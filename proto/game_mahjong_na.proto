@@ -1,0 +1,13 @@
+syntax = "proto2";
+package mahjong;
+// 用于宁安麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum NAGreatWinType
+{
+    NAGreatWinType_None = 0;
+    NAGreatWinType_Heaven = 1; // 天胡，庄家起手胡牌
+    NAGreatWinType_Richi = 2; // 宁安麻将听牌必须大门清
+    NAGreatWinType_SideX2 = 4; // 边卡吊X2
+}

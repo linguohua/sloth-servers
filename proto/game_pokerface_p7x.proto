@@ -1,0 +1,38 @@
+syntax = "proto2";
+package p7x;
+// 用于7王523扑克牌的一些定义
+
+// 牌组类型
+enum CardHandType{
+    None = 0; // 无效牌型
+    Single = 1; // 单张
+    Pair = 2; // 对子，注意可以连对，比如说22,33,44，连续对子个数无限制，那么理论上就是12对（跑得快只保留红桃2）
+    Triplet = 3; // 三张
+    TripletPair = 4; // 三带二，二必须是对子,只有一个三张以及一个对子
+    Four = 5; // 连续若干个3张，例如333,444,555
+    P7Bomb = 6; // 7王523
+}
+
+// 一手牌局结束
+// 可能的结果是：流局、有人自摸胡牌、有人放铳其他人胡牌
+enum HandOverType
+{
+    enumHandOverType_None = 0; // 没有胡牌，或者流局
+    enumHandOverType_Win_SelfDrawn  = 1; // 自摸胡牌
+    enumHandOverType_Win_Chuck = 2; //  放铳胡牌
+    enumHandOverType_Chucker = 3; //  放铳
+    enumHandOverType_Konger = 4; //  点杠者
+    enumHandOverType_Win_RobKong = 5; //  抢杠胡
+}
+
+// 动作类型
+// 注意为了能够用一个int合并多个动作
+// 因此所有动作的值均为二进制bit field独立
+enum ActionType {
+    enumActionType_None = 0; // 无效动作
+    enumActionType_SKIP = 1; // 过
+    enumActionType_DISCARD = 2; // 出牌
+    enumActionType_DRAW = 4; // 抽牌
+    enumActionType_Win_SelfDrawn = 8; // 赢牌
+    enumActionType_Earn = 16; // 赚取分数
+}

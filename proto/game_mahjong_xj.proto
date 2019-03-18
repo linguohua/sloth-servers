@@ -1,0 +1,17 @@
+syntax = "proto2";
+package mahjong;
+// 用于新疆麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum XJGreatWinType
+{
+    XJGreatWinType_None = 0;
+    XJGreatWinType_KongPoint = 1; // 杠后花 杠完之后如果摸到的杠后牌是要胡的牌，则为杠后花（杠开）
+    XJGreatWinType_PureSame = 2; // 清一色 由一种花色的数牌组成的和牌
+    XJGreatWinType_SevenPair = 4; // 七小对 7个对子组成的胡牌
+    XJGreatWinType_GreatSevenPair = 8; // 龙七对 14张牌全是对子，其中至少两个相同的对子，并且这两个对子不能开杠
+    XJGreatWinType_ChowPongKong = 16; // 大吊车 碰后者杠到只剩最后一张手牌，然后听牌并且胡了
+    XJGreatWinType_KongKong = 32; // 杠中杠 杠完又杠，最后杠开胡牌
+    XJGreatWinType_ThirteenOrphans = 64; // 十三幺：由3种序数牌的一、九牌，7种字牌及其中一对作将组成的和牌。
+}

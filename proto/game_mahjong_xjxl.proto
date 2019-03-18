@@ -1,0 +1,32 @@
+syntax = "proto2";
+package mahjong;
+// 用于新疆血流麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum XJXLGreatWinType
+{
+    XJXLGreatWinType_None = 0;
+    XJXLGreatWinType_PongKong = 1; // 【对对胡】*2，由4个刻子（或杠牌）和将牌组成的胡牌
+    XJXLGreatWinType_MeldsEye19 = 2; // 【带幺九】*4，玩家手牌中，全部是用1的连牌或者9的连牌组成的牌
+    XJXLGreatWinType_PureSame = 4; // 【清一色】*4，全部由万\条\筒中的某一种花色组成的胡牌
+    XJXLGreatWinType_SevenPair = 8; // 【七对】*4，由7个对子组成的胡牌；
+    XJXLGreatWinType_PongKongEye = 16; // 【金钩钓】*4，胡牌时其他牌都被碰牌，杠牌。手牌中只剩下一张牌单吊胡牌，不计碰碰胡；
+    XJXLGreatWinType_PureSamePongKong = 32; // 【清对】*8，由清一色和对对胡组成的胡牌；
+    XJXLGreatWinType_GreatSevenPair = 64; // 【龙七对】*8，由7个对子组成的胡牌，且其中有1组4张点数一样的牌，不能杠出或碰出。不计七对，不计1根；
+    XJXLGreatWinType_PongKong258 = 128; // 【将对】*8，全二五八的对对胡（不计对对胡）
+    XJXLGreatWinType_PureSameSevenPair = 256; // 【清七对】*16，由清一色和七对组成的胡牌；
+    XJXLGreatWinType_PureSamePongKongEye = 512; // 【清金钩钓】*16，清一色且所有牌均已碰（杠），只留有一张手牌的大对子单钓（不计对对胡，清一色，金钩钓）
+    XJXLGreatWinType_PureSameMeldsEye19 = 1024; // 【清幺九】*16，清一色带幺九（不计清一色，带幺九）
+    XJXLGreatWinType_PongKongEye258 = 2048; // 【将金钩钓】*16，将对且多有牌均已碰（杠），只留有一张手牌的对子单钓。（不计将对，金钩钓）
+    XJXLGreatWinType_Hevean = 4096; // 【天胡】*32，庄家在发完手牌后，就胡牌，则为天胡；
+    XJXLGreatWinType_Earth = 8192; // 【地胡】*32，在打牌过程中，非庄家在第一次摸完牌后就可以不叫，第一轮摸牌后就自摸胡牌，则为地胡；
+    XJXLGreatWinType_PureSameGreatSevenPair = 16384; // 【清龙七对】*32，由清一色和龙七对组成的胡牌；（不计清一色，龙七对，一根）
+    XJXLGreatWinType_AllKong = 32768; // 【十八罗汉】*64，金钩钓，且胡牌时有4个杠牌。不计4根，金钩钓，对对胡
+    XJXLGreatWinType_PureSameAllKong = 65536; // 【清十八罗汉】*256，由清一色和十八罗汉组成的胡牌（不计清一色，金钩钓，对对胡，4根）；
+    XJXLGreatWinType_Kong2SelfDrawn = 131072; // 杠上开花，2倍
+	XJXLGreatWinType_Kong2Chucker = 262144; // 杠后炮，损失X2，放炮者带有这个标志
+	XJXLGreatWinType_KongTransfor = 524288; // 呼叫转移，杠后炮胡牌者，有这个标志
+	XJXLGreatWinType_ClearFront = 1048576; // 门清
+	XJXLGreatWinType_HasNone19 = 2097152; // 中张
+}

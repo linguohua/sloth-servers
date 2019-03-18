@@ -1,0 +1,25 @@
+syntax = "proto2";
+package mahjong;
+// 用于本地麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum BDGreatWinType
+{
+    enumBDGreatWinType_None = 0;
+
+    enumBDGreatWinType_PongKong = 1; // 碰碰胡：由4副刻子或杠，和1对相同的牌组成的胡牌。
+    enumBDGreatWinType_PureSame = 2; // 清一色：胡牌序列中全是一种数字牌（一共3种数字牌：万子，条子，筒子），例如一手牌全是万子，或者全是条子
+    enumBDGreatWinType_MixedSame = 4; // 混一色：胡牌序列中有且仅有一种数字牌，且余下的是风牌（注意不能是中发牌这三种箭牌）
+    enumBDGreatWinType_SevenPair = 8; // 七对：7对不一样的牌组成的胡牌。
+    enumBDGreatWinType_GreatSevenPair = 16; // 豪华大七对：7对不一样的牌组成的胡牌，而且有4个同样牌，而且胡的那个牌恰好是4个同样牌中的一个。
+    enumBDGreatWinType_2GreatSevenPair = 32; // 双豪华大七对
+    enumBDGreatWinType_3GreatSevenPair = 64; // 3豪华大七对
+    enumBDGreatWinType_ThirteenOrphans = 128; // 十三幺
+    enumBDGreatWinType_AllKong = 256; // 十八罗汉
+    enumBDGreatWinType_Mixed19 = 512; // 混1/9胡，含有字牌的1,9胡，数牌必须都是1或者9
+    enumBDGreatWinType_Pure19 = 1024; // 清1/9胡，不含有字牌的1,9胡，数牌必须都是1或者9
+    enumBDGreatWinType_AllHonor = 2048; // 字一色
+
+    enumBDGreatWinType_FinalDraw = 4096; // 海底捞月：摸牌池最后一张牌，并产生胡牌。
+}

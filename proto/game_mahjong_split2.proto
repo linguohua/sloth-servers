@@ -1,0 +1,211 @@
+syntax = "proto2";
+package mahjong;
+
+
+enum RoomState {
+	// RoomIdle 房间空闲
+	SRoomIdle  = 0;
+	// RoomWaiting 房间正在等待玩家进入
+	SRoomWaiting  = 1;
+	// RoomPlaying 游戏正在进行中
+	SRoomPlaying  = 2;
+    // 房间已经删除
+    SRoomDeleted = 3;
+}
+
+enum PlayerState {
+    PSNone = 0;
+    PSReady = 1;
+    PSOffline = 2;
+    PSPlaying = 3;
+}
+
+// 进入房间后，如果有其他用户则利用
+// 本消息把用户信息发送给客户端
+message MsgPlayerInfo {
+    required string userID = 1;
+    required int32 chairID = 2;
+    required int32 state = 3; // 玩家当前状态PlayerState
+    optional string name = 4; // 玩家名称
+    optional string nick = 5; // 玩家昵称
+    optional uint32 sex = 6; // 玩家性别，0未设置，1男性，2女性
+    optional string headIconURI = 7; // 玩家头像URI
+    optional string ip = 8; // 玩家外网ip
+    optional string location = 9; // 玩家位置信息,json格式
+    optional int32 dfHands = 10; // 玩家总局数
+    optional int32 diamond = 11; // 钻石
+    optional int32 charm = 12; // 魅力
+    optional int32 avatarID = 13; // 头像框ID
+    repeated string clubIDs = 14; // 用户所有牌友群id
+    optional int32 dan = 15; // 段位
+}
+
+// 每个玩家一手牌得分记录
+message PlayerHandScoreRecord
+{
+    required string userID = 1;
+    required int32 winType = 2;
+    required int32 score = 3;
+}
+
+// 房间的牌局一手牌得分记录
+message MsgRoomHandScoreRecord
+{
+    // 手牌结束类型
+    required int32 endType = 1;
+    // 第几手牌
+    required int32 handIndex = 2;
+    // 本手牌每个玩家的得分情况
+    repeated PlayerHandScoreRecord playerRecords = 3;
+}
+
+// 房间信息，用于各种状态更新
+message MsgRoomInfo {
+    required int32 state = 1; // 见RoomState
+    repeated MsgPlayerInfo players = 2; // 其他玩家信息
+    optional string ownerID = 3; // 房间拥有者ID
+    optional string roomNumber = 4; // 房间号
+    optional int32 handStartted = 5; // 已经开始了多少手牌
+
+    repeated MsgRoomHandScoreRecord scoreRecords = 6;
+	
+	optional int32 handFinished = 7; // 已经完成了多少手牌
+}
+
+// 房间分数记录
+message RoomScoreRecords
+{
+    repeated MsgRoomHandScoreRecord scoreRecords = 1; // 每一手牌一个记录
+}
+
+// 客户端发送给服务器
+// 回复解散请求
+message MsgDisbandAnswer
+{
+    required bool agree = 1;
+}
+
+// 解散请求的状态
+enum DisbandState
+{
+    Waiting = 1; // 正在等待回复
+    Done = 2; // 已经完成
+    DoneWithOtherReject = 3; // 其他人拒绝解散
+    DoneWithRoomServerNotResponse = 4; // 房间访问不回应
+    DoneWithWaitReplyTimeout = 5; // 等待其他玩家回复超时
+    ErrorDuplicateAcquire = 6; // 已经有其他人申请了解散
+    ErrorNeedOwnerWhenGameNotStart = 7; // 游戏未开始，只能房主才可以解散房间
+}
+
+// 服务器通知客户端解散请求的执行情况
+message MsgDisbandNotify
+{
+    required int32 disbandState = 1; // 解散请求的状态
+    required int32 applicant = 2; // 谁发起解散请求，座位ID
+    repeated int32 waits = 3; // 正在等待谁，座位列表
+    repeated int32 agrees = 4; // 谁已经同意，座位列表
+    repeated int32 rejects = 5; // 谁已经拒绝,座位列表
+    optional int32 countdown = 6; // 剩余倒计时
+}
+
+// 游戏结束每个玩家的统计信息
+message MsgGameOverPlayerStat
+{
+    required int32 chairID = 1; // 玩家的座位ID
+    required int32 score  = 2; // 玩家总得分
+	required int32 winChuckCounter = 3; // 玩家吃铳（接炮）胡牌次数
+	required int32 winSelfDrawnCounter = 4; // 玩家自摸胡牌次数
+    required int32 chuckerCounter = 5; // 玩家放炮输牌次数
+    optional int32 robKongCounter = 6; // 抢杠胡次数
+    optional int32 kongerCounter = 7; // 被抢杠胡次数
+}
+
+// 游戏结束通知，服务器下发给所有玩家
+message MsgGameOver
+{
+    repeated MsgGameOverPlayerStat playerStats = 1; // 玩家统计信息列表
+}
+
+enum TipCode
+{
+    TCNone = 0;
+    TCWaitOpponentsAction = 1; // 等待其他玩家动作
+    TCDonateFailedNoEnoughDiamond = 2; // 打赏失败，没有钻石
+}
+
+// 对应OPRoomShowTips，主要是monkey房间使用
+message MsgRoomShowTips {
+    optional string tips = 1; // 需要显示的提示文字信息，ut8编码
+    required int32 tipCode = 2; // 如果tipcode为0，则使用tips，否则使用tipCode
+}
+
+// 房间删除原因
+enum RoomDeleteReason
+{
+    IdleTimeout = 1; // 闲置时间过长
+    DisbandByOwnerFromRMS = 2; // 被房主解散从房间管理列表
+    DisbandByApplication = 3; // 被申请解散，而且解散成功
+    DisbandBySystem = 4; // 系统解散，可能是系统管理员解散
+    DisbandMaxHand = 5; // 牌局已经达到最大轮数
+    DisbandInLoseProtected = 6; // 已经有足够人进园子，牌局解散
+}
+
+// 房间删除通知
+message MsgRoomDelete
+{
+    required int32 reason = 1; // 删除原因 RoomDeleteReason
+}
+
+// 房主请求服务器踢开某个玩家
+message MsgKickout
+{
+    required string victimUserID = 1; // 受害者
+}
+
+enum KickoutResult
+{
+    KickoutResult_Success = 1; // 踢人成功
+    KickoutResult_FailedGameHasStartted = 2; // 游戏已经开始不能踢人
+    KickoutResult_FailedNeedOwner = 3; // 主要房主才可以踢人
+    KickoutResult_FailedPlayerNotExist = 4; // 玩家已经离开
+}
+
+// 服务器回复
+message MsgKickoutResult
+{
+    required int32 result = 1;
+    optional string victimUserID = 2; // 被踢的玩家的ID
+    optional string victimNick = 3; // 被踢的玩家的昵称
+    optional string byWhoNick = 4; // 房主昵称
+    optional string byWhoUserID = 5; // 房主ID
+}
+
+// 进入房间结果
+enum EnterRoomStatus {
+    Success = 0; // 成功
+    RoomNotExist = 1; // 房间不存在
+    RoomIsFulled = 2; // 房间已经满员
+    RoomPlaying = 3; // 游戏正在进行中
+    InAnotherRoom = 4; // 账号已经在另一个游戏房间
+    MonkeyRoomUserIDNotMatch = 5; // monkey房间需要userID匹配
+    MonkeyRoomUserLoginSeqNotMatch = 6; // monkey房间需要进入次序匹配
+    AppModuleNeedUpgrade = 7; // 客户端需要升级
+    InRoomBlackList = 8; // 在房间的禁止进入黑名单中
+    TakeoffDiamondFailedNotEnough = 9; // 扣除钻石失败，余额不足
+    TakeoffDiamondFailedIO = 10 ; // 扣除钻石失败，IO失败
+    ParseTokenError = 11 ; // 解析token出错
+    RoomInApplicateDisband = 12; // 房间正在解散
+    NotClubMember = 13; // 需要是俱乐部成员才可以进入房间
+}
+
+// 进入房间回复
+// 进入成功后，包括玩家本身以及其他玩家，均通过OPRoomUpdate获得房间新状态和数据
+message MsgEnterRoomResult {
+    required int32 status = 1; // 0表示成功，其他值表示失败的错误码，见EnterRoomStatus
+}
+
+message MsgDonate {
+    required int32 toChairID = 1; // 送给谁
+    required int32 itemID = 2; // 物品ID
+    optional int32 fromChairID = 3; // 谁给送的
+}

@@ -1,0 +1,53 @@
+syntax = "proto2";
+package mahjong;
+// 用于盐城麻将的一些枚举定义
+
+// 胡牌牌型
+enum YCMiniWinType
+{
+    enumYCMiniWinType_None = 0;
+    enumYCMiniWinType_DoubleSuits = 1; // 断门：（10花）胡牌时，有且仅有条筒万种的两种，不包括风牌
+    enumYCMiniWinType_SuitSequence = 2; // 一条龙：（10花）胡牌时，有同一种数牌组成的1到9三个顺子
+    enumYCMiniWinType_SevenPair = 4; // 七对：（20花）胡牌时，手牌有个7个对子，落地暗杠不算
+    // enumYCMiniWinType_GreatSevenPair = 8; // 豪华七对
+    enumYCMiniWinType_PureSame = 8; // 清一色：(50花)胡牌时，14张牌都是一种数牌，例如万子组成
+    enumYCMiniWinType_PongKong = 16; // 碰碰胡：（50花）胡牌时，除了一对将，其他4对刻子组成
+    enumYCMiniWinType_FrontClear = 32; // 门清（10花）
+    enumYCMiniWinType_RichiWinChucker = 64; // 点炮时是听牌状态，叫“听牌点炮”，那么胡牌花数为基本分数的2倍，仅点炮者付分
+    enumYCMiniWinType_FlyRichiWinChucker = 128; // 如果点炮者是飞听状态，那么叫做“打飞机”，胡牌分数为基本分数的4倍，仅点炮者付分
+    enumYCMiniWinType_FlyRichi = 256; // 飞听自摸胡牌（飞听不能吃炮，因此必然是自摸）胡牌花数是基本花数的3倍，其他三家都要付分
+    enumYCMiniWinType_Heaven = 512; // 天胡的时候，牌型花数=牌型花数X3，再当自摸而三家付分
+    enumYCMiniWinType_NoFlowerWhenRichi = 1024; // 黑字，叫听前，没有任何花牌为之黑字，加36花
+    enumYCMiniWinType_FirstReadyHand = 2048; // 起手听10花
+}
+
+enum YCRichiFlag
+{
+    enumYCRichi_Normal = 0; // 普通听牌
+    enumYCRichi_Fly = 1; // 飞听
+    enumYCRichi_FlyNoFlower = 2; // 无花飞听
+    enumYCRichi_FirstReadyHand = 4; // 起手听牌
+}
+
+// 飞听状态下加分
+enum YCFlyRichiExtraScoreType
+{
+    enumYCFR_None = 0;
+    enumYCFR_SuitSpecialX1 = 1; // 1压档
+    enumYCFR_SuitSpecialX2 = 2; // 2压档
+    enumYCFR_SuitSpecialX3 = 4; // 3压档
+    enumYCFR_SuitSpecialX4 = 8; // 4压档
+
+    enumYCFR_ReadyHandDoublePair = 16; // 对倒
+    enumYCFR_ReadyHandDaDuziX1 = 32; // 大肚子对倒
+    enumYCFR_ReadyHandDaDuziX2 = 64; // 双大肚子对倒
+
+    enumYCFR_ReadyHandSinglePair = 128; // 大吊车
+    enumYCFR_ReadyHandSinglePairWith2 = 256; // 双吊
+    enumYCFR_ReadyHandSinglePairWith3 = 512; // 三吊
+
+    enumYCFR_GreatSevenPairX1 = 1024; // 豪华七对
+    enumYCFR_GreatSevenPairX2 = 2048; // 双豪华七对
+    enumYCFR_GreatSevenPairX3 = 4096; // 三豪华七对
+    enumYCFR_SevenPair = 8192; // 普通七对,客户端不需要理会这个标志，仅用于服务器比较
+}

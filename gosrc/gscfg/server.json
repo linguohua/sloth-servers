@@ -1,0 +1,20 @@
+{
+        // 日志文件
+        "log_file":"/var/log/wxserver/server.log",
+        // 工作模式
+        "daemon" : "yes",
+
+        // 服务器监听端口
+        "port":3001,
+
+        // 服务器实例GUID，必须确保唯一
+        "guid" : "8def07dc-a53f-4851-a88d-9d45d7db126a",
+        // redis服务器地址
+        "redis_server":"127.0.0.1:6379",
+
+        // 服务器访问URL
+        "url" : "http://localhost:3001/dfmj/mj",
+
+        // 房间管理服务器的ID
+        "roomServerID":"27522493-64c3-4899-9e8f-514233ee9f0a"
+}

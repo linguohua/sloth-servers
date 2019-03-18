@@ -1,0 +1,49 @@
+syntax = "proto2";
+package mahjong;
+// 用于大丰麻将，东台麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum GreatWinType
+{
+    enumGreatWinType_None = 0;
+    enumGreatWinType_ChowPongKong = 1 ; // 独钓：吃碰杠一起12只，剩余1只，胡剩余的1只。
+    enumGreatWinType_FinalDraw = 2 ; // 海底捞月：摸牌池最后一张牌，并产生胡牌。
+    enumGreatWinType_PongKong = 4; // 碰碰胡：由4副刻子或杠，和1对相同的牌组成的胡牌。
+    enumGreatWinType_PureSame = 8; // 清一色：胡牌序列中全是一种数字牌（一共3种数字牌：万子，条子，筒子），例如一手牌全是万子，或者全是条子
+    enumGreatWinType_MixedSame = 16; // 混一色：胡牌序列中有且仅有一种数字牌，且余下的是风牌（注意不能是中发牌这三种箭牌）
+    enumGreatWinType_ClearFront = 32; // 大门清：胡牌时，无吃碰杠，且没有抓过花。
+    enumGreatWinType_SevenPair = 64; // 七对：7对不一样的牌组成的胡牌。
+    enumGreatWinType_GreatSevenPair = 128; // 豪华大七对：7对不一样的牌组成的胡牌，而且有4个同样牌，而且胡的那个牌恰好是4个同样牌中的一个。
+    enumGreatWinType_Heaven = 256; // 天胡：庄家起手摸第14只牌，产生胡牌.
+    enumGreatWinType_AfterConcealedKong = 512; // 暗杠胡：手牌里有3只一样的牌，同时胡第4只1样的牌（必须自摸）。注意不是岭上开花
+    enumGreatWinType_AfterExposedKong = 1024; // 明杠胡：碰牌后，依然胡碰的那只牌（必须自摸）。注意不是岭上开花
+    enumGreatWinType_Richi = 2048; // 起手报听胡牌：起手报听，报听后胡牌。
+
+    enumGreatWinType_PongKongWithFlowerNoMeld = 4096; // 有花没有落地碰碰胡
+    enumGreatWinType_PureSameWithFlowerNoMeld = 8192; // 清一色，有花没有下地
+    enumGreatWinType_MixSameWithFlowerNoMeld = 16384; // 混一色，有花没有下地
+    enumGreatWinType_PureSameWithMeld = 32768;  // 清一色，有下地
+    enumGreatWinType_MixSameWithMeld = 65536; // 混一色，有下地
+    enumGreatWinType_RobKong = 131072; // 抢杠胡，大丰本地叫明杠冲
+    enumGreatWinType_OpponentsRichi = 262144; // 对手报听
+}
+
+// 小胡
+// 小胡类型，一手牌可以有多种小胡类型
+enum MiniWinType
+{
+    enumMiniWinType_None = 0;
+    enumMiniWinType_Continuous_Banker = 1;// 连庄
+    enumMiniWinType_SelfDraw = 2; // 自摸
+    enumMiniWinType_NoFlowers = 4; // 一个花都没有，算10花
+    enumMiniWinType_Kong2Discard = 8; // 杠冲
+    enumMiniWinType_Kong2SelfDraw = 16; // 杠开
+    enumMiniWinType_SecondFrontClear = 32; // 小门清
+    enumMiniWinType_PongSelfDrawn = 64; // 对对胡
+    enumMiniWinType_ChowPongkong = 128; // 对对胡独钓
+    enumMiniWinType_Richi = 256; // 报听
+    enumMiniWinType_SevenPair = 512; // 七对
+    enumMiniWinType_PureSameWithMeld = 1024; // 清一色，有下地
+    enumMiniWinType_MixSameWithMeld = 2048; // 混一色，有下地
+}

@@ -1,0 +1,21 @@
+syntax = "proto2";
+package phza;
+// 用于跑胡子的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum GreatWinType
+{
+    enumGreatWinType_None = 0;
+    enumGreatWinType_KingEye = 1 ; // 王吊
+    enumGreatWinType_KingEyeKing= 2 ; // 王吊王
+    enumGreatWinType_KingKot = 4; // 王闯
+    enumGreatWinType_KingKotKing = 8; // 王闯王
+    enumGreatWinType_KingKong = 16; // 王炸
+    enumGreatWinType_KingKongKing = 32; // 王炸王
+    enumGreatWinType_Red = 64; // 红胡：2翻
+    enumGreatWinType_Black = 128; // 黑胡：4翻
+    enumGreatWinType_Red2Black = 256; // 红转黑：4翻
+    enumGreatWinType_RedPoint = 512; // 点朱：3翻
+    enumGreatWinType_Red2RedPoint = 1024; // 红转点朱：3翻
+}

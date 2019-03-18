@@ -1,0 +1,37 @@
+{
+        // 日志文件
+        "log_file":"",
+        // 工作模式
+        "daemon" : "no",
+
+        // 服务器监听端口
+        "accessory_server_port":3002,
+
+        // 服务器实例GUID，必须确保唯一
+        "guid" : "27522493-64c3-4899-9e8f-514233ee9f0a",
+        // redis服务器地址
+        "redis_server":"127.0.0.1:6379",
+        // 敏感词
+        "sensitive_word_file_path":"./SensitiveWordFile.txt",
+
+        "account":"linux",
+        "password":"MMzz----88~bbabcdefgqqb",
+        "linuxWebPort":":8088",
+        // 计划执行数据同步的时间
+        "syncdata_time":1,
+        "room_pay_cfg_file":"",
+        "sub_game_ids":{
+                "1": 10043, // 大丰麻将
+		"6": 10044, // 宁安麻将
+		"7": 10046, // 新疆麻将
+		"8": 10045, // 关张
+		"9": 10047, // 七王
+		"11": 10052,// 斗地主
+		"12": 10053,// 血流
+                "13": 10013, // 兰州
+                "14": 10055, // 兰州
+                "15": 10056 // 兰州
+        }
+
+
+}

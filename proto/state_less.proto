@@ -1,0 +1,189 @@
+syntax = "proto2";
+package stateless;
+
+enum SSMsgType {
+    Request = 1;
+    Response = 2;
+    Notify = 3;
+}
+
+enum SSMsgReqCode {
+    CreateRoom = 1;
+    DeleteRoom = 2;
+    RoomStateNotify = 3;
+    AAExitRoomNotify = 4;  // AA制退出房间退还钻石通知
+    AAEnterRoom = 5;  // AA进入房间扣钻石请求
+    Donate = 6;     // 打赏扣钻石请求
+    UpdateLocation = 7; // 更新用户的位置信息
+    UpdatePropCfg = 8; // 更新牌局内的道具配置
+    HandBeginNotify = 9; // 手牌开始通知
+}
+
+enum SSMsgError {
+    ErrSuccess = 0;
+    ErrDecode = 1;
+    ErrEncode = 2;
+    ErrRoomExist = 3;
+    ErrNoRoomConfig = 4;
+    ErrUnsupportRoomType = 5;
+    ErrDecodeRoomConfig = 6;
+    ErrRoomNotExist = 7;
+    ErrTakeoffDiamondFailedNotEnough = 9; // 扣除钻石失败，余额不足
+    ErrTakeoffDiamondFailedIO = 10 ; // 扣除钻石失败，IO失败
+    ErrTakeoffDiamondFailedRepeat = 11 ; // 扣除钻石失败，已经扣取
+    ErrRoomIsNoEmpty = 12; // 房间不是空的
+}
+
+message SSMsgBag {
+    // 消息类型，SSMsgType
+    required int32 msgType = 1;
+    // 流水号，请求者初始化，回复者回填
+    required uint32 seqNO = 2;
+    // 请求消息码 SSMsgReqCode
+    required int32 requestCode = 3;
+    // 请求状态
+    required int32 status = 4;
+    // 额外参数
+    optional bytes params = 5;
+    // 源服务器URL，回复消息时使用
+    optional string sourceURL = 6;
+}
+
+enum RoomType {
+    // 大丰麻将
+    DafengMJ = 1;
+    // 贯蛋
+    GuanDang = 2;
+    // 东台
+    DongTaiMJ = 3;
+    // 盐城
+    YanChengMJ = 4;
+    // 韶关
+    ShaoGuanMJ = 5;
+    // 宁安
+    NingAnMJ = 6;
+    // 新疆杠后
+    XinJiangGH = 7;
+    // 大丰关张
+    DafengGZ = 8;
+    // 大丰7王523
+    Dafeng7w523 = 9;
+    // 牛牛
+    NiuNiu = 10;
+    // 斗地主
+    DDZ = 11;
+	// 新疆血流
+	XueLiuMJ = 12;
+	// 兰州麻将
+    LanZhouMJ = 13;
+    // 老兰州
+    LLanZouMJ = 14;
+    // 张掖
+    ZhangYeMJ = 15;
+    // 泰安
+    TacnMJ = 16;
+    // 泰安吹牛扑克牌
+    TacnPok = 17;
+	// 跑胡子
+	PHZ = 18;
+	// 法库麻将
+	FKMJ = 19;
+	// 法库麻将非混
+	FUMJ = 20;
+}
+
+// 房间管理服务器发送给游戏服务器
+// 请求创建房间
+message SSMsgCreateRoom {
+    required string roomID = 1; // 房间的唯一ID
+    required string roomConfigID = 2; // 房间的配置ID
+    required int32  roomType = 3; // 房间类型
+    required string userID = 4; // 房间拥有者ID
+    required string roomNumber = 5; // 房间号
+    optional string clubID = 6; // 俱乐部
+    optional string groupID = 7; // 牌友群ID
+    optional string arenaID = 8; // 比赛场ID
+    repeated string userIDs = 9; // 比赛场的所有用户ID
+    optional int32 waitTime = 10; // 比赛场等待开局时间
+    optional string raceTemplateID = 11; // 比赛场模本ID
+}
+
+// 房间管理服务器发送给游戏服务器
+// 请求删除房间
+message SSMsgDeleteRoom {
+    required string roomID = 1; // 需要删除的房间唯一ID
+    optional int32 why = 2; // 删除的理由
+    optional bool onlyEmpty = 3; // 仅删除空房间
+}
+
+// 用于用户ID列表，主要用于把用户列表保存到redis上
+message SSMsgUserIDList {
+    repeated string userIDs = 1;
+}
+
+message SSMsgGameOverPlayerStat {
+    required string userID = 1; // 玩家ID
+    required int32 score  = 2; // 玩家总得分
+}
+
+// 游戏服务器请求房间管理服务器删除一个房间
+message SSMsgGameServer2RoomMgrServerDisbandRoom {
+    required string roomID = 1; // 需要被删除的房间ID
+    required int32 handStart = 2; // 这个房间已经开局了多少手牌，房间服务器需要根据这个参数，决定是否需要返还钻石给用户
+    optional int32 handFinished = 3; // 房间已经完成了多少手牌
+    repeated string playerUserIDs = 4; // 参与游戏的玩家
+    repeated SSMsgGameOverPlayerStat playerStats = 5; // 玩家总积分列表
+}
+
+enum RoomState {
+	// RoomIdle 房间空闲
+	SRoomIdle  = 0;
+	// RoomWaiting 房间正在等待玩家进入
+	SRoomWaiting  = 1;
+	// RoomPlaying 游戏正在进行中
+	SRoomPlaying  = 2;
+}
+
+// 游戏服务器推送通知给房间管理服务器
+// 通知房间状态变化
+message SSMsgRoomStateNotify {
+    required int32 state = 1; // 房间状态 RoomState
+    required string roomID = 2; // 房间ID
+    repeated string userIDs = 3; // 玩家列表
+    required int32 handStartted = 4; // 游戏已经开始轮数
+    required uint32 lastActiveTime = 5; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+}
+
+
+// 游戏服务器请求房间服务器扣钱或者返还钱
+// 扣钱或者返还钱参见SSMsgReqCode
+message SSMsgUpdateBalance {
+     required string userID = 1; // 用户ID
+     required string roomID = 2; // 房间ID
+}
+
+// 道具打赏
+message SSMsgDonate {
+    required int32 propsType = 1; // 道具类型
+    required string from = 2;     // 打赏者
+    required string to = 3;       // 被打赏者
+}
+
+// 房间服务器返回用户钻石与魅力值给游戏服务器
+message SSMsgDonateRsp {
+    required int32 diamond = 1;  // 用户钻石
+    required int32 charm = 2;    // 用户魅力值
+}
+
+// 更新用户的位置信息到房间里
+message SSMsgUpdateLocation {
+    required string userID = 1; // 用户ID
+    required string location = 2; // 位置信息
+}
+
+// 游戏服务器推送通知给房间管理服务器
+// 通知收牌开始
+message SSMsgHandBeginNotify {
+    required string roomID = 2; // 房间ID
+    required int32 handStartted = 4; // 游戏已经开始轮数
+}

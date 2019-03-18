@@ -1,0 +1,89 @@
+syntax = "proto2";
+package pokerface;
+
+// 手牌记录中的用户对象
+message SRMsgPlayerInfo {
+    required string userID = 1;
+    required int32 chairID = 2;
+    optional string nick = 3;
+    optional uint32 sex = 4;
+    optional string headIconURI = 5;
+    optional int32 avatarID = 6; // 头像框ID
+}
+
+// 发牌记录
+message SRDealDetail
+{
+    required int32 chairID = 1; // 玩家座位ID
+    repeated int32 cardsHand = 2; // 手牌
+    repeated int32 cardsFlower = 3; // 花牌
+}
+
+// 记录的动作的标志
+enum SRFlags
+{
+    // 普通动作记录
+    SRNone = 0;
+    // 该动作仅表示玩家选择了操作
+    // 但服务器不一定采纳
+    SRUserReplyOnly = 1;
+    // 表明动作伴随着听牌，主要用于庄家起手听牌
+    SRRichi = 2;
+
+    SRFlyRichi = 4; // 表明动作伴随着飞听，盐城麻将中有普通听牌和飞听两种听牌
+}
+
+// 动作记录
+message SRAction
+{
+    required int32 action = 1;  // 动作，数值为ActionType，例如服务器抽牌、玩家过、吃、碰、杠、出牌等
+    required int32 chairID = 2; // 当动作者是玩家而非系统时，此处指定玩家的座位ID
+    required int32 qaIndex = 3;
+    // 动作涉及到的牌列表，如果动作是发牌，列表包含花牌和非花牌；
+    // 如果动作是出牌，则列表只有一个张牌；如果动作是吃椪杠、列表也只有一张牌，表示面子牌组的第一张牌
+    // 对于吃牌，有两个card，一个是面子牌组的第一张牌，另一个是表示吃的哪张牌
+    repeated int32 cards = 4;
+    required int32 flags = 5; // 标志，见SRFlags
+    optional int32 cardHandType = 6; // 可选的，牌组类型
+	optional int32 allowActions = 7; // 对应本次动作，服务器允许的动作
+}
+
+message SRMsgHandRecorderExtra
+{
+    optional int32 markup = 1; // 房间加价局计数，目前用于盐城麻将
+    optional string ownerUserID = 2; // 房主的用户ID
+}
+
+// 一手牌记录器
+// 消息用于客户端回播，以及bug定位等
+// 用于记录发牌数据，以及听吃椪杠胡等动作
+message SRMsgHandRecorder
+{
+    required int32 bankerChairID = 1; // 本手牌庄家座位
+    required int32 windFlowerID = 2; // 本手牌风牌（当做花牌）
+    repeated SRMsgPlayerInfo players = 3; // 玩家
+    required bool isHandOver = 4; // 是否已经玩到手牌结束
+
+    repeated SRDealDetail deals = 5;    // 发牌记录列表
+    repeated SRAction actions = 6;      // 动作列表
+
+    optional bytes handScore = 7; // 如果本手牌结束，此项保存计分记录
+
+    optional string roomConfigID = 8; // 房间配置ID，重现问题时需要拉取房间配置，以便完整恢复房间
+
+    optional uint32 startTime = 9; // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+
+    optional uint32 endTime = 10; // 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+
+    optional int32 handNum = 11; // 第几轮
+
+    optional string shareAbleID = 12; // 用于分享的8位ID
+
+    optional bool isContinuousBanker = 13; // 是否连庄
+
+    optional string roomNumber = 14; // 房间号，仅用于客户端显示用
+
+    optional int32 roomType = 15; // 房间类型
+
+    optional SRMsgHandRecorderExtra extra = 16; // 额外参数
+}

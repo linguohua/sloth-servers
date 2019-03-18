@@ -1,0 +1,274 @@
+syntax = "proto2";
+package pokerface;
+// 牌的ID
+enum CardID {
+	R2H = 0; // 2
+	R2D = 1;
+	R2C = 2;
+	R2S = 3;
+
+	R3H = 4; // 3
+	R3D = 5;
+	R3C = 6;
+	R3S = 7;
+
+	R4H = 8 ;// 4
+	R4D = 9;
+	R4C = 10;
+	R4S = 11;
+
+	R5H = 12 ;// 5
+	R5D = 13;
+	R5C = 14;
+	R5S = 15;
+
+	R6H = 16 ;// 6
+	R6D = 17;
+	R6C = 18;
+	R6S = 19;
+
+	R7H = 20 ;// 7
+	R7D = 21;
+	R7C = 22;
+	R7S = 23;
+
+	R8H = 24 ;// 8
+	R8D = 25;
+	R8C = 26;
+	R8S = 27;
+
+	R9H = 28 ;// 9
+	R9D = 29;
+	R9C = 30;
+	R9S = 31;
+
+	R10H = 32; // 10
+	R10D = 33;
+	R10C = 34;
+	R10S = 35;
+
+	JH = 36; // Jack
+	JD = 37;
+	JC = 38;
+	JS = 39;
+
+	QH = 40; // Queen
+	QD = 41;
+	QC = 42;
+	QS = 43;
+
+	KH = 44; // King
+	KD = 45;
+	KC = 46;
+	KS = 47;
+
+	AH = 48; // ACE
+	AD = 49;
+	AC = 50;
+	AS = 51;
+
+	// RankEnd = 52; // rank 牌分界
+
+	JOB = 52; // joker black，黑小丑
+	JOR = 53; // joker red，红小丑
+
+	CARDMAX = 54;
+}
+
+enum MessageCode{
+    OPInvalid = 0; // 无效消息码
+    OPAction = 1; // 动作
+    OPActionResultNotify = 2; // 动作通知
+    OPActionAllowed = 3; // 动作允许，对一个玩家，请求其出牌等
+    OPReActionAllowed = 5; // 动作允许，对多个玩家，在某个玩家出牌后，请求其余玩家吃椪杠胡等
+    OPDeal = 6; // 发牌
+    OPHandOver = 7; // 本手牌结果
+    OPRestore = 8; // 断线、奔溃恢复，注意恢复过程是由若干个消息构成，先是OPRoomUpdate，然后是OPRestore(消息体是MsgRestore)，然后是OPActionAllowed或者OPReActionAllowed
+    OPPlayerLeaveRoom = 9; // 玩家离开房间，客户端会请求服务器其离开房间
+    OPPlayerEnterRoom = 10; // 玩家进入房间，客户端不会发送该消息，仅用于通知客户端
+    OPDisbandRequest = 11 ; // 解散牌局
+    OPDisbandNotify = 12; // 解散牌局询问其他玩家是否同意，或者通告解散的当前状态（谁同意，谁拒绝，谁正在思考）
+    OPDisbandAnswer = 13; // 解散牌局答复
+    OPPlayerReady = 14; // 玩家准备好
+    OPRoomDeleted = 15; // 房间被删除，本消息没有消息体，仅一个命令字，客户端收到后退出房间
+    OPRoomUpdate = 16; // 更新房间信息，主要是玩家状态变更
+    OPRoomShowTips = 17; // 要求客户端显示一段提示信息
+    OPGameOver = 18; // 房间游戏结束
+    OPKickout = 19; // 踢玩家出房间
+    OPDonate = 20; // 玩家打赏给另一个玩家
+    OPUpdateLocation = 21; // 更新玩家的GPS定位信息
+    OP2Lobby = 22; // 切换到大厅，连接断开，但是服务器保留玩家座位，并重置状态到offline状态，当且仅当游戏没开始时允许所有客户端发送这个请求
+    OPUpdatePropCfg = 23; // 更新牌局内的道具配置
+
+}
+
+// 消息包装，把其他消息体格式化为byte array，
+// 加上消息码构成一个GameMessage，便于解析
+message GameMessage {
+    required int32 Ops = 1;
+    optional bytes Data = 2;
+}
+
+// 牌组
+message MsgCardHand {
+    required int32 cardHandType = 1; // 牌组类型
+    repeated int32 cards = 2; // 牌列表，对于一些有规律的牌组例如同花顺，可以只写第一个牌
+}
+
+// 玩家牌列表
+message MsgPlayerCardList {
+    required int32 chairID = 1; // 玩家座位ID
+    required int32 cardCountOnHand = 2; // 玩家手上的牌数量（用于其他玩家显示手牌数）
+    repeated int32 cardsOnHand = 3; // 玩家手上的牌（暗牌）
+
+    repeated MsgCardHand discardedHands = 4; // 打出去的牌组列表
+
+    repeated int32 flowers = 5; // 花牌列表
+}
+
+// 发牌
+// 服务器下发给客户端
+// 客户端收到消息后，做如下处理：
+// 1. 显示自己的牌
+// 2. 显示其他人的牌（暗牌，庄家14张）
+// 3. 显示庄家
+message MsgDeal {
+    required int32 bankerChairID = 1; // 庄家座位ID
+    required int32 windFlowerID = 2; // 当做花牌的风牌id
+    repeated MsgPlayerCardList playerCardLists = 3; // 所有玩家的牌列表
+    required int32 cardsInWall = 4; // 牌墙剩余张数
+    optional int32 dice1 = 5; // 第一个骰子
+    optional int32 dice2 = 6; // 第二个骰子
+    optional bool isContinuousBanker = 7; // bankerChairID是否连庄
+    optional int32 markup = 8; // 暂时用于加价局计数
+}
+
+// 服务器准许客户端做游戏动作
+// 服务器发送给客户端
+// 客户端收到本消息后，于界面上提示或者允许用户操作
+// 在用户操作完成后（或者超时），发送MsgPlayerAction消息给服务器
+message MsgAllowPlayerAction {
+    required int32 qaIndex = 1; // QA索引，参考 MsgPlayerAction 中说明
+    required int32 actionChairID = 2; // 本动作允许的目标，如果是自己则客户端展示操作界面
+    required int32 allowedActions = 3; // 所有当前服务器期待/允许的动作
+    optional int32 timeoutInSeconds = 4; // 默认超时时间，首次消息服务器会下发，如果值是0x010f表示必须打红桃3，如果值是0x020f表示必须打红桃2
+}
+
+// 服务器准许客户端做游戏动作
+// 服务器发送给客户端
+// 客户端收到本消息后，于界面上提示或者允许用户操作
+// 在用户操作完成后（或者超时），发送MsgPlayerAction消息给服务器
+message MsgAllowPlayerReAction {
+    required int32 qaIndex = 1; // QA索引，参考 MsgPlayerAction 中说明
+    required int32 actionChairID = 2; // 本动作允许的目标，如果是自己则客户端展示操作界面
+    required int32 allowedActions = 3; // 所有当前服务器期待/允许的动作
+    optional int32 timeoutInSeconds = 4; // 默认超时时间，首次消息服务器会下发
+
+    optional int32 prevActionChairID = 5; // 上一个动作的玩家座位ID
+    optional MsgCardHand prevActionHand = 6; // 上一动作玩家打出牌组
+}
+
+// 玩家执行动作
+// 客户端必须是收到服务器允许动作消息并
+// 通过界面让玩家完成操作之后，通过该消息通知服务器用户执行了动作
+// 客户端需要填写正确的qaIndex，以及action（这两个参数都是从服务器下发）
+message MsgPlayerAction {
+    // QA索引，该索引是服务器通过出牌许可消息下发的，客户端需要回填于此
+    // QA索引的目的是为了服务器对消息的控制：服务器对于新收到的消息如果其QA索引
+    // 不等于服务器当前期待的QA索引，服务器将会抛弃该消息
+    // QA索引就是流水号，QA代表Question&Answer
+    // 本文档其余处QA索引意义与此一致
+    required int32 qaIndex = 1;
+    required int32 action = 2; // 动作
+    optional int32 flags = 3; // 其他标记，目前只用做听牌标记，如果是1，则表示出牌后要求听牌
+    repeated int32 cards = 4; // 动作的涉及的牌列表
+}
+
+// 服务器通知所有玩家某个玩家进行了何种动作
+// 客户端收到消息后，对界面进行更新或者播放对应动作动画
+message MsgActionResultNotify {
+    required int32 targetChairID = 1; // 动作者
+    required int32 action = 2;  // 动作名
+    optional MsgCardHand actionHand = 3; // 动作目标牌组
+    optional int32 cardsInWall = 4; // 剩余牌张数
+}
+
+// 掉线恢复
+message MsgRestore
+{
+    required MsgDeal msgDeal = 1; // 所有人的牌数据，复用MsgDeal
+    optional int32 prevActionChairID = 2; // 上一个动作的玩家座位ID
+    optional MsgCardHand prevActionHand = 3; // 上一动作玩家打出牌组
+
+    optional int32 landlordChairID = 4; // 地主的座位ID
+    optional int32 multiple = 5; // 当前房间的倍数，由抢地主翻倍而改变，默认是1
+    repeated int32 lastAwardCards = 6; // 当前房间奖励给地主的3张底牌，如果处于抢地主阶段，有可能为空
+
+    repeated int32 playersListA = 7; // 服务器通过这个额外的玩家座位ID列表，下发一些额外内容，例如斗地主用于下发加注的玩家
+}
+
+// 大胡者的计分
+message MsgPlayerScoreGreatWin
+{
+    required int32 baseWinScore = 1; // 基本的赢牌分数，也即是trimGreatWinPoints乘以每个辣子对应的分数, NOTE: 废弃不用
+    required int32 greatWinType = 2; // 大胡类型（可以多种类型复合）
+    required int32 greatWinPoints = 3; // 辣子数，服务器乘以10，客户端需要除以10后再使用
+    required int32 trimGreatWinPoints = 4; // 裁剪后的辣子数（因为有个封顶限制），服务器乘以10，客户端需要除以10后再使用, NOTE: 废弃不用
+
+    optional int32 continuousBankerExtra = 5; // 因连庄得分, NOTE: 废弃不用
+}
+
+// 小胡者的计分
+message MsgPlayerScoreMiniWin
+{
+    required int32 miniWinType = 1; // 小胡类型（可以多种类型复合）
+    required int32 miniWinBasicScore = 2; //  小胡底分, NOTE: 废弃不用
+    required int32 miniWinFlowerScore = 3; // 小胡花分, NOTE: 废弃不用
+    required int32 miniMultiple = 4; // 翻倍倍数，服务器乘以10，客户端需要除以10后再使用
+    required int32 miniWinTrimScore = 5; // 裁剪后最终的小胡分数（注意并不计入墩子分）, NOTE: 废弃不用
+
+    optional int32 continuousBankerExtra = 6; // 因连庄得分, NOTE: 废弃不用
+}
+
+// 一手牌结束后每个玩家的计分
+message MsgPlayerScore
+{
+    required int32 targetChairID = 1; // 玩家
+    required int32 winType = 2; // 赢牌类型自摸胡，吃铳胡，没胡
+    required int32 score = 3; // 以多少毛钱为单位
+    required int32 specialScore = 4; // 墩子分，或者杠分之类的
+    optional MsgPlayerScoreGreatWin greatWin = 5; // 如果是大胡，此项有效
+    optional MsgPlayerScoreMiniWin miniWin = 6;  // 如果是小胡，此项有效
+    optional int32 fakeWinScore = 7; // 由于包牌导致的收益/损失，或者韶关麻将中的歼牌损失
+    repeated int32 fakeList = 8; // 有包牌关系的玩家 列表, NOTE: 废弃不用
+    optional bool isContinuousBanker = 9; // 是否连庄，客户端根据此字段显示连庄字样
+    optional int32 continuousBankerMultiple = 10; // 连庄倍数
+}
+
+// 一手牌结束后计分
+message MsgHandScore
+{
+    repeated MsgPlayerScore playerScores = 1; // 玩家得分
+}
+
+// 一手牌结束通知
+message MsgHandOver
+{
+    required int32 endType = 1; // 结束类型：自模胡，吃铳胡，流局
+    repeated MsgPlayerCardList playerCardLists = 2; // 手牌列表
+    optional MsgHandScore scores = 3; // 分数
+    optional bool continueAble = 4; // 是否可以继续下手牌
+}
+
+// 更新玩家的GPS定位信息
+message MsgUpdateLocation
+{
+    required string userID = 1; // 用户ID
+    required string location = 2; // 位置信息，json格式
+}
+
+// 更新牌局内的道具配置
+message MsgUpdatePropCfg
+{
+    required string propCfg = 1; // 牌局内的道具配置
+}

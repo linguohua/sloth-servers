@@ -1,0 +1,392 @@
+syntax = "proto2";
+
+package accessory;
+
+//编译：
+//cd src/accessory
+//protoc --proto_path=./proto  --go_out=./src/accessory ./proto/accessory.proto
+
+
+enum MsgError {
+    ErrSuccess = 0; // 成功
+    ErrDecode = 1;  // 解码错误
+    ErrEncode = 2;  // 编码错误
+	ErrRoomExist = 3; // 房间已经存在，游戏服务返回
+    ErrNoRoomConfig = 4;  // 没有房间配置，游戏服务器返回
+    ErrServerIsFull = 5;  // 解码房间配置错误，游戏服务器返回
+	ErrDecodeRoomConfig = 6; // 解码房间配置错误
+	ErrRoomNotExist = 7;     // 服务器已经满
+	ErrDatabase = 8;     // 数据库错误
+	ErrRequestGameServerTimeOut = 9;  // 请求游戏服务器错误
+	ErrWaitGameServerSN = 10;     // 等待游戏服务器的序列出错
+	ErrRoomIDIsEmpty = 11;     // 房间ID为空
+	ErrNotRoomCreater = 12;  // 不是房间创建者
+	ErrGameIsPlaying = 13;  // 正在游戏中
+	ErrTokenIsEmpty = 14;     // token为空
+	ErrUserIdIsEmpty = 15;     // userID为空
+	ErrRoomNumberIsEmpty = 16;     // 房间6位数ID为空
+	ErrRoomNumberNotExist = 17;     // 房间6位数字ID不存在
+	ErrGameServerIDNotExist = 18;     // 游戏服务器ID不存在
+	ErrRoomCountIsOutOfLimit = 19;     // 用户房间数量已经满
+	ErrRequestInvalidParam = 20;     // 请求的参数无效
+	ErrTakeoffDiamondFailedNotEnough = 21;     // 剩余钻石不足
+	ErrTakeoffDiamondFailedIO = 22;     // IO数据库出错
+	ErrTakeoffDiamondFailedRepeat = 23;     // 已经扣取钻石
+	ErrGameServerUnsupportRoomType = 24;  // 游戏服务器不支持房间类型
+	ErrGameServerRoomExist = 25;		  // 游戏服务器已经存在这个房间
+    ErrGameServerNoRoomConfig = 26;		  // 游戏服务器没有房间配置
+    ErrGameServerDecodeRoomConfig = 27;	  // 游戏服务器解码房间配置错误
+    ErrGameServerRoomNotExist = 28;		  // 游戏服务器不存在这个房间
+	ErrUserInOtherRoom = 29; 		// 用户正在别的房间
+	ErrRoomIsFull = 30; 		// 房间里用户已满
+	ErrUserInBlacklist = 31;  // 用户在黑名单中
+	ErrUserCanNotCreateCLubRoom = 32;  // 用户不能创建俱乐部房间
+	ErrUserCanNotJoinCLubRoom = 33;   // 仅俱乐部使用的房间，请加入xxx(俱乐部ID)
+	ErrClubIDIsEmtpy = 34;   // 选择基金支付，必须是俱乐部成员
+	ErrRoomPriceCfgNotExist = 35;   // 服务器房间价格配置不存在
+	ErrUserCreateRoomLock = 36;   // 防止用户不断的点击创建房间
+	ErrGenerateRoomNumber= 37;    // 生成房间号失败
+	ErrGroupPayMasterDiamondNotEnough= 38;    // 生成房间号失败
+	ErrNotSupportGroupMasterPay = 39;    // 不支持群主支付
+	ErrOutOfMaxClubCreateRoomNum = 40;    // 超过了茶馆可以创建房最大数量
+	ErrOutOfMaxClubMemberCreateRoomNum = 41;    // 超过了茶馆成员可以创建房最大数量
+}
+
+
+enum MessageCode{
+    OPInvalid = 0; // 无效消息码
+    OPCreateRoom = 1; // 创建房间
+	OPDeleteRoom = 2; // 删除房间
+	OPChat = 3; // 聊天
+	OPGetRooms = 4;  // 获取房间列表
+	OPLoginReply = 5;  // 登录返回
+	OPRequestRoomInfo = 6; // 进入房间请求
+	OPLoadRooms = 7; // 拉取房间列表
+	OPUpdateUserInfo = 8; // 客户端更新用户信息到服务器
+	OPUpdateRoomState = 9; // 服务器向客户端更新房间状态信息
+	OPUpdateRoomList = 10; // 服务器向客户端更新房间列表
+	OPVoiceData = 11; // 语音消息
+	OPRequestUserScoreInfo = 12; // 服务器向客户端更新得分局数信息
+	OPUpdateUserMoney= 13; // 更新用户的钱
+	OPBroadcast = 14; // 广播给所有的客户端
+	OPSendUserInfo = 15; // 登陆后下发个人信息
+	OPUnicast = 16; // 发送消息给指定用户
+	OPUpdateMail = 17; //通知客户端有新邮件
+	OPLoginGifts = 18; //登录礼包
+	OPUpdateClubFun = 19; // 刷新俱乐部基金,内容是json
+	OPUpdateRoomPriceCfg = 20; // 刷新房间价格
+	OPNotifyUserRoomIsFull = 21; //通知用户，房间已满
+}
+
+// 消息包装，把其他消息体格式化为byte array，
+// 加上消息码构成一个AccessoryMessage，便于解析
+message AccessoryMessage {
+    required int32 Ops = 1;
+    optional bytes Data = 2;
+}
+
+// 房间类型
+enum RoomType{
+	// 大丰麻将
+    DafengMJ = 1;
+    // 贯蛋
+    GuanDang = 2;
+    // 东台
+    DongTaiMJ = 3;
+    // 盐城
+    YanChengMJ = 4;
+    // 韶关
+    ShaoGuanMJ = 5;
+    // 宁安
+    NingAnMJ = 6;
+    // 新疆杠后
+    XinJiangGH = 7;
+    // 大丰关张
+    DafengGZ = 8;
+    // 大丰7王523
+    Dafeng7w523 = 9;
+    // 牛牛
+    NiuNiu = 10;
+	// 斗地主
+    DDZ = 11;
+	// 新疆血流
+	XueLiuMJ = 12;
+	// 兰州麻将
+    LanZhouMJ = 13;
+    // 老兰州
+    LLanZouMJ = 14;
+    // 张掖
+    ZhangYeMJ = 15;
+}
+
+// 开房方式，如立即开局、代人开房
+enum OpenRoomType {
+	// 创建立即进入
+	CreateAndEnter = 1;
+	// 代别人开房
+	CreateForOther = 2;
+}
+
+//玩家创建房间
+message MsgCreateRoomReq
+{
+	required string config = 1; // JSON格式的规则
+	optional int32 exchangeId = 2; // 兑换Id
+	optional int32 roomType= 3; // 见RoomType
+	optional int32 openType= 4; // 见OpenRoomType
+	optional string clubID = 5; // 如果是俱乐部创建，则带上俱乐部ID
+	optional string arenaID = 6; // 比赛ID
+	repeated string userIDs = 7; // 创建比赛场的时候带所有用户ID到游戏服务器
+	optional int32 waitTime = 8; // 创建比赛场的时候带一个等待开局时间
+	optional string raceTemplateID = 9; // 比赛场模本ID
+}
+
+// 用户信息
+message UserProfile {
+	required string userID = 1; // 用户ID
+	optional string userName = 2; // 用户名
+	optional string nickName = 3; // 用户昵称
+}
+
+//玩家房间信息
+message RoomInfo
+{
+	required string roomID = 1; // 房间唯一ID
+	required string roomNumber = 2; // 房间6位数字ID
+	required string gameServerURL=3; // 房间所在的游戏服务器url
+	optional int32 state = 4; // 房间状态
+	optional string config = 5; // 房间配置,JSON格式
+	optional string timeStamp = 6; // 创建房间的时间截
+	repeated UserProfile users = 7; // 用户信息列表
+	optional int32 handStartted = 8; // 已经开始了多少轮牌局
+	optional uint32 lastActiveTime = 9; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	optional string propCfg = 10 ; // 道具配置
+	optional string arenaID = 11; // 比赛ID
+	optional string raceTemplateID = 12; // 比赛场模本ID
+}
+
+//玩家创建房间返回信息
+message MsgCreateRoomRsp
+{
+	required int32 result = 1; //0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
+	optional RoomInfo roomInfo = 2; //房间信息
+	optional int32 openType= 3; // 见OpenRoomType
+	optional string retMsg = 4; // result对应的字符串
+	optional int32 roomType= 5; // 见RoomType
+	optional int32 diamond= 6;  // 若创建成功返回剩下的钻石
+}
+
+//解散玩家创建的房间
+message MsgReleaseRoomReq
+{
+	required string roomID = 1; // 房间ID
+	optional int32 roomType= 2; // 见RoomType
+}
+
+//解散玩家创建的房间返回信息
+message MsgReleaseRoomRsp
+{
+	required int32 result = 1;  // 1:成功 4:房间不存在 5:不是你建的你解散个毛啊 6:正在游戏中你解散个毛啊
+	optional string roomID  = 2;// 被删除的房间号
+	optional string retMsg = 3; // result对应的字符串
+}
+
+
+// 聊天信息中的数据类型
+enum ChatDataType {
+	Text = 0; // 文本
+	Emoji = 1; // 表情
+	Voice = 2;  // 语音
+	Buildin = 3; // 内置消息
+
+}
+
+// 聊天消息的范围
+// 单播，房间内，游戏服务器内，全游戏（游戏一般会有多个服务器）
+// 目前只需要实现单播，和房间内即可
+enum ChatScopeType {
+	UniCast = 0; // 单播
+	InRoom = 1; // 房间内
+	InServer = 2; // 单个游戏服务器内
+	InAllServers = 3; // 所有游戏服务器
+}
+
+// 聊天消息
+message MsgChat {
+	required int32 scope = 1; // 本聊天信息的作用范围
+	optional string from = 2; // 谁发的
+	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
+	required int32 dataType = 4; // 聊天的数据类型
+	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
+}
+
+// 房间列表，主要用于把用户的房间列表保存到redis上
+message RoomIDList {
+    repeated string roomIDs = 1; // 房间ID列表
+}
+
+// 拉取房间列表返回
+message MsgLoadRoomListRsp {
+	required int32 result = 1; // 0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
+	repeated RoomInfo roomInfos = 2; //房间信息列表
+	optional string retMsg = 3; // 错误码对应的字符串
+}
+
+enum LoginState {
+    Faild = 0; // 失败
+    Success = 1;  // 成功
+	UserInBlacklist = 2;  //用户在黑名单中
+	ParseTokenError = 3; // 解析token错误
+
+}
+
+// 更新用户信息，包括定位信息等
+message MsgUpdateUserInfo {
+	required string location = 1; // 用户的定位信息
+}
+
+message RoomCost {
+	required uint32 handNum = 1; // 局数
+	required uint32 pay = 2; // 局数对应所需要的钻石
+}
+
+message MsgLoginReply {
+	required int32 result = 1; // 见LoginState
+	optional string token = 2; // 用userID生成的token
+	repeated RoomInfo roomInfos = 3; // 房间列表
+	optional string retMsg = 4; // result对应的字符串
+	optional RoomInfo lastRoomInfo = 5; // 玩家最后进入那间房间的信息 ，只有玩家3小时没退出来才有效
+	optional string roomDiscount = 6; // 折扣表
+
+}
+
+message MsgRequestRoomInfo {
+	required string roomNumber = 1; // 房间6位数ID
+}
+
+message MsgRequestRoomInfoRsp {
+	required int32 result = 1; // 见MsgError
+	optional RoomInfo roomInfo = 2; // 房间信息
+	optional string retMsg = 7; // 错误码对应的字符串
+}
+
+// 服务器向客户端更新房间状态
+message MsgUpdateRoomState {
+	required int32 state = 1; // 房间状态 RoomState
+    required string roomID = 2; // 房间ID
+	repeated UserProfile users = 3; // 玩家列表
+	required int32 handStartted = 4; // 房间已经开始了多少轮牌局
+	required uint32 lastActiveTime = 5; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+}
+
+// 服务器向客户端更新房间列表
+message MsgUpdateRoomList
+{
+    repeated RoomInfo roomInfos = 1; // 房间信息列表
+}
+
+// 个人信息 局数得分
+message MsgRequestUserScoreInfo {
+	required string userID = 1; // 用户ID
+	optional string gameID = 2; // 之前他们的服务器请求要带的,
+}
+
+message MsgRequestUserScoreInfoRsp {
+	required int32 maxWinScore = 1; 	// 最大单局得分
+	required int32 customCount = 2; 	// 约牌房总局数
+	optional int32 maxWinMoney = 3; 	// 最大单局赢金币
+	optional int32 coinCount   = 4; 	// 金币房总局数
+	optional string retMsg = 7; 		// 错误码对应的字符串
+}
+
+// 加载多个用户头像
+message MsgLoadUserHeadIconURI {
+	repeated string userIDs = 1;  // 用户ID
+}
+
+// 用户的头像信息
+message MsgHeadIconInfo {
+	required string userID = 1;   // 用户ID
+	optional uint32 sex = 2; //  用户性别，0未设置，1男性，2女性
+	optional string headIconURI = 3;   // 用户头像
+}
+
+// 用户头像信息列表
+message MsgLoadUserHeadIconURIReply {
+	required int32 result = 1 ; // 见MsgError
+	repeated MsgHeadIconInfo headIconInfos = 2;  //  用户头像信息列表
+	optional string retMsg = 3; // result对应的字符串
+}
+
+enum ActivityType {
+	Email = 1; // 邮件
+}
+
+// 更新用户的钱包
+message MsgUpdateUserMoney {
+	required uint32 diamond = 1; // 用户当前剩余砖石数量
+	optional uint32 activityType = 2; // 活动类型
+}
+
+// 回播房间信息
+message MsgAccReplayRoom
+{
+	required bytes replayRoomBytes = 1; // 字节流，客户端根据recordRoomType来解析
+	required int32 recordRoomType = 2; // 房间类型
+}
+
+// 回放房间记录概要列表
+message MsgAccLoadReplayRoomsReply
+{
+	repeated MsgAccReplayRoom replayRooms = 1; // 回播房间列表
+	optional int32 cursor = 2; // 游标, 分页拉取
+	optional int32 totalCursor = 3; // 当前房间列表个数，即最大游标
+}
+
+// 回放记录
+message MsgAccLoadReplayRecord
+{
+	required bytes replayRecordBytes = 1; // 字节流，客户端根据roomJSONConfig来解析
+	required string roomJSONConfig = 2; // 房间JSON配置
+}
+
+//玩家信息
+message MsgUserInfo
+{
+	required string uid = 1;
+	required string name = 2;
+	required int64 sex = 3;
+	required string protrait = 4;
+	required string token = 5;
+	required int64  diamond = 6;
+	required string nick = 7;
+	required int64  charm = 8;
+	required string  addr = 9;
+	required string  avatar = 10;
+	optional int64  dan = 11;
+	optional int64  gold = 12;
+}
+
+// 回放房间中的玩家信息
+message MsgReplayPlayerInfo
+{
+	required string userID = 1; // userID
+	optional string nick = 2;   // 名字
+	required int32 chairID = 3; // 椅子ID
+
+	optional int32 totalScore = 4; // 总得分
+	optional uint32 sex = 5; // 玩家性别
+	optional string headIconURI = 6; // 玩家头像URI
+	optional int32 avatarID = 7; // 头像框ID
+}
+
+// 回播房间记录
+message MsgReplayRoom
+{
+	required int32 recordRoomType = 1; // 房间类型
+	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required string roomNumber = 4; // 房间号，仅用于客户端显示
+	optional string roomConfigID = 8; // 房间配置ID
+	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+}

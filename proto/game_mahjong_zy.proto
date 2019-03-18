@@ -1,0 +1,20 @@
+syntax = "proto2";
+package mahjong;
+// 用于张掖麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum ZYGreatWinType
+{
+    ZYGreatWinType_None = 0;
+}
+
+// 张掖、兰州麻将之类的用于掉线恢复的扩展消息
+// 用于把当前状态，每个人抛分，每个人甩牌之类发下去
+message ZYMsgRestoreEx
+{
+    optional int32 followState = 1; // 当前流程的状态，0表示正在打牌；1表示正在抛分；2表示正在甩牌，如果是0则不需要解析余下数据
+    repeated int32 playersInCustomScoreState = 2; // 正在抛分的玩家座位ID
+    repeated int32 customScores = 3; // 每一个已经抛分的玩家ID+抛出去的分数
+    repeated int32 playersInSelfMeldState = 4; // 正在甩牌的玩家座位ID
+}

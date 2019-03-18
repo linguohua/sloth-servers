@@ -1,0 +1,51 @@
+syntax = "proto2";
+package pokerface;
+
+/**
+ * 本proto主要用于回播以及支持回播功能的相关消息
+ */
+
+// 回放房间中的玩家信息
+message MsgReplayPlayerInfo
+{
+	required string userID = 1; // userID
+	optional string nick = 2;   // 名字
+	required int32 chairID = 3; // 椅子ID
+
+	optional int32 totalScore = 4; // 总得分
+	optional uint32 sex = 5; // 玩家性别
+	optional string headIconURI = 6; // 玩家头像URI
+	optional int32 avatarID = 7; // 头像框ID
+}
+
+// 回放记录中玩家的得分信息
+message MsgReplayPlayerScoreSummary
+{
+	required int32 chairID = 1; // 玩家座位ID
+	required int32 score = 2;  // 玩家本手牌的得分
+	required int32 winType = 3; // 玩家本手牌的赢牌类型
+}
+
+// 手牌回放记录概要
+message MsgReplayRecordSummary
+{
+    required string recordUUID = 1; // 手牌回复记录的uuid，根据uuid获得完整的回播记录
+    repeated MsgReplayPlayerScoreSummary playerScores = 2; // 每个玩家的得分
+	required uint32 endTime = 3; // 手牌结束时间
+	optional string shareAbleID = 4; // 8位可以分享的ID
+	optional uint32 startTime = 5; // 手牌开始时间
+}
+
+// 回播房间记录
+message MsgReplayRoom
+{
+	required int32 recordRoomType = 1; // 房间类型
+	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required string roomNumber = 4; // 房间号，仅用于客户端显示
+
+	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+	repeated MsgReplayRecordSummary records = 6; // 每个房间可能有多局手牌记录
+
+	optional string ownerUserID = 7; // 房主ID
+}

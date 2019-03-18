@@ -1,0 +1,32 @@
+syntax = "proto2";
+package tacnpok;
+// 用于斗地主扑克牌的一些定义
+
+// 牌组类型
+enum CardHandType{
+    None = 0; // 无效牌型
+    C4A4 = 1; // 4 A 4
+    Roket = 2; // 火箭，也即是大小王一对子
+}
+
+// 一手牌局结束
+// 可能的结果是：流局、有人自摸胡牌、有人放铳其他人胡牌
+enum HandOverType
+{
+    enumHandOverType_Draw = 0; // 平局
+    enumHandOverType_Win = 1; // 赢
+    enumHandOverType_Lose = 2; // 输
+    enumHandOverType_Watch = 3; // 旁观
+}
+
+// 动作类型
+// 注意为了能够用一个int合并多个动作
+// 因此所有动作的值均为二进制bit field独立
+enum ActionType {
+    enumActionType_None = 0; // 无效动作
+    enumActionType_Abandon = 1; // 扣牌
+    enumActionType_Call_Bet = 2; // 下注
+    enumActionType_DRAW = 4; // 抽牌
+    enumActionType_Follow_Bet = 8; // 跟注
+    enumActionType_Win_SelfDrawn = 16; // 赢牌
+}

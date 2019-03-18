@@ -1,0 +1,74 @@
+syntax = "proto2";
+package club;
+
+enum ClubReplyCode
+{
+    RCNone = 0;
+    RCError = 1;
+    RCOperation = 2;
+}
+
+// 俱乐部角色定义
+enum ClubRoleType
+{
+    CRoleTypeNone = 0; // 无效角色
+    CRoleTypeMember = 1; // 成员
+    CRoleTypeCreator = 2; // 创建者
+    CRoleTypeOwner = 4; // 拥有者
+    CRoleTypeMgr = 8; // 管理者
+}
+
+enum ClubOperError
+{
+    CERR_OK = 0; // 没有错误
+    CERR_Exceed_Max_Club_Count_Limit = 1; // 超过最大限制
+    CERR_No_Valid_Club_Number = 2; // 无法申请到有效的俱乐部编号
+    CERR_Database_IO = 3; // 数据库错误
+    CERR_Encode_Decode = 4; // 编码解码错误
+    CERR_Invalid_Input_Parameter = 5; // 无效输入参数
+    CERR_Only_Creator_Can_KickOut = 6; // 只有创建者才可以踢人
+    CERR_You_Already_In_Club = 7; // 你已经在此俱乐部
+    CERR_You_Are_In_Club_Block_List = 8; // 你已经在此俱乐部黑名单，不能申请加入
+    CERR_You_Already_Applicate = 9; // 你已经申请过，请耐心等候部长批准
+    CERR_Invitee_Already_In_Club = 10; // 你已经在此俱乐部
+    CERR_Invitee_Are_In_Club_Block_List = 11; // 你已经在此俱乐部黑名单，不能申请加入
+    CERR_Invitee_Already_Applicate = 12; // 你已经申请过，请耐心等候部长批准
+    CERR_Club_Not_Exist = 13; // 俱乐部不存在
+    CERR_Only_Creator_Can_Invite = 14; // 只有部长可以邀请别人
+    CERR_Only_Creator_Can_Approve = 15; // 只有部长可以批准
+    CERR_No_Applicant = 16; // 没有对应的申请者
+    CERR_Applicant_Already_In_Club = 17; // 申请者已经是俱乐部成员
+    CERR_Applicant_In_Club_Block_List = 18; // 申请者在俱乐部的黑名单中
+    CERR_Token_Invalid = 19; // token无效
+    CERR_Club_Name_Too_Long = 20; // 俱乐部名字太长
+    CERR_Club_Name_Exist = 21; // 同名的俱乐部已经存在
+    CERR_Club_Only_Owner_Can_Disband = 22; // 只有部长可以解散俱乐部
+    CERR_Owner_Can_not_quit = 23; // 部长不能退出自己的俱乐部，只能解散
+    CERR_User_Not_In_Club = 24; // 玩家不在俱乐部中
+    CERR_Club_Only_Owner_Can_Set = 25; // 只有部长可以设置俱乐部
+    CERR_Club_Forbit_Join = 26; // 俱乐部禁止加入
+    CERR_Input_Text_Too_Long = 27; // 输入文字过长
+    CERR_Club_Has_Room_In_PlayingState = 28; // 俱乐部还有正在游戏中的房间，不能解散
+}
+
+enum ClubEventType
+{
+    CEVT_None = 0; // 无效事件ID
+    CEVT_ClubDisband = 1; // 俱乐部被解散
+    CEVT_NewApplicant = 2; // 新申请者
+    CEVT_Approval = 3; // 批准加入俱乐部
+    CEVT_Deny = 4; // 拒绝申请
+    CEVT_Join = 5; // 玩家加入俱乐部
+    CEVT_Quit = 6; // 玩家离开俱乐部
+    CEVT_Kickout = 7; // 踢出玩家
+}
+
+enum ClubFundEventType
+{
+    CFET_None = 0; // 无效事件
+    CFET_Add_By_Shop = 1; // 商城充值
+    CFET_Award_By_System = 3; // 系统奖励
+    CFET_Gift_By_System = 4; // 系统赠送
+    CFET_Reduce_By_Room = 5; // 开房扣除
+    CFET_Add_By_Room = 6; // 开房返还
+}

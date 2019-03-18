@@ -1,0 +1,50 @@
+syntax = "proto2";
+package pgd;
+// 用于掼蛋扑克牌的一些定义
+
+/*
+1．牌点由大到小排列为：大王、小王、级牌、A、K、Q、J、10、9、8、7、6、5、4、3、2。A在搭配成三连对、二连三、顺子、同花顺时，可作1。
+2．单张、对子、三连对、三同张、二连三、三带二、顺子，同牌型比较牌点大小，牌型之间不能压牌。三带二仅比较三同张牌点大小。
+3．炸弹：张数多者大，张数相同比较牌点大小。炸弹可压单张、对子、三连对、三同张、二连三、三带二、顺子等牌型。超过5张的炸弹可以压同花顺。
+4．同花顺：比较牌点大小。同花顺可压不超过5张的炸弹。
+5．四大天王：可压所有牌型。
+*/
+// 牌组类型
+enum CardHandType{
+    None = 0; // 无效牌型
+    Flush = 1; // 五张牌点相邻的单张。A在搭配成三连对、二连三、顺子、同花顺时，可作1。
+    Bomb = 2; // 四张或四张以上牌点相同的单张。
+    Single = 3; // 单张
+    Pair = 4; // 对子：两张牌点相同的牌，包括两张大王和两张小王。
+    Pair3X = 5; // 三连对：三个牌点相邻对子。A在搭配成三连对、二连三、顺子、同花顺时，可作1。
+    Triplet = 6; // 三同张：三张牌点相同的牌。
+    TripletPair = 7; // 三带二：一个三同张和一个对子。
+    Triplet2X = 8; // 二连三（钢板）：两个牌点相邻的三同张牌。A在搭配成三连对、二连三、顺子、同花顺时，可作1。
+    FlushRoket = 9; // 同花顺（火箭）：花色相同的顺子。A在搭配成三连对、二连三、顺子、同花顺时，可作1。
+    BigFour = 10; // 四大天王（天王炸）：大王、小王各两张
+}
+
+// 一手牌局结束
+// 可能的结果是：流局、有人自摸胡牌、有人放铳其他人胡牌
+enum HandOverType
+{
+    enumHandOverType_None = 0; // 没有胡牌，或者流局
+    enumHandOverType_Win_SelfDrawn  = 1; // 自摸胡牌
+    enumHandOverType_Win_Chuck = 2; //  放铳胡牌
+    enumHandOverType_Chucker = 3; //  放铳
+    enumHandOverType_Konger = 4; //  点杠者
+    enumHandOverType_Win_RobKong = 5; //  抢杠胡
+}
+
+// 动作类型
+// 注意为了能够用一个int合并多个动作
+// 因此所有动作的值均为二进制bit field独立
+enum ActionType {
+    enumActionType_None = 0; // 无效动作
+    enumActionType_SKIP = 1; // 过
+    enumActionType_DISCARD = 2; // 出牌
+    enumActionType_DRAW = 4; // 抽牌，斗地主里面用于通知所有人底牌以及把底牌给予地主同志
+    enumActionType_Win_SelfDrawn = 8; // 赢牌
+    enumActionType_Call = 16; // 叫地主
+    enumActionType_Rob = 32; // 抢地主
+}

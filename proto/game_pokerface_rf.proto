@@ -1,0 +1,40 @@
+syntax = "proto2";
+package prunfast;
+// 用于跑得快扑克牌的一些定义
+
+// 牌组类型
+enum CardHandType{
+    None = 0; // 无效牌型
+    Flush = 1; // 顺子，不考虑花色，只要连续5张或者5张以上，注意A2345这样可以形成对子；但是不能JQKA2，只能10JQKA
+    Bomb = 2; // 炸弹，4张相同的牌，或者3张Ace，如果4张3都在同一个玩家手上那么红桃3如果打出去了，剩余的3个3也可以组成炸弹
+    Single = 3; // 单张
+    Pair = 4; // 对子，注意可以连对，比如说22,33,44，连续对子个数无限制，那么理论上就是12对（跑得快只保留红桃2）
+    Pair2X = 5; // 连对，比如说22,33,44，连续对子个数无限制，那么理论上就是12对（跑得快只保留红桃2）
+    Triplet = 6; // 三张
+    TripletPair = 7; // 三带二，二必须是对子,只有一个三张以及一个对子
+    Triplet2X = 8; // 连续若干个3张，例如333,444,555
+    Triplet2X2Pair = 9; // 连续三张带两对子，至少两个连续的三张；两个对子（不连续也没关系）
+}
+
+// 一手牌局结束
+// 可能的结果是：流局、有人自摸胡牌、有人放铳其他人胡牌
+enum HandOverType
+{
+    enumHandOverType_None = 0; // 没有胡牌，或者流局
+    enumHandOverType_Win_SelfDrawn  = 1; // 自摸胡牌
+    enumHandOverType_Win_Chuck = 2; //  放铳胡牌
+    enumHandOverType_Chucker = 3; //  放铳
+    enumHandOverType_Konger = 4; //  点杠者
+    enumHandOverType_Win_RobKong = 5; //  抢杠胡
+}
+
+// 动作类型
+// 注意为了能够用一个int合并多个动作
+// 因此所有动作的值均为二进制bit field独立
+enum ActionType {
+    enumActionType_None = 0; // 无效动作
+    enumActionType_SKIP = 1; // 过
+    enumActionType_DISCARD = 2; // 出牌
+    enumActionType_DRAW = 4; // 抽牌，暂时无用
+    enumActionType_Win_SelfDrawn = 8; // 赢牌
+}

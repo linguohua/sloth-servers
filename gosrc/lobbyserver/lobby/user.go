@@ -1,0 +1,190 @@
+package lobby
+
+import (
+	"encoding/binary"
+	"encoding/hex"
+	"gconst"
+	"strings"
+	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+
+	proto "github.com/golang/protobuf/proto"
+	"github.com/gorilla/websocket"
+)
+
+// User 表示一个用户
+type User struct {
+	uID              string          // 用户唯一ID
+	ws               *websocket.Conn // websocket 连接对象
+	wg               sync.WaitGroup
+	lastReceivedTime time.Time
+	lastPingTime     time.Time
+
+	wsLock *sync.Mutex // websocket并发写锁
+
+	sqllock *sync.Mutex
+}
+
+// newUser 新建用户对象
+func newUser(ws *websocket.Conn, userID string) *User {
+	u := &User{}
+	u.uID = userID
+	u.ws = ws
+	u.lastPingTime = time.Now()
+	u.lastReceivedTime = time.Now()
+	u.wsLock = &sync.Mutex{}
+	u.sqllock = &sync.Mutex{}
+
+	u.wg.Add(1)
+
+	return u
+}
+
+func (u *User) sendPing() {
+	if u.ws != nil {
+		u.wsLock.Lock()
+		u.ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		u.wsLock.Unlock()
+	}
+}
+
+func (u *User) sendPong(msg string) {
+	if u.ws != nil {
+		u.wsLock.Lock()
+		u.ws.WriteMessage(websocket.PongMessage, []byte(msg))
+		u.wsLock.Unlock()
+	}
+}
+
+func (u *User) userID() string {
+	return u.uID
+}
+
+// reBind 重新绑定websocket
+func (u *User) reBind(ws *websocket.Conn) {
+	if u.ws != nil {
+		u.ws.Close()
+	}
+
+	u.ws = ws
+}
+
+func (u *User) send(bytes []byte) {
+	if u.ws != nil {
+		// log.Println(string(bytes))
+		u.wsLock.Lock()
+		u.ws.WriteMessage(websocket.BinaryMessage, bytes)
+		u.wsLock.Unlock()
+	}
+}
+
+func (u *User) sendMsg(pb proto.Message, ops int32) {
+	accessoryMessage := &AccessoryMessage{}
+	accessoryMessage.Ops = &ops
+
+	if pb != nil {
+		bytes, err := proto.Marshal(pb)
+
+		if err != nil {
+			log.Panic("sendMsg, marshal msg failed")
+			return
+		}
+		accessoryMessage.Data = bytes
+	}
+
+	bytes, err := proto.Marshal(accessoryMessage)
+	if err != nil {
+		log.Panic("sendMsg, marshal msg failed")
+		return
+	}
+
+	u.send(bytes)
+}
+
+func (u *User) onWebsocketClosed(ws *websocket.Conn) {
+	// if u.ws == ws {
+	// 	userMgr.removeUser(u)
+	// }
+}
+
+func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
+	accessoryMessage := &AccessoryMessage{}
+	err := proto.Unmarshal(message, accessoryMessage)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var msgCode = MessageCode(accessoryMessage.GetOps())
+
+	switch msgCode {
+	// case MessageCode_OPCreateRoom:
+	// 	onMessageCreateRoom(u, accessoryMessage)
+	// 	break
+	// case MessageCode_OPRequestRoomInfo:
+	// 	onMessageRequestRoomInfo(u, accessoryMessage)
+	// 	break
+	case MessageCode_OPDeleteRoom:
+		// onMessageDeleteRoom(u, accessoryMessage)
+		break
+	case MessageCode_OPChat:
+		onMessageChat(u, accessoryMessage)
+		break
+	case MessageCode_OPUpdateUserInfo:
+		onMessageUpdateUserInfo(u, accessoryMessage)
+		break
+	case MessageCode_OPVoiceData:
+		onMessageVoiceChat(u, message)
+		break
+	default:
+		log.Println("onMessage unsupported msgCode:", msgCode)
+		break
+	}
+}
+
+func userID2Str(userID int64) string {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(userID))
+	return hex.EncodeToString(b)
+}
+
+func (u *User) saveAuthInfo(userInfo *UserInfo, realIP string) {
+	log.Println("saveAuthInfo")
+	if userInfo == nil {
+		userInfo = &UserInfo{}
+	}
+
+	var ws = u.ws
+	remoteAddr := ws.RemoteAddr().String()
+	addrs := strings.Split(remoteAddr, ":")
+	var ip = realIP
+	if ip == "" && len(addrs) == 2 {
+		ip = addrs[0]
+	}
+
+	// 查询钻石
+	// TODO: llwant mysql
+	// diamond, _ := webdata.QueryDiamond(u.uID)
+	// log.Println("ip:", ip)
+	diamond := 0
+	conn := pool.Get()
+	defer conn.Close()
+
+	conn.Do("HMSET", gconst.AsUserTablePrefix+u.uID, "userName", userInfo.SdkUserName, "userNick", userInfo.SdkUserNick, "userSex", userInfo.SdkUserSex, "userLogo", userInfo.SdkUserLogo, "ip", ip, "diaomond", diamond)
+}
+
+func (u *User) detach() {
+	if u.ws != nil {
+		u.ws.Close()
+		u.ws = nil
+	}
+}
+
+func (u *User) updateMoney(diamond uint32) {
+	var updateUserMoney = &MsgUpdateUserMoney{}
+	var userDiamond = diamond
+	updateUserMoney.Diamond = &userDiamond
+	u.sendMsg(updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
+}

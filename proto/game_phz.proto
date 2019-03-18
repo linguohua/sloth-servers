@@ -1,0 +1,302 @@
+syntax = "proto2";
+package phza;
+
+// 牌的ID
+enum TileID {
+	CH1 = 0; // 小字
+	CH2 = 1;
+	CH3 = 2;
+	CH4 = 3;
+	CH5 = 4;
+	CH6 = 5;
+	CH7 = 6;
+	CH8 = 7;
+	CH9 = 8;
+	CH10 = 9;
+	CCH1 = 10; // 大字
+	CCH2 = 11;
+	CCH3 = 12;
+	CCH4 = 13;
+	CCH5 = 14;
+	CCH6 = 15;
+	CCH7 = 16;
+	CCH8 = 17;
+	CCH9 = 18;
+	CCH10 = 19;
+	KING = 20; // 王
+
+	TILE_MAX = 21;
+}
+
+enum MessageCode{
+    OPInvalid = 0; // 无效消息码
+    OPAction = 1; // 动作
+    OPActionResultNotify = 2; // 动作通知
+    OPActionAllowed = 3; // 动作允许，对一个玩家，请求其出牌等
+    OPReActionAllowed = 5; // 动作允许，对多个玩家，在某个玩家出牌后，请求其余玩家吃椪杠胡等
+    OPDeal = 6; // 发牌
+    OPHandOver = 7; // 本手牌结果
+    OPRestore = 8; // 断线、奔溃恢复，注意恢复过程是由若干个消息构成，先是OPRoomUpdate，然后是OPRestore(消息体是MsgRestore)，然后是OPActionAllowed或者OPReActionAllowed
+    OPPlayerLeaveRoom = 9; // 玩家离开房间，客户端会请求服务器其离开房间
+    OPPlayerEnterRoom = 10; // 玩家进入房间，客户端不会发送该消息，仅用于通知客户端
+    OPDisbandRequest = 11 ; // 解散牌局
+    OPDisbandNotify = 12; // 解散牌局询问其他玩家是否同意，或者通告解散的当前状态（谁同意，谁拒绝，谁正在思考）
+    OPDisbandAnswer = 13; // 解散牌局答复
+    OPPlayerReady = 14; // 玩家准备好
+    OPRoomDeleted = 15; // 房间被删除，本消息没有消息体，仅一个命令字，客户端收到后退出房间
+    OPRoomUpdate = 16; // 更新房间信息，主要是玩家状态变更
+    OPRoomShowTips = 17; // 要求客户端显示一段提示信息
+    OPGameOver = 18; // 房间游戏结束
+    OPKickout = 19; // 踢玩家出房间
+    OPDonate = 20; // 玩家打赏给另一个玩家
+    OPUpdateLocation = 21; // 更新玩家的GPS定位信息
+    OP2Lobby = 22; // 切换到大厅，连接断开，但是服务器保留玩家座位，并重置状态到offline状态，当且仅当游戏没开始时允许所有客户端发送这个请求
+    OPUpdatePropCfg = 23; // 更新牌局内的道具配置
+}
+
+// 消息包装，把其他消息体格式化为byte array，
+// 加上消息码构成一个GameMessage，便于解析
+message GameMessage {
+    required int32 Ops = 1;
+    optional bytes Data = 2;
+}
+
+// 牌组（面子）类型
+enum MeldType{
+	enumMeldTypeNone = 0;
+    enumMeldTypeSeqContinuous = 1; // 顺子
+	enumMeldTypeSeq2710 = 2; // 2.7.10 顺子
+	enumMeldTypeLCross = 3; // 小面
+	enumMeldTypeUCross = 4; // 大面		
+    enumMeldTypeKot = 5; // 刻子
+	enumMeldTypeFKot = 6; // 啸
+	enumMeldTypePong = 7; // 碰
+	enumMeldTypeFXKot = 8; // 臭啸	
+    enumMeldTypeQingKong = 9; // 倾
+    enumMeldTypePowKong = 10; // 跑
+	enumMeldTypeDragon = 11; // 龙
+	enumMeldTypeEye = 12; // 眼
+}
+
+// 牌组
+message MsgMeldTile {
+    required int32 meldType = 1; // 牌组类型
+    required int32 tile1 = 2; // 第一个牌
+    optional int32 contributor = 3; // 贡献者座位ID，例如碰牌时，此处指明是碰哪家的牌
+    optional int32 chowTile = 4; // 吃牌时，指明吃那个牌，由于tile1只能指明牌组第一个牌，因此为吃牌加上这个field
+	repeated int32 tileList = 5; // 牌列表，当且仅当有王时，服务器会填充该列表，客户端可以使用该列表完整显示牌组
+}
+
+// 玩家麻将牌列表
+// 包含了所有客户端需要用于展示的列表
+// 客户端根据需要读取对应的列表进行展示
+// 对于自己，所有列表都有数据
+// 别人的牌，则只有部分列表有数据（例如花牌列表）
+message MsgPlayerTileList {
+    required int32 chairID = 1; // 玩家座位ID
+    required int32 tileCountInHand = 2; // 玩家手上的牌数量（用于其他玩家显示手牌数）
+    repeated int32 tilesHand = 3; // 玩家手上的牌（暗牌）
+    repeated int32 tilesFlower = 4; // 玩家的花牌
+    repeated int32 tilesDiscard = 5; // 玩家打出去的牌
+    // 牌组（顺子，刻子，杠牌）列表，需要明牌示人
+    // 对于暗杠牌，客户端需要暗牌示人
+    // 落地牌组（也即是吃椪杠牌组，需要显示给所有人看到，注意暗杠仅需要一个标记）
+    repeated MsgMeldTile melds = 6;
+}
+
+// 发牌
+// 服务器下发给客户端
+// 客户端收到消息后，做如下处理：
+// 1. 显示自己的牌
+// 2. 显示其他人的牌（暗牌，庄家14张）
+// 3. 显示庄家
+// 4. 显示所有人的花牌
+message MsgDeal {
+    required int32 bankerChairID = 1; // 庄家座位ID
+    required int32 windFlowerID = 2; // 当做花牌的风牌id
+    repeated MsgPlayerTileList playerTileLists = 3; // 所有玩家的牌列表
+    required int32 tilesInWall = 4; // 牌墙剩余张数
+    optional int32 dice1 = 5; // 第一个骰子
+    optional int32 dice2 = 6; // 第二个骰子
+    optional bool isContinuousBanker = 7; // bankerChairID是否连庄
+    optional int32 markup = 8; // 暂时用于盐城麻将的加价局计数
+}
+
+// 动作类型
+// 注意为了能够用一个int合并多个动作
+// 因此所有动作的值均为二进制bit field独立
+enum ActionType {
+    enumActionType_SKIP = 1; // 过
+    enumActionType_DISCARD = 2; // 出牌
+    enumActionType_DRAW = 4; // 抽牌
+    enumActionType_CHOW = 8; // 吃
+    enumActionType_PONG = 16; // 碰
+    enumActionType_POW = 32; // 跑
+    enumActionType_QING = 64; // 倾
+    enumActionType_WIN_Chuck = 128; // 放铳胡牌（非自摸:有人放铳也即是国内的放炮、点炮）
+    enumActionType_WIN_SelfDrawn= 256; // 自摸胡牌
+    enumActionType_FKot = 512; // 啸
+    enumActionType_FXKot = 1024; // 臭啸，F mean Fuck
+    enumActionType_Call = 2048; // 飘
+	enumActionType_DeadLock = 4096; // 死手了
+	enumActionType_CHOW_With = 8192; // 下火
+}
+
+// 打牌提示
+message MsgReadyHandTips
+{
+    required int32 targetTile =  1; // 打出哪一张
+    repeated int32 readyHandList = 2; // 打出该牌后，可以听得牌列表 [牌id，剩余张数，牌id，剩余张数...]
+}
+
+// 服务器准许客户端做游戏动作
+// 服务器发送给客户端
+// 客户端收到本消息后，于界面上提示或者允许用户操作
+// 在用户操作完成后（或者超时），发送MsgPlayerAction消息给服务器
+message MsgAllowPlayerAction {
+    required int32 qaIndex = 1; // QA索引，参考 MsgPlayerAction 中说明
+    required int32 actionChairID = 2; // 本动作允许的目标，如果是自己则客户端展示操作界面
+    required int32 allowedActions = 3; // 所有当前服务器期待/允许的动作
+    optional int32 timeoutInSeconds = 4; // 默认超时时间，首次消息服务器会下发
+    repeated MsgMeldTile meldsForAction = 5; // 允许暗杠、加杠时面子牌列表
+	repeated MsgReadyHandTips tipsForAction = 6; // 允许出牌动作时指定受限的牌列表
+}
+
+// 服务器准许客户端做游戏动作
+// 服务器发送给客户端
+// 客户端收到本消息后，于界面上提示或者允许用户操作
+// 在用户操作完成后（或者超时），发送MsgPlayerAction消息给服务器
+message MsgAllowPlayerReAction {
+    required int32 qaIndex = 1; // QA索引，参考 MsgPlayerAction 中说明
+    required int32 actionChairID = 2; // 本动作允许的目标，如果是自己则客户端展示操作界面
+    required int32 allowedActions = 3; // 所有当前服务器期待/允许的动作
+    optional int32 timeoutInSeconds = 4; // 默认超时时间，首次消息服务器会下发
+    repeated MsgMeldTile meldsForAction = 5; // 允许吃碰杠牌时面子牌列表
+    required int32 victimTileID = 6; // 允许吃、碰、杠、胡的牌
+    required int32 victimChairID = 7; // 被吃椪杠、胡的人
+}
+
+// 玩家执行动作
+// 客户端必须是收到服务器允许动作消息并
+// 通过界面让玩家完成操作之后，通过该消息通知服务器用户执行了动作
+// 客户端需要填写正确的qaIndex，以及action（这两个参数都是从服务器下发）
+message MsgPlayerAction {
+    // QA索引，该索引是服务器通过出牌许可消息下发的，客户端需要回填于此
+    // QA索引的目的是为了服务器对消息的控制：服务器对于新收到的消息如果其QA索引
+    // 不等于服务器当前期待的QA索引，服务器将会抛弃该消息
+    // QA索引就是流水号，QA代表Question&Answer
+    // 本文档其余处QA索引意义与此一致
+    required int32 qaIndex = 1;
+    required int32 action = 2; // 动作
+    optional int32 flags = 3; // 其他标记，目前只用做听牌标记，如果是1，则表示出牌后要求听牌
+    optional int32 tile = 4; // 动作的目标牌ID
+    optional int32 meldType = 5; // 动作的目标面子牌组,由于客户端用的lua组件不能正确保存optional message类型，把MsgMeld拆开
+    optional int32 meldTile1 = 6; // 动作的目标面子牌组,由于客户端用的lua组件不能正确保存optional message类型，把MsgMeld拆开
+
+	optional int32 chowWith1 = 7; // 下火选择
+	optional int32 chowWithType1 = 8; // 下火选择类型
+	optional int32 chowWith2 = 9; // 下火选择
+	optional int32 chowWithType2 = 10; // 下火选择类型
+}
+
+// 服务器通知所有玩家某个玩家进行了何种动作
+// 客户端收到消息后，对界面进行更新或者播放对应动作动画
+message MsgActionResultNotify {
+    required int32 targetChairID = 1; // 动作者
+    required int32 action = 2;  // 动作名
+    optional int32 actionTile = 3; // 动作目标牌，注意如果是抽牌动作，该field表示抽到的非花牌，重要的是，如果没有手牌可抽只抽到花牌，那么该field为1+enumTid_MAX
+    optional MsgMeldTile actionMeld = 4; // 动作目标牌组
+    repeated int32 newFlowers = 5; // 抽牌通知时，下发新抽的花牌，大丰特殊需求：如果此域不为空，表明需要替换暗杠列表
+    optional int32 tilesInWall = 6; // 牌墙剩余牌张数
+    optional bool waitDiscardReAction = 7; // 是否需要等待其他人操作
+}
+
+// 掉线恢复
+message MsgRestore
+{
+    required MsgDeal msgDeal = 1; // 所有人的牌数据，复用MsgDeal
+    repeated int32 readyHandChairs = 2; // 所有听牌者的座位ID
+    optional int32 lastDiscaredChairID = 3; // 最后一个打出牌的玩家，注意如果最后一个操作是吃椪杠，那么最后一张打出去的牌已经被夺走，因此该field无效
+    optional bool isMeNewDraw = 4; // 是否是我刚刚新抽的牌，这个变量主要用于告诉客户端，不要对手牌最后一张进行排序
+    optional bool waitDiscardReAction = 5; // 是否需要等待其他人操作
+    repeated int32 flyReadyHandChairs = 6; // 所有飞听牌者的座位ID，盐城麻将
+    optional bytes extra = 7; // 扩展
+}
+
+// 一手牌局结束
+// 可能的结果是：流局、有人自摸胡牌、有人放铳其他人胡牌
+enum HandOverType
+{
+    enumHandOverType_None = 0; // 没有胡牌，或者流局
+    enumHandOverType_Win_SelfDrawn  = 1; // 自摸胡牌
+    enumHandOverType_Win_Chuck = 2; //  放铳胡牌
+    enumHandOverType_Chucker = 3; //  放铳
+    enumHandOverType_Konger = 4; //  点杠者
+    enumHandOverType_Win_RobKong = 5; //  抢杠胡
+}
+
+// 大胡者的计分
+message MsgPlayerScoreGreatWin
+{
+    required int32 baseWinScore = 1; // 基本的赢牌分数，也即是trimGreatWinPoints乘以每个辣子对应的分数, NOTE: 废弃不用
+    required int32 greatWinType = 2; // 大胡类型（可以多种类型复合）
+    required int32 greatWinPoints = 3; // 辣子数，服务器乘以10，客户端需要除以10后再使用
+    required int32 trimGreatWinPoints = 4; // 裁剪后的辣子数（因为有个封顶限制），服务器乘以10，客户端需要除以10后再使用, NOTE: 废弃不用
+
+    optional int32 continuousBankerExtra = 5; // 因连庄得分, NOTE: 废弃不用
+}
+
+// 小胡者的计分
+message MsgPlayerScoreMiniWin
+{
+    required int32 miniWinType = 1; // 小胡类型（可以多种类型复合）
+    required int32 miniWinBasicScore = 2; //  小胡底分, NOTE: 废弃不用
+    required int32 miniWinFlowerScore = 3; // 小胡花分, NOTE: 废弃不用
+    required int32 miniMultiple = 4; // 翻倍倍数，服务器乘以10，客户端需要除以10后再使用
+    required int32 miniWinTrimScore = 5; // 裁剪后最终的小胡分数（注意并不计入墩子分）, NOTE: 废弃不用
+
+    optional int32 continuousBankerExtra = 6; // 因连庄得分, NOTE: 废弃不用
+}
+
+// 一手牌结束后每个玩家的计分
+message MsgPlayerScore
+{
+    required int32 targetChairID = 1; // 玩家
+    required int32 winType = 2; // 赢牌类型自摸胡，吃铳胡，没胡
+    required int32 score = 3; // 以多少毛钱为单位
+    required int32 specialScore = 4; // 墩子分，或者杠分之类的
+    optional MsgPlayerScoreGreatWin greatWin = 5; // 如果是大胡，此项有效
+    optional MsgPlayerScoreMiniWin miniWin = 6;  // 如果是小胡，此项有效
+    optional int32 fakeWinScore = 7; // 由于包牌导致的收益/损失，或者韶关麻将中的歼牌损失
+    repeated int32 fakeList = 8; // 有包牌关系的玩家 列表, NOTE: 废弃不用
+    optional bool isContinuousBanker = 9; // 是否连庄，客户端根据此字段显示连庄字样
+    optional int32 continuousBankerMultiple = 10; // 连庄倍数
+}
+
+// 一手牌结束后计分
+message MsgHandScore
+{
+    repeated MsgPlayerScore playerScores = 1; // 玩家得分
+}
+
+// 一手牌结束通知
+message MsgHandOver
+{
+    required int32 endType = 1; // 结束类型：自模胡，吃铳胡，流局
+    repeated MsgPlayerTileList playerTileLists = 2; // 手牌列表
+    optional MsgHandScore scores = 3; // 分数
+    optional bool continueAble = 4; // 是否可以继续下手牌
+}
+
+// 更新玩家的GPS定位信息
+message MsgUpdateLocation
+{
+    required string userID = 1; // 用户ID
+    required string location = 2; // 位置信息，json格式
+}
+
+// 更新牌局内的道具配置
+message MsgUpdatePropCfg
+{
+    required string propCfg = 1; // 牌局内的道具配置
+}

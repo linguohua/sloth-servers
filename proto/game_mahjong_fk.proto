@@ -1,0 +1,23 @@
+syntax = "proto2";
+package mahjong;
+// 用于FK麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum FKGreatWinType
+{
+    enumFKGreatWinType_None = 0;
+
+    enumFKGreatWinType_ClearFront = 1; // 门清
+
+    enumFKGreatWinType_WinAsBanker = 2; // 庄家赢牌
+    enumFKGreatWinType_WinAsSelfDrawn = 4; // 自摸赢牌
+    enumFKGreatWinType_LoseAsBanker = 8; // 庄家输牌
+	
+	enumFKGreatWinType_PureSame = 16; // 清一色，用于非混玩法
+	enumFKGreatWinType_PongKong = 32; // 飘胡，用于非混玩法
+	enumFKGreatWinType_SevenPair = 64; // 7对，用于非混玩法
+	enumFKGreatWinType_SoloWin = 128; // 夹胡，也就是仅听一种并胡这一种
+	enumFKGreatWinType_EyeWin = 256; // 定向胡，也就是单吊
+	enumFKGreatWinType_OpponentsCF = 512; // 三清
+}

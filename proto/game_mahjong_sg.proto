@@ -1,0 +1,29 @@
+syntax = "proto2";
+package mahjong;
+// 用于韶关麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum SGGreatWinType
+{
+    SGGreatWinType_None = 0;
+    SGGreatWinType_PongKong = 1; // 对对胡（4倍）：玩家手牌除了一对对牌以外，剩下的都是三张一对的。如111222444索33399筒。又称碰碰胡(手上有4个相同牌没有杠的话则组不成对对胡)
+    SGGreatWinType_PureSame = 2; // 清一色（8倍）：玩家胡牌的手牌全部都是一门花色。如11333222456999筒(索)。
+    SGGreatWinType_MixedSame = 4; // 混一色（4倍）：玩家胡牌的手牌全部都是一门花色。如11333222456筒(索)东东东。但手上牌（包括碰和杠）的牌里有番子牌
+    SGGreatWinType_MixPongKong = 8; // 混对（8倍）：玩家手上的牌是清一色的对对胡。如99977755511筒(索)东东东。但手上牌（包括碰和杠）的牌里有番子牌
+    SGGreatWinType_PurePongKong = 32; // 清对（16倍）：玩家手上的牌是清一色的对对胡。如99977755511筒(索)。
+    SGGreatWinType_Suit19 = 64; // 混幺九（16倍）：由幺九牌和东、南、西、北风、中、发、白组成的牌型。(如3个9筒, 3个1索, 3个9索,3个西风,1对红中），又称混幺九
+    SGGreatWinType_AllHonor = 128; // 字一色 全番（32倍）：由东、南、西、北风、中、发、白组成的牌型。（如3个东, 3个北, 3个发,3个南,1对白板），又称字一色
+    SGGreatWinType_ThirteenOrphans = 256; // 十三幺（32倍）：由东、南、西、北、中、发、白、一万、九万、一饼、九饼、幺鸡、九条，再额外加上以上 13 张牌中的任意一张牌组成的牌型既为十三幺。
+}
+
+// 韶关麻将手牌结算时一些标志
+// 该值填写于MsgPlayerScore的fakeWinScore域
+enum SGHandOverExtraFlags
+{
+    SGHOFlags_None = 0;
+    SGHOFlags_Faker = 1; // 歼牌
+    SGHOFlags_FollowBanker = 2; // 跟庄
+    SGHOFlags_ExposedKong2SelfDrawn = 4; // 杠上开花
+    SGHOFlags_SelfDrawn = 8; // 自摸两倍
+}

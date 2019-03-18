@@ -1,0 +1,28 @@
+syntax = "proto2";
+package mahjong;
+// 用于泰安麻将的一些枚举定义
+
+// 大胡
+// 大胡类型，一手牌可以有多种大胡类型
+enum TacnGreatWinType
+{
+    enumTacnGreatWinType_None = 0;
+
+    enumTacnGreatWinType_PureSame = 1; // 清一色：胡牌序列中全是一种数字牌（一共3种数字牌：万子，条子，筒子），例如一手牌全是万子，或者全是条子
+    enumTacnGreatWinType_MixedSame = 2; // 混一色：胡牌序列中有且仅有一种数字牌，且余下的是风牌（注意不能是中发牌这三种箭牌）
+    enumTacnGreatWinType_SevenPair = 4; // 七对：7对不一样的牌组成的胡牌。
+    enumTacnGreatWinType_Heaven = 8; // 天胡：庄家起手摸第14只牌，产生胡牌.
+    enumTacnGreatWinType_Earth = 16; // 地胡
+    enumTacnGreatWinType_Richi = 32; // 起手报听胡牌：起手报听，报听后胡牌。
+    enumTacnGreatWinType_OpponentsRichi = 64; // 对手报听
+    enumTacnGreatWinType_Kong2SelfDrawn= 128; // 杠上开花
+    enumTacnGreatWinType_Kong2Chucker = 256; // 杠上点炮
+
+    enumTacnGreatWinType_WinAsBanker = 512; // 庄家赢牌
+    enumTacnGreatWinType_WinAsSelfDrawn = 1024; // 自摸赢牌
+    enumTacnGreatWinType_WinAsAllPongKong = 2048; // 飘胡
+    enumTacnGreatWinType_LoseAsBanker = 4096; // 庄家输牌
+    enumTacnGreatWinType_LoseAsNoExposedMeld = 8192; // 未开门
+    enumTacnGreatWinType_LoseAsSuit3 = 16384; // 未清门
+	enumTacnGreatWinType_LoseAsSingleHonor = 32768; // 未清风
+}
