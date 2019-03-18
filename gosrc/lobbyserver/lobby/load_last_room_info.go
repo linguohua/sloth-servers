@@ -1,15 +1,16 @@
 package lobby
 
 import (
-	log "github.com/sirupsen/logrus"
+	"encoding/json"
 	"gconst"
 	"strconv"
 	"time"
-	"encoding/json"
+
 	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 
-func getPropCfg(roomType int)string{
+func getPropCfg(roomType int) string {
 	// conn := pool.Get()
 	// defer conn.Close()
 
@@ -26,6 +27,11 @@ func getPropCfg(roomType int)string{
 	}
 
 	return string(buf)
+}
+
+// LoadUserLastEnterRoomID load last enter room
+func LoadUserLastEnterRoomID(userID string) string {
+	return loadUserLastEnterRoomID(userID)
 }
 
 func loadUserLastEnterRoomID(userID string) string {
@@ -105,13 +111,13 @@ func loadLastRoomInfo(userID string) *RoomInfo {
 		return nil
 	}
 
-	roomTypeInt, _:=strconv.Atoi(roomType)
+	roomTypeInt, _ := strconv.Atoi(roomType)
 
 	var roomInfo = &RoomInfo{}
 	roomInfo.RoomID = &enterRoomID
 	roomInfo.RoomNumber = &roomNumber
 	roomInfo.GameServerURL = &gameServerURL
-	roomInfo.ArenaID =&arenaID
+	roomInfo.ArenaID = &arenaID
 	roomInfo.RaceTemplateID = &raceTemplateID
 	var propCfg = getPropCfg(roomTypeInt)
 	roomInfo.PropCfg = &propCfg

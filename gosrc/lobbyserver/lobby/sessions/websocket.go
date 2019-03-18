@@ -1,6 +1,8 @@
 package sessions
 
 import (
+	"lobbyserver/config"
+	"lobbyserver/lobby"
 	"net/http"
 	"time"
 
@@ -58,10 +60,10 @@ func waitWebsocketMessage(ws *websocket.Conn, user *User, r *http.Request) {
 }
 
 func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
-	userID, ok := verifyToken(r)
+	userID, ok := lobby.VerifyToken(r)
 	if !ok {
 		log.Println("verifyUser failed")
-		replyLoginError(ws, int32(LoginState_ParseTokenError))
+		lobby.ReplyLoginError(ws, int32(lobby.LoginState_ParseTokenError))
 		return
 	}
 
@@ -75,7 +77,7 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 
 	userMgr.addUser(user)
 
-	loginReply(ws, userID)
+	lobby.LoginReply(ws, userID)
 
 	defer func() {
 		userMgr.removeUser(user)
@@ -101,9 +103,16 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	tryAcceptUser(ws, r)
 }
 
+// InitWith init
 func InitWith(mainRouter *mux.Router) {
 	userMgr = newUserMgr()
 
 	startAliveKeeper()
 
+	lobby.SessionMgr = userMgr
+
+	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
+	sessions.HandleFunc("/", acceptWebsocket)
+
+	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
 }

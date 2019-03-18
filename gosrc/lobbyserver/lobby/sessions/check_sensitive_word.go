@@ -1,10 +1,11 @@
-package lobby
+package sessions
 
 import (
 	"bufio"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/huayuego/wordfilter/trie"
 )

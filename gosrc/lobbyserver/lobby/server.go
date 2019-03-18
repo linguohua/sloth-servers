@@ -9,13 +9,14 @@ import (
 	"path"
 	"time"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/websocket"
+
 	log "github.com/sirupsen/logrus"
 
 	"lobbyserver/pricecfg"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
 
 	"github.com/gorilla/mux"
 )
@@ -55,65 +56,6 @@ func loadCharm(userID string) int32 {
 	return int32(charm)
 }
 
-func replyLoginError(ws *websocket.Conn, errCode int32) {
-	var msgLoginReply = &MsgLoginReply{}
-	msgLoginReply.Result = proto.Int32(errCode)
-	var errorString = LoginString[errCode]
-	msgLoginReply.RetMsg = &errorString
-
-	msgLoginReplyBuf, err := proto.Marshal(msgLoginReply)
-	if err != nil {
-		log.Println("replyLoginError, Marshal error:", err)
-		return
-	}
-
-	var messageCode = int32(MessageCode_OPLoginReply)
-	accessoryMessage := &AccessoryMessage{}
-	accessoryMessage.Ops = &messageCode
-	accessoryMessage.Data = msgLoginReplyBuf
-	accessoryMessageBuf, err := proto.Marshal(accessoryMessage)
-	if err != nil {
-		log.Println("replyLoginError, Marshal error:", err)
-		return
-	}
-	// log.Println(msgLoginReply)
-	ws.WriteMessage(websocket.BinaryMessage, accessoryMessageBuf)
-
-}
-
-func loginReply(ws *websocket.Conn, userID string) {
-	var msgLoginReply = &MsgLoginReply{}
-	var errCode = int32(LoginState_Success)
-	msgLoginReply.Result = &errCode
-
-	var tk = genTK(userID)
-	msgLoginReply.Token = &tk
-
-	var lastRoomInfo = loadLastRoomInfo(userID)
-	if lastRoomInfo != nil {
-		msgLoginReply.LastRoomInfo = lastRoomInfo
-	}
-
-	msgLoginReplyBuf, err := proto.Marshal(msgLoginReply)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var messageCode = int32(MessageCode_OPLoginReply)
-	accessoryMessage := &AccessoryMessage{}
-	accessoryMessage.Ops = &messageCode
-	accessoryMessage.Data = msgLoginReplyBuf
-
-	accessoryMessageBuf, err := proto.Marshal(accessoryMessage)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	// log.Println(msgLoginReply)
-	ws.WriteMessage(websocket.BinaryMessage, accessoryMessageBuf)
-}
-
 func initAccUserIDHTTPHandlers() {
 	accUserIDHTTPHandlers["/lrproom"] = handleLoadReplayRooms
 	accUserIDHTTPHandlers["/lrprecord"] = handleLoadReplayRecord
@@ -144,6 +86,67 @@ func initAccRawHTTPHandlers() {
 
 func echoVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
+}
+
+// ReplyLoginError login error
+func ReplyLoginError(ws *websocket.Conn, errCode int32) {
+	var msgLoginReply = &MsgLoginReply{}
+	msgLoginReply.Result = proto.Int32(errCode)
+	var errorString = LoginString[errCode]
+	msgLoginReply.RetMsg = &errorString
+
+	msgLoginReplyBuf, err := proto.Marshal(msgLoginReply)
+	if err != nil {
+		log.Println("replyLoginError, Marshal error:", err)
+		return
+	}
+
+	var messageCode = int32(MessageCode_OPLoginReply)
+	accessoryMessage := &AccessoryMessage{}
+	accessoryMessage.Ops = &messageCode
+	accessoryMessage.Data = msgLoginReplyBuf
+	accessoryMessageBuf, err := proto.Marshal(accessoryMessage)
+	if err != nil {
+		log.Println("replyLoginError, Marshal error:", err)
+		return
+	}
+	// log.Println(msgLoginReply)
+	ws.WriteMessage(websocket.BinaryMessage, accessoryMessageBuf)
+
+}
+
+// LoginReply login reply
+func LoginReply(ws *websocket.Conn, userID string) {
+	var msgLoginReply = &MsgLoginReply{}
+	var errCode = int32(LoginState_Success)
+	msgLoginReply.Result = &errCode
+
+	var tk = genTK(userID)
+	msgLoginReply.Token = &tk
+
+	var lastRoomInfo = loadLastRoomInfo(userID)
+	if lastRoomInfo != nil {
+		msgLoginReply.LastRoomInfo = lastRoomInfo
+	}
+
+	msgLoginReplyBuf, err := proto.Marshal(msgLoginReply)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var messageCode = int32(MessageCode_OPLoginReply)
+	accessoryMessage := &AccessoryMessage{}
+	accessoryMessage.Ops = &messageCode
+	accessoryMessage.Data = msgLoginReplyBuf
+
+	accessoryMessageBuf, err := proto.Marshal(accessoryMessage)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	// log.Println(msgLoginReply)
+	ws.WriteMessage(websocket.BinaryMessage, accessoryMessageBuf)
 }
 
 // func (mux *myHTTPServerMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -227,8 +230,6 @@ func CreateHTTPServer() {
 	loadAllRoomConfigFromRedis()
 
 	pricecfg.LoadAllPriceCfg(pool)
-
-	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
 
 	initAccUserIDHTTPHandlers()
 	initAccRawHTTPHandlers()
