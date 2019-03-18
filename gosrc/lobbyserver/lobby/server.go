@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gconst"
 	"lobbyserver/config"
+	"math/rand"
 	"net/http"
 	"path"
 	"time"
@@ -20,70 +21,31 @@ import (
 )
 
 const (
-	wsReadLimit       = 64 * 1024 // 64K
-	wsReadBufferSize  = 4 * 1024
-	wsWriteBufferSize = 4 * 1024
-	authServer        = "http://wjr.u8.login.qianz.com:8080/user/verifyUser?userID=%s&token=%s&sign=%s"
-	appKey            = "253c8d16bc73d85ac7066dcae0e478fe"
+	authServer = "http://wjr.u8.login.qianz.com:8080/user/verifyUser?userID=%s&token=%s&sign=%s"
+	appKey     = "253c8d16bc73d85ac7066dcae0e478fe"
 )
 
 type accUserIDHTTPHandler func(w http.ResponseWriter, r *http.Request, userID string)
 type accRawHTTPHandler func(w http.ResponseWriter, r *http.Request)
 
 var (
-	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize}
 	// 根router，只有http server看到
 	rootRouter = mux.NewRouter()
 
 	// MainRouter main-router
 	MainRouter *mux.Router
 
-	userMgr              *UserMgr
 	accSysExceptionCount int // 异常计数
 	// chost                = &clubHost{}
 
 	accRawHTTPHandlers    = make(map[string]accRawHTTPHandler)
 	accUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
+
+	// SessionMgr mgr
+	SessionMgr ISessionMgr
+
+	randGenerator *rand.Rand
 )
-
-// UserCount user count
-func UserCount() int {
-	return len(userMgr.users)
-}
-
-func waitWebsocketMessage(ws *websocket.Conn, user *User, r *http.Request) {
-	log.Printf("wait ws msg, userId: %s, peer: %s", user.userID(), r.RemoteAddr)
-
-	ws.SetPongHandler(func(msg string) error {
-		user.lastReceivedTime = time.Now()
-		return nil
-	})
-
-	ws.SetPingHandler(func(msg string) error {
-		user.lastReceivedTime = time.Now()
-		user.sendPong(msg)
-		return nil
-	})
-
-	for {
-		_, message, err := ws.ReadMessage()
-		if err != nil {
-			log.Println(" websocket receive error:", err)
-			ws.Close()
-			user.onWebsocketClosed(ws)
-			break
-		}
-
-		user.lastReceivedTime = time.Now()
-
-		if message != nil && len(message) > 0 {
-			user.onWebsocketMessage(ws, message)
-		}
-
-		//log.Printf("receive from user %d message:%s", user.userID(), message)
-	}
-	log.Printf("ws closed, userId %s, peer:%s", user.userID(), r.RemoteAddr)
-}
 
 func loadCharm(userID string) int32 {
 	conn := pool.Get()
@@ -150,50 +112,6 @@ func loginReply(ws *websocket.Conn, userID string) {
 	}
 	// log.Println(msgLoginReply)
 	ws.WriteMessage(websocket.BinaryMessage, accessoryMessageBuf)
-}
-
-func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
-	userID, ok := verifyToken(r)
-	if !ok {
-		log.Println("verifyUser failed")
-		replyLoginError(ws, int32(LoginState_ParseTokenError))
-		return
-	}
-
-	var user = newUser(ws, userID)
-
-	oldUser := userMgr.getUserByID(user.uID)
-	if oldUser != nil {
-		oldUser.detach()
-		oldUser.wg.Wait()
-	}
-
-	userMgr.addUser(user)
-
-	loginReply(ws, userID)
-
-	defer func() {
-		userMgr.removeUser(user)
-		user.wg.Done()
-	}()
-
-	waitWebsocketMessage(ws, user, r)
-}
-
-func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// 接收限制
-	ws.SetReadLimit(wsReadLimit)
-
-	defer ws.Close()
-
-	log.Println("accept websocket:", r.URL)
-	tryAcceptUser(ws, r)
 }
 
 func initAccUserIDHTTPHandlers() {
@@ -293,6 +211,7 @@ func authorizedHandler() http.Handler {
 
 // CreateHTTPServer 启动服务器
 func CreateHTTPServer() {
+	randGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
 	// TODO: just for test, please remove later
 	log.Println("For cub test:" + genTK("10024063"))
 
@@ -311,16 +230,13 @@ func CreateHTTPServer() {
 
 	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
 
-	userMgr = newUserMgr()
-	startAliveKeeper()
-
 	initAccUserIDHTTPHandlers()
 	initAccRawHTTPHandlers()
 
 	// 所有模块看到的mainRouter
 	// 外部访问需要形如/prunfast/uuid/pok
 	var mainRouter = rootRouter.PathPrefix("/lobby/{uuid}/").Subrouter()
-	mainRouter.HandleFunc("/ws/{wtype}", acceptWebsocket)
+	//mainRouter.HandleFunc("/ws/{wtype}", acceptWebsocket)
 	mainRouter.HandleFunc("/version", echoVersion)
 	mainRouter.PathPrefix("/untrust").Handler(authorizedHandler())
 

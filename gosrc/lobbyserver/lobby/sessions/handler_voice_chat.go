@@ -1,4 +1,4 @@
-package lobby
+package sessions
 
 import (
 	log "github.com/sirupsen/logrus"

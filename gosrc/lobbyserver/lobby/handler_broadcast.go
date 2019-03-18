@@ -2,9 +2,10 @@ package lobby
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -52,11 +53,7 @@ func handleBroadCast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := userMgr.users
-	for _, user := range users {
-		user.send(bytes)
-	}
-
+	SessionMgr.Broacast(bytes)
 	w.Write([]byte("Broadcast message success!"))
 	return
 
@@ -107,12 +104,13 @@ func handlePlayerPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := userMgr.getUserByID(playerID)
-	if user != nil {
-		user.send(bytes)
-		msg := fmt.Sprintf("player %s handlePlayerPush", playerID)
-		log.Println(msg)
-	}
+	SessionMgr.SendTo(playerID, bytes)
+	// user := userMgr.getUserByID(playerID)
+	// if user != nil {
+	// 	user.send(bytes)
+	// 	msg := fmt.Sprintf("player %s handlePlayerPush", playerID)
+	// 	log.Println(msg)
+	// }
 
 	w.Write([]byte("Broadcast message success!"))
 	return
@@ -162,10 +160,7 @@ func handleAllPlayerPush(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := userMgr.users
-	for _, user := range users {
-		user.send(bytes)
-	}
+	SessionMgr.Broacast(bytes)
 
 	w.Write([]byte("Broadcast message success!"))
 

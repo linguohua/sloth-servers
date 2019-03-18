@@ -228,7 +228,7 @@ func validRandNumber(roomNumbers string, roomID string) string {
 func randomRoomNumber(roomID string) string {
 	randNumberArray := make([]string, 10)
 	for i := 0; i < 10; i++ {
-		randNumber := userMgr.rand.Intn(MaxRoomNum-MinRoomNum) + MinRoomNum
+		randNumber := randGenerator.Intn(MaxRoomNum-MinRoomNum) + MinRoomNum
 		randNumberStr := fmt.Sprintf("%d", randNumber)
 		randNumberArray[i] = randNumberStr
 	}

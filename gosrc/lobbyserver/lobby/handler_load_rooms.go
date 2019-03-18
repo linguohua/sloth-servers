@@ -1,17 +1,18 @@
 package lobby
 
 import (
-	log "github.com/sirupsen/logrus"
 	"gconst"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 )
 
-func replyLoadRooms(user *User, msgLoadRoomListRsp *MsgLoadRoomListRsp) {
-	user.sendMsg(msgLoadRoomListRsp, int32(MessageCode_OPLoadRooms))
-}
+// func replyLoadRooms(user *User, msgLoadRoomListRsp *MsgLoadRoomListRsp) {
+// 	user.sendMsg(msgLoadRoomListRsp, int32(MessageCode_OPLoadRooms))
+// }
 
 func loadUsersProfile(userIDs []string) []*UserProfile {
 	userProfiles := make([]*UserProfile, 0, len(userIDs))
@@ -159,15 +160,15 @@ func loadRoomInfos(userIDString string) []*RoomInfo {
 // 1.获取对应房间配置ID、房间号、游戏服务器ID
 // 2.用房间配置ID获取房间配置
 // 3.用游戏服务器ID获取游戏服务器url
-func onMessageGetRooms(user *User, accessoryMessage *AccessoryMessage) {
-	conn := pool.Get()
-	defer conn.Close()
+// func onMessageGetRooms(user *User, accessoryMessage *AccessoryMessage) {
+// 	conn := pool.Get()
+// 	defer conn.Close()
 
-	var roomInfos = loadRoomInfos(user.userID())
+// 	var roomInfos = loadRoomInfos(user.userID())
 
-	var msgLoadRoomListRsp = &MsgLoadRoomListRsp{}
-	msgLoadRoomListRsp.RoomInfos = roomInfos
-	var result = int32(MsgError_ErrSuccess)
-	msgLoadRoomListRsp.Result = &result
-	replyLoadRooms(user, msgLoadRoomListRsp)
-}
+// 	var msgLoadRoomListRsp = &MsgLoadRoomListRsp{}
+// 	msgLoadRoomListRsp.RoomInfos = roomInfos
+// 	var result = int32(MsgError_ErrSuccess)
+// 	msgLoadRoomListRsp.Result = &result
+// 	replyLoadRooms(user, msgLoadRoomListRsp)
+// }

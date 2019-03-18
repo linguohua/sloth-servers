@@ -1,4 +1,4 @@
-package lobby
+package sessions
 
 import (
 	"encoding/binary"
@@ -180,11 +180,4 @@ func (u *User) detach() {
 		u.ws.Close()
 		u.ws = nil
 	}
-}
-
-func (u *User) updateMoney(diamond uint32) {
-	var updateUserMoney = &MsgUpdateUserMoney{}
-	var userDiamond = diamond
-	updateUserMoney.Diamond = &userDiamond
-	u.sendMsg(updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
 }

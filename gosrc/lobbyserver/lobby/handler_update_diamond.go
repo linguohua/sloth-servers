@@ -77,11 +77,11 @@ func handleUpdateDiamond(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 
 	// 更新用户钻石
-	user := userMgr.getUserByID(userID)
-	if user == nil {
-		log.Println("user offline")
-		return
-	}
+	// user := userMgr.getUserByID(userID)
+	// if user == nil {
+	// 	log.Println("user offline")
+	// 	return
+	// }
 
 	// TODO: llwant mysql
 	// diamond, err := webdata.QueryDiamond(userID)
@@ -90,7 +90,7 @@ func handleUpdateDiamond(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	user.updateMoney(uint32(0))
+	// user.updateMoney(uint32(0))
 	// var updateUserMoney = &MsgUpdateUserMoney{}
 	// var userDiamond = uint32(diamond)
 	// updateUserMoney.Diamond = &userDiamond

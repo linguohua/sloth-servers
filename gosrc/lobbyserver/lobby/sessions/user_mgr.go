@@ -1,20 +1,13 @@
-package lobby
-
-import (
-	"math/rand"
-	"time"
-)
+package sessions
 
 // UserMgr 用户管理
 type UserMgr struct {
 	users map[string]*User
-	rand  *rand.Rand
 }
 
 func newUserMgr() *UserMgr {
 	um := &UserMgr{}
 	um.users = make(map[string]*User)
-	um.rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	return um
 }
 

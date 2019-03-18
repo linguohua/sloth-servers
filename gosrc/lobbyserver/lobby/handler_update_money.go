@@ -15,12 +15,12 @@ func handleUpdateMoney(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 更新用户钻石
-	user := userMgr.getUserByID(userID)
-	if user == nil {
-		log.Println("user offline")
-		w.Write([]byte("User offline !"))
-		return
-	}
+	// user := userMgr.getUserByID(userID)
+	// if user == nil {
+	// 	log.Println("user offline")
+	// 	w.Write([]byte("User offline !"))
+	// 	return
+	// }
 
 	// TODO: llwant mysql
 	// diamond, err := webdata.QueryDiamond(userID)
@@ -31,7 +31,7 @@ func handleUpdateMoney(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	user.updateMoney(uint32(0))
+	// user.updateMoney(uint32(0))
 
 	w.Write([]byte("Update user money success !"))
 }

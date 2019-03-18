@@ -2,8 +2,9 @@ package lobby
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -31,12 +32,12 @@ func handleUniCast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := userMgr.getUserByID(userID)
-	if user == nil {
-		log.Println("user offline")
-		w.Write([]byte("User offline !"))
-		return
-	}
+	// user := userMgr.getUserByID(userID)
+	// if user == nil {
+	// 	log.Println("user offline")
+	// 	w.Write([]byte("User offline !"))
+	// 	return
+	// }
 
 	var msgCode = int32(MessageCode_OPUnicast)
 	accessoryMessage := &AccessoryMessage{}
@@ -49,7 +50,7 @@ func handleUniCast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.send(bytes)
+	SessionMgr.SendTo(userID, bytes)
 
 	var msg = fmt.Sprintf("Send message to user %s success!", userID)
 	w.Write([]byte(msg))

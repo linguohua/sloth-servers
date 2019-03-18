@@ -161,11 +161,15 @@ func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 
 	order := refund2UserAndSave2Redis(roomID, userID, 0)
 	if order != nil && order.Refund != nil {
-		user := userMgr.getUserByID(userID)
-		if user != nil {
-			user.updateMoney(uint32(order.Refund.RemainDiamond))
-		}
+		updateMoney(uint32(order.Refund.RemainDiamond), userID)
 	}
+}
+
+func updateMoney(diamond uint32, userID string) {
+	var updateUserMoney = &MsgUpdateUserMoney{}
+	var userDiamond = diamond
+	updateUserMoney.Diamond = &userDiamond
+	SessionMgr.SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {
@@ -440,17 +444,17 @@ func replySSMsg(msgBag *gconst.SSMsgBag, errCode gconst.SSMsgError, params []byt
 }
 
 func updateUserRoomList(userID string) {
-	user := userMgr.getUserByID(userID)
-	if user == nil {
-		log.Println("update user roomList failed, user is nil")
-		return
-	}
+	// user := userMgr.getUserByID(userID)
+	// if user == nil {
+	// 	log.Println("update user roomList failed, user is nil")
+	// 	return
+	// }
 
 	var roomInfos = loadRoomInfos(userID)
 
 	var msgUpdateRoomList = &MsgUpdateRoomList{}
 	msgUpdateRoomList.RoomInfos = roomInfos
-	user.sendMsg(msgUpdateRoomList, int32(MessageCode_OPUpdateRoomList))
+	SessionMgr.SendProtoMsgTo(userID, msgUpdateRoomList, int32(MessageCode_OPUpdateRoomList))
 }
 
 func getRoomTypeWithServerID(gameServerID string) int {
