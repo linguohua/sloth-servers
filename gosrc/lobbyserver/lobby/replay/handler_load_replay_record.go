@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"gconst"
+	"lobbyserver/lobby"
 	"net/http"
 	"strings"
 
@@ -89,7 +90,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 	}
 
 	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	recordID := r.URL.Query().Get("rid")

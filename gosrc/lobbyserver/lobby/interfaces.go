@@ -11,3 +11,8 @@ type ISessionMgr interface {
 	SendProtoMsgTo(userID string, protoMsg proto.Message, opcode int32) bool
 	UserCount() int
 }
+
+// IRoomUtil room helper
+type IRoomUtil interface {
+	LoadLastRoomInfo(userID string) *RoomInfo
+}

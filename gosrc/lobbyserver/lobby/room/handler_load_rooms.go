@@ -2,6 +2,7 @@ package room
 
 import (
 	"gconst"
+	"lobbyserver/lobby"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -14,10 +15,10 @@ import (
 // 	user.sendMsg(msgLoadRoomListRsp, int32(MessageCode_OPLoadRooms))
 // }
 
-func loadUsersProfile(userIDs []string) []*UserProfile {
-	userProfiles := make([]*UserProfile, 0, len(userIDs))
+func loadUsersProfile(userIDs []string) []*lobby.UserProfile {
+	userProfiles := make([]*lobby.UserProfile, 0, len(userIDs))
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	conn.Send("MULTI")
@@ -39,7 +40,7 @@ func loadUsersProfile(userIDs []string) []*UserProfile {
 		userName := fileds[0]
 		nickName := fileds[1]
 		userID := userIDs[index]
-		userProfile := &UserProfile{}
+		userProfile := &lobby.UserProfile{}
 		userProfile.UserID = &userID
 		userProfile.UserName = &userName
 		userProfile.NickName = &nickName
@@ -50,22 +51,22 @@ func loadUsersProfile(userIDs []string) []*UserProfile {
 	return userProfiles
 }
 
-func loadRoomInfos(userIDString string) []*RoomInfo {
-	conn := pool.Get()
+func loadRoomInfos(userIDString string) []*lobby.RoomInfo {
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userIDString, "rooms"))
 	if err != nil {
 		log.Println("loadRoomInfos, err:", err)
-		return make([]*RoomInfo, 0)
+		return make([]*lobby.RoomInfo, 0)
 	}
 
-	var roomIDList = &RoomIDList{}
+	var roomIDList = &lobby.RoomIDList{}
 	if bytes != nil {
 		err := proto.Unmarshal(bytes, roomIDList)
 		if err != nil {
 			log.Println("loadRoomInfos, err:", err)
-			return make([]*RoomInfo, 0)
+			return make([]*lobby.RoomInfo, 0)
 		}
 	}
 
@@ -73,10 +74,10 @@ func loadRoomInfos(userIDString string) []*RoomInfo {
 	var roomIDs = roomIDList.GetRoomIDs()
 	if len(roomIDs) == 0 {
 		log.Println("room ids is empty")
-		return make([]*RoomInfo, 0)
+		return make([]*lobby.RoomInfo, 0)
 	}
 
-	var roomInfos = make([]*RoomInfo, 0, len(roomIDs))
+	var roomInfos = make([]*lobby.RoomInfo, 0, len(roomIDs))
 
 	conn.Send("MULTI")
 	for _, roomID := range roomIDs {
@@ -111,7 +112,7 @@ func loadRoomInfos(userIDString string) []*RoomInfo {
 			continue
 		}
 
-		var roomInfo = &RoomInfo{}
+		var roomInfo = &lobby.RoomInfo{}
 		roomInfo.RoomID = &roomID
 		roomInfo.RoomNumber = &roomNunmber
 		roomInfo.GameServerURL = &gameServerURL
@@ -121,7 +122,7 @@ func loadRoomInfos(userIDString string) []*RoomInfo {
 		lastActiveTimeUint32 := uint32(lastActiveTimeInt32)
 		roomInfo.LastActiveTime = &lastActiveTimeUint32
 
-		roomConfig, ok := roomConfigs[roomConfigID]
+		roomConfig, ok := lobby.RoomConfigs[roomConfigID]
 		if ok {
 			roomInfo.Config = &roomConfig
 		}

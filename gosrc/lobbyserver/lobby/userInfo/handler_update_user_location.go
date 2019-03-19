@@ -1,12 +1,11 @@
-package userInfo
+package userinfo
 
 import (
 	"fmt"
 	"gconst"
-	"lobbyserver/config"
+	"lobbyserver/lobby"
 	"net/http"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,8 +13,8 @@ import (
 func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID string) {
 	log.Println("handleUpdateUserLocation, userID:", userID)
 
-	accessoryMessage, errCode := parseAccessoryMessage(r)
-	if errCode != int32(MsgError_ErrSuccess) {
+	accessoryMessage, errCode := lobby.ParseAccessoryMessage(r)
+	if errCode != int32(lobby.MsgError_ErrSuccess) {
 		var msg = fmt.Sprintf("Update user location error, code:%d", errCode)
 		w.WriteHeader(404)
 		w.Write([]byte(msg))
@@ -23,7 +22,7 @@ func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID str
 	}
 
 	var buf = accessoryMessage.GetData()
-	var updateUserInfo = &MsgUpdateUserInfo{}
+	var updateUserInfo = &lobby.MsgUpdateUserInfo{}
 	err := proto.Unmarshal(buf, updateUserInfo)
 	if err != nil {
 		log.Println("handleUpdateUserLocation, decode error:", err)
@@ -34,7 +33,7 @@ func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID str
 	}
 
 	var location = updateUserInfo.GetLocation()
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 	conn.Do("HSET", gconst.AsUserTablePrefix+userID, "location", location)
 
@@ -43,49 +42,49 @@ func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID str
 
 func sendLocation2GameServer(location string, userID string) {
 	log.Printf("sendLocation2GameServer, userID:%s", userID)
-	enterRoomID := loadUserLastEnterRoomID(userID)
-	if enterRoomID == "" {
-		log.Println("sendLocation2GameServer, enterRoomID is nil")
-		return
-	}
+	// enterRoomID := loadUserLastEnterRoomID(userID)
+	// if enterRoomID == "" {
+	// 	log.Println("sendLocation2GameServer, enterRoomID is nil")
+	// 	return
+	// }
 
-	conn := pool.Get()
-	defer conn.Close()
+	// conn := lobby.Pool().Get()
+	// defer conn.Close()
 
-	serverID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+enterRoomID, "gameServerID"))
-	if err != nil {
-		log.Println("load gameServerID error:", err)
-		return
-	}
-	log.Println("sendLocation2GameServer, serverID:", serverID)
-	if serverID == "" {
-		log.Println("sendLocation2GameServer, can't get serverID")
-		return
-	}
+	// serverID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+enterRoomID, "gameServerID"))
+	// if err != nil {
+	// 	log.Println("load gameServerID error:", err)
+	// 	return
+	// }
+	// log.Println("sendLocation2GameServer, serverID:", serverID)
+	// if serverID == "" {
+	// 	log.Println("sendLocation2GameServer, can't get serverID")
+	// 	return
+	// }
 
-	updateLocation := &gconst.SSMsgUpdateLocation{}
-	updateLocation.UserID = &userID
-	updateLocation.Location = &location
+	// updateLocation := &gconst.SSMsgUpdateLocation{}
+	// updateLocation.UserID = &userID
+	// updateLocation.Location = &location
 
-	buf, err := proto.Marshal(updateLocation)
-	if err != nil {
-		log.Println("Marshal SSMsgUpdateLocation error:", err)
-		return
-	}
+	// buf, err := proto.Marshal(updateLocation)
+	// if err != nil {
+	// 	log.Println("Marshal SSMsgUpdateLocation error:", err)
+	// 	return
+	// }
 
-	msgType := int32(gconst.SSMsgType_Request)
-	requestCode := int32(gconst.SSMsgReqCode_UpdateLocation)
-	status := int32(gconst.SSMsgError_ErrSuccess)
+	// msgType := int32(gconst.SSMsgType_Request)
+	// requestCode := int32(gconst.SSMsgReqCode_UpdateLocation)
+	// status := int32(gconst.SSMsgError_ErrSuccess)
 
-	msgBag := &gconst.SSMsgBag{}
-	msgBag.MsgType = &msgType
-	var sn = generateSn()
-	msgBag.SeqNO = &sn
-	msgBag.RequestCode = &requestCode
-	msgBag.Status = &status
-	var url = config.ServerID
-	msgBag.SourceURL = &url
-	msgBag.Params = buf
+	// msgBag := &gconst.SSMsgBag{}
+	// msgBag.MsgType = &msgType
+	// var sn = lobby.GenerateSn()
+	// msgBag.SeqNO = &sn
+	// msgBag.RequestCode = &requestCode
+	// msgBag.Status = &status
+	// var url = config.ServerID
+	// msgBag.SourceURL = &url
+	// msgBag.Params = buf
 
-	publishMsg(serverID, msgBag)
+	// lobby.PublishMsg(serverID, msgBag)
 }

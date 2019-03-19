@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"gconst"
 	"lobbyserver/lobby"
+	"lobbyserver/lobby/userinfo"
 	"strings"
 	"sync"
 	"time"
@@ -151,10 +152,10 @@ func userID2Str(userID int64) string {
 	return hex.EncodeToString(b)
 }
 
-func (u *User) saveAuthInfo(userInfo *lobby.UserInfo, realIP string) {
+func (u *User) saveAuthInfo(userInfo *userinfo.UserInfo, realIP string) {
 	log.Println("saveAuthInfo")
 	if userInfo == nil {
-		userInfo = &lobby.UserInfo{}
+		userInfo = &userinfo.UserInfo{}
 	}
 
 	var ws = u.ws

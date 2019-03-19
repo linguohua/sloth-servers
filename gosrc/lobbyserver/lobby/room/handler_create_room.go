@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"gconst"
 	"lobbyserver/config"
+	"lobbyserver/lobby"
+	"lobbyserver/lobby/pay"
 	"net/http"
+	"sort"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -36,16 +39,16 @@ var (
 func replyPayError(w http.ResponseWriter, payError int32) {
 	switch payError {
 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO):
-		replyCreateRoomError(w, int32(MsgError_ErrTakeoffDiamondFailedIO))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrTakeoffDiamondFailedIO))
 		break
 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough):
-		replyCreateRoomError(w, int32(MsgError_ErrTakeoffDiamondFailedNotEnough))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough))
 		break
 	case int32(gconst.SSMsgError_ErrNoRoomConfig):
-		replyCreateRoomError(w, int32(MsgError_ErrTakeoffDiamondFailedNotEnough))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough))
 		break
 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedRepeat):
-		replyCreateRoomError(w, int32(MsgError_ErrTakeoffDiamondFailedRepeat))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrTakeoffDiamondFailedRepeat))
 		break
 	default:
 		log.Println("unknow pay error:", payError)
@@ -54,30 +57,30 @@ func replyPayError(w http.ResponseWriter, payError int32) {
 }
 
 func replyCreateRoomError(w http.ResponseWriter, errorCode int32) {
-	msgCreateRoomRsp := &MsgCreateRoomRsp{}
+	msgCreateRoomRsp := &lobby.MsgCreateRoomRsp{}
 	msgCreateRoomRsp.Result = proto.Int32(errorCode)
-	var errString = ErrorString[errorCode]
+	var errString = lobby.ErrorString[errorCode]
 	msgCreateRoomRsp.RetMsg = &errString
 	log.Println("errString:", errString)
-	reply(w, msgCreateRoomRsp, int32(MessageCode_OPCreateRoom))
+	reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
 }
 
 func replyCreateRoomErrorAndLastDiamond(w http.ResponseWriter, errorCode int32, diamond int32) {
-	msgCreateRoomRsp := &MsgCreateRoomRsp{}
+	msgCreateRoomRsp := &lobby.MsgCreateRoomRsp{}
 	msgCreateRoomRsp.Result = proto.Int32(errorCode)
-	var errString = ErrorString[errorCode]
+	var errString = lobby.ErrorString[errorCode]
 	msgCreateRoomRsp.RetMsg = &errString
 	msgCreateRoomRsp.Diamond = proto.Int32(diamond)
 	log.Printf("errorCode:%d, errString:%s", errorCode, errString)
-	reply(w, msgCreateRoomRsp, int32(MessageCode_OPCreateRoom))
+	reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
 }
 
-func replyCreateRoomSuccess(w http.ResponseWriter, roomInfo *RoomInfo, openType int32, diamond int32) {
+func replyCreateRoomSuccess(w http.ResponseWriter, roomInfo *lobby.RoomInfo, openType int32, diamond int32) {
 
-	msgCreateRoomRsp := &MsgCreateRoomRsp{}
-	var errorCode = int32(MsgError_ErrSuccess)
+	msgCreateRoomRsp := &lobby.MsgCreateRoomRsp{}
+	var errorCode = int32(lobby.MsgError_ErrSuccess)
 	msgCreateRoomRsp.Result = &errorCode
-	var errString = ErrorString[errorCode]
+	var errString = lobby.ErrorString[errorCode]
 	msgCreateRoomRsp.RetMsg = &errString
 	msgCreateRoomRsp.RoomInfo = roomInfo
 	msgCreateRoomRsp.OpenType = proto.Int32(openType)
@@ -85,11 +88,11 @@ func replyCreateRoomSuccess(w http.ResponseWriter, roomInfo *RoomInfo, openType 
 	msgCreateRoomRsp.RoomType = proto.Int32(openType)
 	msgCreateRoomRsp.Diamond = proto.Int32(diamond)
 
-	reply(w, msgCreateRoomRsp, int32(MessageCode_OPCreateRoom))
+	reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
 }
 
 func appendRoom2UserRoomList(msgCreateRoom *gconst.SSMsgCreateRoom) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	var userIDString = msgCreateRoom.GetUserID()
@@ -100,7 +103,7 @@ func appendRoom2UserRoomList(msgCreateRoom *gconst.SSMsgCreateRoom) {
 		return
 	}
 
-	var roomIDList = &RoomIDList{}
+	var roomIDList = &lobby.RoomIDList{}
 	if buf != nil {
 		err := proto.Unmarshal(buf, roomIDList)
 		if err != nil {
@@ -134,7 +137,7 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 	var arenaID = msgCreateRoom.GetArenaID()
 	var raceTemplateID = msgCreateRoom.GetRaceTemplateID()
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	lastActiveTime := timeStampInSecond / 60
@@ -146,7 +149,8 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 	conn.Send("HSET", gconst.RoomNumberTable+roomNumberString, "roomID", roomID)
 	conn.Send("HMSET", gconst.RoomTablePrefix+roomID, "ownerID", userID, "roomConfigID",
 		roomConfigID, "gameServerID", gameServerID, "roomNumber", roomNumberString, "timeStamp", timeStampInSecond,
-		"lastActiveTime", lastActiveTime, "roomType", roomType, "clubID", clubID, "groupID", groupID, "arenaID", arenaID, "raceTemplateID", raceTemplateID, "gameNo", gameNo)
+		"lastActiveTime", lastActiveTime, "roomType", roomType, "clubID", clubID, "groupID", groupID,
+		"arenaID", arenaID, "raceTemplateID", raceTemplateID, "gameNo", gameNo)
 	conn.Send("SADD", gconst.RoomTableACCSet, roomID)
 
 	if groupID != "" {
@@ -166,7 +170,7 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 }
 
 func getGameServerURL(gameServerID string) string {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 	url, _ := redis.String(conn.Do("HGET", gconst.GameServerKeyPrefix+gameServerID, "url"))
 	if url == "" {
@@ -188,7 +192,7 @@ func strArray2Comma(ss []string) string {
 
 // 这个是为了写牌局记录到sql, sql保存牌局需要这个GameNo
 func generateGameNo() (int64, error) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	gameNo, err := redis.Int64(conn.Do("INCR", gconst.CurrentRoomGameNo))
@@ -213,10 +217,10 @@ func generateGameNo() (int64, error) {
 // 1.检查数据库是否已经存在随机数
 // 2.若不存在，则保存到数据库，然后返回这个随机数
 func validRandNumber(roomNumbers string, roomID string) string {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 	// luaScript 在startRedis中创建
-	randNumber, err := redis.String(luaScript.Do(conn, gconst.RoomNumberTable, roomID, roomNumbers))
+	randNumber, err := redis.String(lobby.LuaScript.Do(conn, gconst.RoomNumberTable, roomID, roomNumbers))
 	if err != nil {
 		log.Printf("randromNumber error, roomNumbers %s, roomID %s, error:%v ", roomNumbers, roomID, err)
 	}
@@ -228,7 +232,7 @@ func validRandNumber(roomNumbers string, roomID string) string {
 func randomRoomNumber(roomID string) string {
 	randNumberArray := make([]string, 10)
 	for i := 0; i < 10; i++ {
-		randNumber := randGenerator.Intn(MaxRoomNum-MinRoomNum) + MinRoomNum
+		randNumber := lobby.RandGenerator.Intn(MaxRoomNum-MinRoomNum) + MinRoomNum
 		randNumberStr := fmt.Sprintf("%d", randNumber)
 		randNumberArray[i] = randNumberStr
 	}
@@ -238,7 +242,7 @@ func randomRoomNumber(roomID string) string {
 }
 
 func saveRoomConfigIfNotExist(roomConfig string) (roomConfigID string, errorCode int32) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	bytes := []byte(roomConfig)
@@ -250,23 +254,48 @@ func saveRoomConfigIfNotExist(roomConfig string) (roomConfigID string, errorCode
 		_, err := conn.Do("HSET", gconst.RoomConfigTable, roomConfigID, bytes)
 		if err != nil {
 			log.Println("save room config err:", err)
-			errorCode = int32(MsgError_ErrDatabase)
+			errorCode = int32(lobby.MsgError_ErrDatabase)
 			return
 		}
 	}
 
-	_, exist := roomConfigs[roomConfigID]
+	_, exist := lobby.RoomConfigs[roomConfigID]
 	if !exist {
-		roomConfigs[roomConfigID] = roomConfig
+		lobby.RoomConfigs[roomConfigID] = roomConfig
 	}
 
-	errorCode = int32(MsgError_ErrSuccess)
+	errorCode = int32(lobby.MsgError_ErrSuccess)
 	return
+}
+
+// GameServerInfo 保存游戏服务器信息
+type GameServerInfo struct {
+	serverID string
+	version  int
+	roomType int
+}
+
+// byServerVersion 根据座位ID排序
+type byServerVersion []*GameServerInfo
+
+func (s byServerVersion) Len() int {
+	return len(s)
+}
+func (s byServerVersion) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s byServerVersion) Less(i, j int) bool {
+	return s[i].version > s[j].version
+}
+
+// sortPlayers 根据座位ID排序
+func sortGameServer(gameServerInfos []*GameServerInfo) {
+	sort.Sort(byServerVersion(gameServerInfos))
 }
 
 func getGameServerID(myRoomType int) string {
 	log.Println("getGameServerID, myRoomType:", myRoomType)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	if myRoomType == 0 {
@@ -315,37 +344,37 @@ func getGameServerID(myRoomType int) string {
 }
 
 func checkRoomLimit(userID string) (errCode int32) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "rooms"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("get rooms err:", err)
-		errCode = int32(MsgError_ErrDatabase)
+		errCode = int32(lobby.MsgError_ErrDatabase)
 		return
 	}
 
-	var roomIDList = &RoomIDList{}
+	var roomIDList = &lobby.RoomIDList{}
 	if bytes != nil {
 		err := proto.Unmarshal(bytes, roomIDList)
 		if err != nil {
 			log.Println(err)
-			errCode = int32(MsgError_ErrDecode)
+			errCode = int32(lobby.MsgError_ErrDecode)
 			return
 		}
 
 	}
 
 	if len(roomIDList.GetRoomIDs()) < MaxRoomCount {
-		errCode = int32(MsgError_ErrSuccess)
+		errCode = int32(lobby.MsgError_ErrSuccess)
 		return
 	}
 
-	errCode = int32(MsgError_ErrRoomCountIsOutOfLimit)
+	errCode = int32(lobby.MsgError_ErrRoomCountIsOutOfLimit)
 	return
 }
 
-func ifNotExistInGameServerAndCleanRoom(roomInfo *RoomInfo, owner string) bool {
+func ifNotExistInGameServerAndCleanRoom(roomInfo *lobby.RoomInfo, owner string) bool {
 	if roomInfo == nil {
 		log.Println("ifNotExistInGameServerAndCleanRoom, roomInfo == nil")
 		return false
@@ -357,7 +386,7 @@ func ifNotExistInGameServerAndCleanRoom(roomInfo *RoomInfo, owner string) bool {
 		return false
 	}
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// startHand, err := redis.Int(conn.Send("HGET",  gconst.GameRoomStatistics+roomID,  "hrStartted"))
@@ -377,7 +406,7 @@ func ifNotExistInGameServerAndCleanRoom(roomInfo *RoomInfo, owner string) bool {
 		return false
 	}
 
-	var orders = refund2Users(roomID, int(handStart), []string{owner})
+	var orders = pay.Refund2Users(roomID, int(handStart), []string{owner})
 	if orders != nil {
 		deleteRoomInfoFromRedis(roomID, owner)
 		log.Printf("ifNotExistInGameServerAndCleanRoom, room %s, not exist in game server, clean room info", roomID)
@@ -387,8 +416,8 @@ func ifNotExistInGameServerAndCleanRoom(roomInfo *RoomInfo, owner string) bool {
 	return false
 }
 
-func loadUserRoom(userID string) *RoomInfo {
-	conn := pool.Get()
+func loadUserRoom(userID string) *lobby.RoomInfo {
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "rooms"))
@@ -400,7 +429,7 @@ func loadUserRoom(userID string) *RoomInfo {
 		return nil
 	}
 
-	var roomIDList = &RoomIDList{}
+	var roomIDList = &lobby.RoomIDList{}
 	err = proto.Unmarshal(bytes, roomIDList)
 	if err != nil {
 		return nil
@@ -439,13 +468,13 @@ func loadUserRoom(userID string) *RoomInfo {
 		return nil
 	}
 
-	var roomInfo = &RoomInfo{}
+	var roomInfo = &lobby.RoomInfo{}
 	roomInfo.RoomID = &roomID
 	roomInfo.RoomNumber = &roomNumber
 	roomInfo.GameServerURL = &gameServerURL
 
 	//log.Println("loadLastRoom, gserverURL:", gameServerURL)
-	roomConfig, ok := roomConfigs[roomConfigID]
+	roomConfig, ok := lobby.RoomConfigs[roomConfigID]
 	if ok {
 		roomInfo.Config = &roomConfig
 	}
@@ -454,7 +483,7 @@ func loadUserRoom(userID string) *RoomInfo {
 }
 
 func removeUserCreateRoomLock(userID string) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	conn.Do("DEL", gconst.UserCreatRoomLock+userID)
@@ -462,7 +491,7 @@ func removeUserCreateRoomLock(userID string) {
 
 func isUserCreateRoomLock(userID string, roomID string) bool {
 	log.Println("isUserCreateRoomLock, userID:", userID)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// 10秒后自动清除
@@ -490,7 +519,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 	if isUserCreateRoomLock(userID, roomIDString) {
 		log.Println("User crate room is lock !")
-		replyCreateRoomError(w, int32(MsgError_ErrUserCreateRoomLock))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrUserCreateRoomLock))
 		return
 	}
 
@@ -499,11 +528,11 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		removeUserCreateRoomLock(userID)
 	}()
 
-	if isUserInBlacklist(userID) {
-		log.Println("handlerCreateRoom,user in black list")
-		replyCreateRoomError(w, int32(MsgError_ErrUserInBlacklist))
-		return
-	}
+	// if isUserInBlacklist(userID) {
+	// 	log.Println("handlerCreateRoom,user in black list")
+	// 	replyCreateRoomError(w, int32(lobby.MsgError_ErrUserInBlacklist))
+	// 	return
+	// }
 
 	var gameServerID = r.URL.Query().Get("gsid")
 
@@ -518,43 +547,43 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	}
 
 	if lastRoomInfo != nil {
-		msgCreateRoomRsp := &MsgCreateRoomRsp{}
-		var errorCode = int32(MsgError_ErrUserInOtherRoom)
+		msgCreateRoomRsp := &lobby.MsgCreateRoomRsp{}
+		var errorCode = int32(lobby.MsgError_ErrUserInOtherRoom)
 		msgCreateRoomRsp.Result = &errorCode
-		var errString = ErrorString[errorCode]
+		var errString = lobby.ErrorString[errorCode]
 		msgCreateRoomRsp.RetMsg = &errString
 		msgCreateRoomRsp.RoomInfo = lastRoomInfo
 		log.Printf("handlerCreateRoom, User %s in other room, roomNumber: %s, roomId:%s", userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
-		reply(w, msgCreateRoomRsp, int32(MessageCode_OPCreateRoom))
+		reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
 		return
 	}
 
 	accessoryMessage, errCode := parseAccessoryMessage(r)
-	if errCode != int32(MsgError_ErrSuccess) {
+	if errCode != int32(lobby.MsgError_ErrSuccess) {
 		replyCreateRoomError(w, errCode)
 	}
 
 	bytes := accessoryMessage.GetData()
 
-	msg := &MsgCreateRoomReq{}
+	msg := &lobby.MsgCreateRoomReq{}
 	err := proto.Unmarshal(bytes, msg)
 	if err != nil {
 		log.Println("onMessageCreateRoom, Unmarshal err:", err)
-		replyCreateRoomError(w, int32(MsgError_ErrDecode))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrDecode))
 		return
 	}
 
 	// 牌友群创建的房间
-	if msg.GetClubID() != "" {
-		createRoomForGroup(w, msg, userID, roomIDString)
-		return
-	}
+	// if msg.GetClubID() != "" {
+	// 	createRoomForGroup(w, msg, userID, roomIDString)
+	// 	return
+	// }
 
 	// 创建比赛房
-	if msg.GetArenaID() != "" {
-		createRoomForRace(w, msg, userID, roomIDString)
-		return
-	}
+	// if msg.GetArenaID() != "" {
+	// 	createRoomForRace(w, msg, userID, roomIDString)
+	// 	return
+	// }
 
 	// log.Println("msg:", msg)
 	//检查有效性
@@ -564,7 +593,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	// 扣费等等都可以不一样创建房间有不同种类的房间，不仅游戏类型不一样，而且房间的生命周期
 	// 扣费等等都可以不一样
 	errCode = checkRoomLimit(userID)
-	if errCode != int32(MsgError_ErrSuccess) {
+	if errCode != int32(lobby.MsgError_ErrSuccess) {
 		log.Println("checkRoomLimit, errCode: ", errCode)
 		replyCreateRoomError(w, errCode)
 		return
@@ -573,14 +602,14 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	configString := msg.GetConfig()
 	if configString == "" {
 		log.Println("room config is not available")
-		replyCreateRoomError(w, int32(MsgError_ErrNoRoomConfig))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrNoRoomConfig))
 		return
 	}
 
 	log.Println("configString:", configString)
 	//保存配置
 	roomConfigID, errCode := saveRoomConfigIfNotExist(configString)
-	if errCode != int32(MsgError_ErrSuccess) {
+	if errCode != int32(lobby.MsgError_ErrSuccess) {
 		log.Println("save room config error, errCode:", errCode)
 		replyCreateRoomError(w, errCode)
 		return
@@ -594,7 +623,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 	if gameServerID == "" {
 		log.Println("GameServerId not exist, maybe GamerServer not start")
-		replyCreateRoomError(w, int32(MsgError_ErrGameServerIDNotExist))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrGameServerIDNotExist))
 		return
 	}
 
@@ -610,14 +639,14 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	roomNumberString := randomRoomNumber(roomIDString)
 	if roomNumberString == "" {
 		log.Println("handlerCreateRoom, GenerateRoomNum faile err:", err)
-		replyCreateRoomError(w, int32(MsgError_ErrGenerateRoomNumber))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrGenerateRoomNumber))
 		return
 	}
 
 	gameNo, err := generateGameNo()
 	if err != nil {
 		log.Println("handlerCreateRoom, generateGameNo error:", err)
-		replyCreateRoomError(w, int32(MsgError_ErrGenerateRoomNumber))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrGenerateRoomNumber))
 		return
 	}
 
@@ -625,18 +654,18 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 	// var roomNumberString = fmt.Sprintf("%d", roomNumber)
 
-	roomConfig := parseRoomConfigFromString(configString)
+	roomConfig := lobby.ParseRoomConfigFromString(configString)
 
 	gameNoString := fmt.Sprintf("%d", gameNo)
 	var diamond = 0
-	diamond, errCode = payAndSave2RedisWith(int(roomType), roomConfigID, roomIDString, userID, gameNoString)
+	diamond, errCode = pay.DoPayAndSave2RedisWith(int(roomType), roomConfigID, roomIDString, userID, gameNoString)
 
 	// 如果是钻石不足，获取最新的钻石返回给客户端
 	if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
 		log.Println("handlerCreateRoom faile err:", err)
 		// TODO: llwant mysql
 		var currentDiamond = 0 // webdata.QueryDiamond(userID)
-		replyCreateRoomErrorAndLastDiamond(w, int32(MsgError_ErrTakeoffDiamondFailedNotEnough), int32(currentDiamond))
+		replyCreateRoomErrorAndLastDiamond(w, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough), int32(currentDiamond))
 		return
 	}
 
@@ -656,7 +685,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	msgCreateRoomBuf, err := proto.Marshal(msgCreateRoom)
 	if err != nil {
 		log.Println("parse roomConfig err： ", err)
-		replyCreateRoomError(w, int32(MsgError_ErrEncode))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrEncode))
 		return
 	}
 
@@ -666,7 +695,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 	msgBag := &gconst.SSMsgBag{}
 	msgBag.MsgType = &msgType
-	var sn = generateSn()
+	var sn = lobby.GenerateSn()
 	msgBag.SeqNO = &sn
 	msgBag.RequestCode = &requestCode
 	msgBag.Status = &status
@@ -675,15 +704,16 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	msgBag.Params = msgCreateRoomBuf
 
 	//等待游戏服务器的回应
-	log.Printf("handlerCreateRoom, request gameServer create room userID:%s, roomNumber:%s, roomID:%s, gameServerID:%s", userID, roomNumberString, roomIDString, gameServerID)
-	succeed, msgBagReply := sendAndWait(gameServerID, msgBag, 10*time.Second)
+	log.Printf("handlerCreateRoom, request gameServer create room userID:%s, roomNumber:%s, roomID:%s, gameServerID:%s",
+		userID, roomNumberString, roomIDString, gameServerID)
+	succeed, msgBagReply := lobby.SendAndWait(gameServerID, msgBag, 10*time.Second)
 
 	if succeed {
 		errCode := msgBagReply.GetStatus()
 		if errCode != 0 {
 			log.Println("request game server error:, errCode:", errCode)
 			// 创建房间失败，返还钻石
-			refund2UserAndSave2Redis(roomIDString, userID, 0)
+			pay.Refund2UserAndSave2Redis(roomIDString, userID, 0)
 
 			errCode = converGameServerErrCode2AccServerErrCode(errCode)
 			replyCreateRoomError(w, errCode)
@@ -691,7 +721,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		}
 
 		// roomConfig := parseRoomConfigFromString(configJSON)
-		if roomConfig != nil && roomConfig.PayType != fundPay {
+		if roomConfig != nil && roomConfig.PayType != pay.FundPay {
 			appendRoom2UserRoomList(msgCreateRoom)
 		}
 
@@ -700,7 +730,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 		saveRoomInfo(msgCreateRoom, gameServerID, roomNumberString, timeStampInSecond, gameNo)
 
-		roomInfo := &RoomInfo{}
+		roomInfo := &lobby.RoomInfo{}
 		roomInfo.RoomID = &roomIDString
 		roomInfo.RoomNumber = &roomNumberString
 		var timeStampString = fmt.Sprintf("%d", timeStampInSecond)
@@ -726,9 +756,9 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	} else {
 		// 创建房间失败，返还钻石
 		log.Printf("handlerCreateRoom, user %s create room failed, request game server timeout", userID)
-		refund2UserAndSave2Redis(roomIDString, userID, 0)
+		pay.Refund2UserAndSave2Redis(roomIDString, userID, 0)
 
-		replyCreateRoomError(w, int32(MsgError_ErrRequestGameServerTimeOut))
+		replyCreateRoomError(w, int32(lobby.MsgError_ErrRequestGameServerTimeOut))
 	}
 }
 
@@ -751,4 +781,77 @@ func writeGameStartRecord(roomType int, roomNumber string, ownerID string, round
 	// if !ok {
 	// 	log.Println("writeGameStartRecord failed!")
 	// }
+}
+
+func reply(w http.ResponseWriter, pb proto.Message, ops int32) {
+	accessoryMessage := &lobby.AccessoryMessage{}
+	accessoryMessage.Ops = &ops
+
+	if pb != nil {
+		bytes, err := proto.Marshal(pb)
+
+		if err != nil {
+			log.Panic("reply msg, marshal msg failed")
+			return
+		}
+		accessoryMessage.Data = bytes
+	}
+
+	bytes, err := proto.Marshal(accessoryMessage)
+	if err != nil {
+		log.Panic("reply msg, marshal msg failed")
+		return
+	}
+
+	w.Write(bytes)
+}
+
+func parseAccessoryMessage(r *http.Request) (accMsg *lobby.AccessoryMessage, errCode int32) {
+	if r.ContentLength < 1 {
+		log.Println("parseAccessoryMessage failed, content length is zero")
+		errCode = int32(lobby.MsgError_ErrRequestInvalidParam)
+		return
+	}
+
+	message := make([]byte, r.ContentLength)
+	n, _ := r.Body.Read(message)
+	if n != int(r.ContentLength) {
+		log.Println("parseAccessoryMessage failed, can't read request body")
+		errCode = int32(lobby.MsgError_ErrRequestInvalidParam)
+		return
+	}
+
+	accessoryMessage := &lobby.AccessoryMessage{}
+	err := proto.Unmarshal(message, accessoryMessage)
+	if err != nil {
+		log.Println("parseAccessoryMessage failed, Unmarshal msg error:", err)
+		errCode = int32(lobby.MsgError_ErrDecode)
+		return
+	}
+
+	accMsg = accessoryMessage
+	errCode = int32(lobby.MsgError_ErrSuccess)
+	return
+}
+
+func converGameServerErrCode2AccServerErrCode(gameServerErrCode int32) int32 {
+	var errCode = gameServerErrCode
+	if errCode == int32(gconst.SSMsgError_ErrEncode) {
+		errCode = int32(lobby.MsgError_ErrEncode)
+	} else if errCode == int32(gconst.SSMsgError_ErrDecode) {
+		errCode = int32(lobby.MsgError_ErrDecode)
+	} else if errCode == int32(gconst.SSMsgError_ErrRoomExist) {
+		errCode = int32(lobby.MsgError_ErrGameServerRoomExist)
+	} else if errCode == int32(gconst.SSMsgError_ErrNoRoomConfig) {
+		errCode = int32(lobby.MsgError_ErrGameServerNoRoomConfig)
+	} else if errCode == int32(gconst.SSMsgError_ErrUnsupportRoomType) {
+		errCode = int32(lobby.MsgError_ErrGameServerUnsupportRoomType)
+	} else if errCode == int32(gconst.SSMsgError_ErrDecodeRoomConfig) {
+		errCode = int32(lobby.MsgError_ErrGameServerDecodeRoomConfig)
+	} else if errCode == int32(gconst.SSMsgError_ErrRoomNotExist) {
+		errCode = int32(lobby.MsgError_ErrGameServerRoomNotExist)
+	}
+
+	return errCode
+
 }

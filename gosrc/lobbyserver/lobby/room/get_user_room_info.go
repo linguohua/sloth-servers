@@ -3,10 +3,11 @@ package room
 import (
 	"fmt"
 	"gconst"
-	"strconv"
-	log "github.com/sirupsen/logrus"
-	"github.com/garyburd/redigo/redis"
 	"lobbyserver/lobby"
+	"strconv"
+
+	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 // UserRoomInfo 用户房间信息
@@ -25,7 +26,7 @@ func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
 		return nil, fmt.Errorf("Can't get Enter room ID")
 	}
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType"))
@@ -48,12 +49,12 @@ func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
 		return nil, fmt.Errorf("Load game server port error:%v", err)
 	}
 
-	roomCfg, ok := roomConfigs[roomConfigID]
+	roomCfg, ok := lobby.RoomConfigs[roomConfigID]
 	if !ok {
 		return nil, fmt.Errorf("Can't get room config")
 	}
 
-	var roomCfgJSON = parseRoomConfigFromString(roomCfg)
+	var roomCfgJSON = lobby.ParseRoomConfigFromString(roomCfg)
 
 	var userRoomInfo = &UserRoomInfo{}
 	userRoomInfo.RoomType = int32(roomTypeInt)
@@ -62,4 +63,9 @@ func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
 	userRoomInfo.RoomNumber = roomNumber
 
 	return userRoomInfo, nil
+}
+
+// InitWith init
+func InitWith() {
+
 }

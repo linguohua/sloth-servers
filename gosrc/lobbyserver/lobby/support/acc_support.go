@@ -9,7 +9,6 @@ import (
 
 	//"webdata"
 	"github.com/garyburd/redigo/redis"
-	"github.com/gorilla/mux"
 )
 
 // accSupportVerify 检查monkey用户接入合法
@@ -88,7 +87,8 @@ func supportMiddleware(old http.Handler) http.Handler {
 }
 
 // InitWith init
-func InitWith(mainRouter *mux.Router) {
+func InitWith() {
+	var mainRouter = lobby.MainRouter
 	var support = mainRouter.PathPrefix("/support").Subrouter()
 	support.Use(supportMiddleware)
 

@@ -89,8 +89,8 @@ func main() {
 	lobby.CreateHTTPServer()
 	log.Println("start lobbyserver ok!")
 
-	support.InitWith(lobby.MainRouter)
-	sessions.InitWith(lobby.MainRouter)
+	support.InitWith()
+	sessions.InitWith()
 
 	// go syncdata.SyncRedisData2DB()
 	// go syncdata.StartSyncDataSchedule()

@@ -9,7 +9,8 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func reply(w http.ResponseWriter, pb proto.Message, ops int32) {
+// ReplyHTTPWithProto reply http
+func ReplyHTTPWithProto(w http.ResponseWriter, pb proto.Message, ops int32) {
 	accessoryMessage := &AccessoryMessage{}
 	accessoryMessage.Ops = &ops
 
@@ -32,7 +33,8 @@ func reply(w http.ResponseWriter, pb proto.Message, ops int32) {
 	w.Write(bytes)
 }
 
-func parseAccessoryMessage(r *http.Request) (accMsg *AccessoryMessage, errCode int32) {
+// ParseAccessoryMessage parse message
+func ParseAccessoryMessage(r *http.Request) (accMsg *AccessoryMessage, errCode int32) {
 	if r.ContentLength < 1 {
 		log.Println("parseAccessoryMessage failed, content length is zero")
 		errCode = int32(MsgError_ErrRequestInvalidParam)

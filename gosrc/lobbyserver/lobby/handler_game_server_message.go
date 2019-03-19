@@ -3,8 +3,10 @@ package lobby
 import (
 	"fmt"
 	"gconst"
+	"lobbyserver/config"
 	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
@@ -36,7 +38,7 @@ func notifyUserRoomIsFull(roomNum string, userIDs []string) {
 	var data = []byte(msgString)
 
 	for _, usreID := range userIDs {
-		push(int32(pb.MessageCode_OPNotifyUserRoomIsFull), data, usreID)
+		push(int32(MessageCode_OPNotifyUserRoomIsFull), data, usreID)
 	}
 }
 
@@ -68,12 +70,12 @@ func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
 	roomNumber := strs[4]
 	clubID := strs[5]
 
-	cfgString, ok := roomConfigs[roomConfigID]
+	cfgString, ok := RoomConfigs[roomConfigID]
 	if !ok {
 		return
 	}
 
-	roomConfigJSON := parseRoomConfigFromString(cfgString)
+	roomConfigJSON := ParseRoomConfigFromString(cfgString)
 	rquirePlayerNum := roomConfigJSON.PlayerNumAcquired
 
 	if len(userIDs) == rquirePlayerNum && groupID == "" && roomState == int32(gconst.RoomState_SRoomWaiting) {
@@ -101,7 +103,7 @@ func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
 			playerNum = len(userIDs)
 		}
 
-		publishRoomStateChange2Group(groupID, roomID, ClubStateChange, playerNum, userIDs)
+		// publishRoomStateChange2Group(groupID, roomID, ClubStateChange, playerNum, userIDs)
 	}
 
 	// 发通知给俱乐部
@@ -115,54 +117,54 @@ func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
 }
 
 func onHandBeginNotify(msgBag *gconst.SSMsgBag) {
-	var handBeginNotify = &gconst.SSMsgHandBeginNotify{}
-	err := proto.Unmarshal(msgBag.GetParams(), handBeginNotify)
-	if err != nil {
-		log.Println("onRoomStateNotify,  error:", err)
-		return
-	}
+	// var handBeginNotify = &gconst.SSMsgHandBeginNotify{}
+	// err := proto.Unmarshal(msgBag.GetParams(), handBeginNotify)
+	// if err != nil {
+	// 	log.Println("onRoomStateNotify,  error:", err)
+	// 	return
+	// }
 
-	var roomID = handBeginNotify.GetRoomID()
-	var handStartted32 = handBeginNotify.GetHandStartted()
+	// var roomID = handBeginNotify.GetRoomID()
+	// var handStartted32 = handBeginNotify.GetHandStartted()
 
-	conn := pool.Get()
-	defer conn.Close()
+	// conn := pool.Get()
+	// defer conn.Close()
 
-	roomConfigID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+roomID, "roomConfigID"))
-	if err != nil {
-		log.Println("onHandBeginNotify err:", err)
-		return
-	}
+	// roomConfigID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+roomID, "roomConfigID"))
+	// if err != nil {
+	// 	log.Println("onHandBeginNotify err:", err)
+	// 	return
+	// }
 
-	cfgString, ok := roomConfigs[roomConfigID]
-	if !ok {
-		log.Println("onHandBeginNotify cant' find room config for roomConfigID:", roomConfigID)
-		return
-	}
+	// cfgString, ok := RoomConfigs[roomConfigID]
+	// if !ok {
+	// 	log.Println("onHandBeginNotify cant' find room config for roomConfigID:", roomConfigID)
+	// 	return
+	// }
 
-	roomConfigJSON := parseRoomConfigFromString(cfgString)
-	if roomConfigJSON.Race == 1 {
-		publishHandBegin2Arena(roomID, int(handStartted32))
-	}
+	// roomConfigJSON := ParseRoomConfigFromString(cfgString)
+	// if roomConfigJSON.Race == 1 {
+	// 	//publishHandBegin2Arena(roomID, int(handStartted32))
+	// }
 }
 
 func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 	log.Println("onReturnDiamondNotify")
-	var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
-	err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
-	if err != nil {
-		log.Println("onReturnDiamondNotify, err:", err)
-		return
-	}
+	// var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
+	// err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
+	// if err != nil {
+	// 	log.Println("onReturnDiamondNotify, err:", err)
+	// 	return
+	// }
 
-	var roomID = msgUpdateBalance.GetRoomID()
-	var userID = msgUpdateBalance.GetUserID()
-	log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
+	// var roomID = msgUpdateBalance.GetRoomID()
+	// var userID = msgUpdateBalance.GetUserID()
+	// log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
 
-	order := refund2UserAndSave2Redis(roomID, userID, 0)
-	if order != nil && order.Refund != nil {
-		updateMoney(uint32(order.Refund.RemainDiamond), userID)
-	}
+	// order := refund2UserAndSave2Redis(roomID, userID, 0)
+	// if order != nil && order.Refund != nil {
+	// 	updateMoney(uint32(order.Refund.RemainDiamond), userID)
+	// }
 }
 
 func updateMoney(diamond uint32, userID string) {
@@ -200,148 +202,148 @@ func onGameServerRequest(msgBag *gconst.SSMsgBag) {
 
 func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	log.Println("onDeleteRoomRequest")
-	var gameServer2RoomMgrServerDisbandRoom = &gconst.SSMsgGameServer2RoomMgrServerDisbandRoom{}
-	err := proto.Unmarshal(msgBag.GetParams(), gameServer2RoomMgrServerDisbandRoom)
-	if err != nil {
-		log.Println("onDeleteRoomRequest, Unmarshal msg SSMsgGameServer2RoomMgrServerDisbandRoom err:", err)
-		replySSMsg(msgBag, gconst.SSMsgError_ErrDecode, nil)
-		return
-	}
+	// var gameServer2RoomMgrServerDisbandRoom = &gconst.SSMsgGameServer2RoomMgrServerDisbandRoom{}
+	// err := proto.Unmarshal(msgBag.GetParams(), gameServer2RoomMgrServerDisbandRoom)
+	// if err != nil {
+	// 	log.Println("onDeleteRoomRequest, Unmarshal msg SSMsgGameServer2RoomMgrServerDisbandRoom err:", err)
+	// 	replySSMsg(msgBag, gconst.SSMsgError_ErrDecode, nil)
+	// 	return
+	// }
 
-	var roomID = gameServer2RoomMgrServerDisbandRoom.GetRoomID()
-	var startHand = gameServer2RoomMgrServerDisbandRoom.GetHandStart()
-	var finishHand = gameServer2RoomMgrServerDisbandRoom.GetHandFinished()
-	var userIDs = gameServer2RoomMgrServerDisbandRoom.GetPlayerUserIDs()
+	// var roomID = gameServer2RoomMgrServerDisbandRoom.GetRoomID()
+	// var startHand = gameServer2RoomMgrServerDisbandRoom.GetHandStart()
+	// var finishHand = gameServer2RoomMgrServerDisbandRoom.GetHandFinished()
+	// var userIDs = gameServer2RoomMgrServerDisbandRoom.GetPlayerUserIDs()
 
-	log.Printf("onDeleteRoomRequest, roomID:%s, startHand:%d, userIDs:%v", roomID, startHand, userIDs)
+	// log.Printf("onDeleteRoomRequest, roomID:%s, startHand:%d, userIDs:%v", roomID, startHand, userIDs)
 
-	conn := pool.Get()
-	defer conn.Close()
+	// conn := pool.Get()
+	// defer conn.Close()
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "ownerID", "clubID", "roomConfigID", "groupID", "roomType"))
-	if err == redis.ErrNil {
-		log.Printf("onDeleteRoomRequest room %s not exit", roomID)
-		replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
-		return
-	}
+	// fields, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "ownerID", "clubID", "roomConfigID", "groupID", "roomType"))
+	// if err == redis.ErrNil {
+	// 	log.Printf("onDeleteRoomRequest room %s not exit", roomID)
+	// 	replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
+	// 	return
+	// }
 
-	var onwerID = fields[0]
-	var clubID = fields[1]
-	var roomConfigID = fields[2]
-	var groupID = fields[3]
-	var roomType = fields[4]
+	// var onwerID = fields[0]
+	// var clubID = fields[1]
+	// var roomConfigID = fields[2]
+	// var groupID = fields[3]
+	// var roomType = fields[4]
 
-	var roomConfig = GetRoomConfig(roomConfigID)
-	if roomConfig == nil {
-		log.Printf("Can't get config,  room:%s,configID:%s", roomID, roomConfigID)
-		replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
-		return
-	}
+	// var roomConfig = GetRoomConfig(roomConfigID)
+	// if roomConfig == nil {
+	// 	log.Printf("Can't get config,  room:%s,configID:%s", roomID, roomConfigID)
+	// 	replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
+	// 	return
+	// }
 
-	var payType = roomConfig.PayType
+	// var payType = roomConfig.PayType
 
-	var orders = make([]*OrderRecord, 0)
-	if clubID != "" && payType == ClubFundPay {
-		// 返还钻石给俱乐部, 这是旧的俱乐部扣钻，已经弃用
-		var order = refund2Club(roomID, int(startHand))
-		if order != nil {
-			if order.Refund.Refund != 0 {
-				notifyClubFundAddByRoom(order.Refund.Refund, order.Refund.RemainDiamond, "", clubID)
-			}
+	// var orders = make([]*OrderRecord, 0)
+	// if clubID != "" && payType == ClubFundPay {
+	// 	// 返还钻石给俱乐部, 这是旧的俱乐部扣钻，已经弃用
+	// 	var order = refund2Club(roomID, int(startHand))
+	// 	if order != nil {
+	// 		if order.Refund.Refund != 0 {
+	// 			notifyClubFundAddByRoom(order.Refund.Refund, order.Refund.RemainDiamond, "", clubID)
+	// 		}
 
-			orders = append(orders, order)
-		}
-	} else {
-		// 群主支付， 不用管房间里面有多少人
-		if groupID != "" && payType == groupPay {
-			userIDs = make([]string, 0)
-		}
+	// 		orders = append(orders, order)
+	// 	}
+	// } else {
+	// 	// 群主支付， 不用管房间里面有多少人
+	// 	if groupID != "" && payType == groupPay {
+	// 		userIDs = make([]string, 0)
+	// 	}
 
-		orders = refund2Users(roomID, int(startHand), userIDs)
-	}
+	// 	orders = refund2Users(roomID, int(startHand), userIDs)
+	// }
 
-	if orders == nil || len(orders) == 0 {
-		log.Println("refund diamond failed")
-	}
+	// if orders == nil || len(orders) == 0 {
+	// 	log.Println("refund diamond failed")
+	// }
 
-	deleteRoomInfoFromRedis(roomID, onwerID)
+	// deleteRoomInfoFromRedis(roomID, onwerID)
 
-	if clubID != "" {
-		//chost.clubRoomsListener.OnClubRoomDestroy(clubID, roomID)
-	}
+	// if clubID != "" {
+	// 	//chost.clubRoomsListener.OnClubRoomDestroy(clubID, roomID)
+	// }
 
-	log.Printf("groupID:%s, payType:%d, startHand:%d", groupID, payType, startHand)
-	if groupID != "" {
-		// 通知罗行的俱乐部解散房间
-		publishRoomChangeMessage2Group(groupID, roomID, DeleteClubRoom)
+	// log.Printf("groupID:%s, payType:%d, startHand:%d", groupID, payType, startHand)
+	// if groupID != "" {
+	// 	// 通知罗行的俱乐部解散房间
+	// 	// publishRoomChangeMessage2Group(groupID, roomID, DeleteClubRoom)
 
-		//统计茶馆的大赢家
-		// if payType == groupPay && startHand > 0 {
-		// 	go statsGroupBigWiner(groupID, roomType, roomID, gameServer2RoomMgrServerDisbandRoom.PlayerStats)
-		// }
-		if startHand > 0 {
-			go statsGroupBigWiner(groupID, roomType, roomID, gameServer2RoomMgrServerDisbandRoom.PlayerStats, finishHand)
-		}
-	}
+	// 	//统计茶馆的大赢家
+	// 	// if payType == groupPay && startHand > 0 {
+	// 	// 	go statsGroupBigWiner(groupID, roomType, roomID, gameServer2RoomMgrServerDisbandRoom.PlayerStats)
+	// 	// }
+	// 	if startHand > 0 {
+	// 		// go statsGroupBigWiner(groupID, roomType, roomID, gameServer2RoomMgrServerDisbandRoom.PlayerStats, finishHand)
+	// 	}
+	// }
 
-	if roomConfig.Race == 1 {
-		var playerStats = gameServer2RoomMgrServerDisbandRoom.GetPlayerStats()
-		publishGameOver2Arena(roomID, int(startHand), playerStats)
-	}
+	// if roomConfig.Race == 1 {
+	// 	var playerStats = gameServer2RoomMgrServerDisbandRoom.GetPlayerStats()
+	// 	//publishGameOver2Arena(roomID, int(startHand), playerStats)
+	// }
 
-	//webdata.UpdateUsersExp(finishHand, userIDs)
+	// //webdata.UpdateUsersExp(finishHand, userIDs)
 
-	// 回复游戏服务器
-	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
+	// // 回复游戏服务器
+	// replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
 }
 
 // AA制进入房间扣钱请求
 func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 	log.Println("onAAEnterRoomRequest")
-	var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
-	err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
-	if err != nil {
-		log.Println("onAAEnterRoomRequest, Unmarshal msg SSMsgUpdateBalance err:", err)
-		replySSMsg(msgBag, gconst.SSMsgError_ErrDecode, nil)
-		return
-	}
+	// var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
+	// err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
+	// if err != nil {
+	// 	log.Println("onAAEnterRoomRequest, Unmarshal msg SSMsgUpdateBalance err:", err)
+	// 	replySSMsg(msgBag, gconst.SSMsgError_ErrDecode, nil)
+	// 	return
+	// }
 
-	var roomID = msgUpdateBalance.GetRoomID()
-	var userID = msgUpdateBalance.GetUserID()
+	// var roomID = msgUpdateBalance.GetRoomID()
+	// var userID = msgUpdateBalance.GetUserID()
 
-	log.Printf("onAAEnterRoomRequest, roomID:%s, userID:%s", roomID, userID)
-	// roomType := int(gconst.RoomType_DafengMJ)
-	diamond, result := payAndSave2Redis(roomID, userID)
-	if result != int32(gconst.SSMsgError_ErrSuccess) {
-		var errCode gconst.SSMsgError
-		switch result {
-		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough):
-			errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
-			break
-		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO):
-			errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
-			break
-		case int32(gconst.SSMsgError_ErrNoRoomConfig):
-			errCode = gconst.SSMsgError_ErrNoRoomConfig
-			break
-		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedRepeat):
-			// 如果已经扣取钻石，则直接返回成功，让用户再次进入房间
-			errCode = gconst.SSMsgError_ErrSuccess
-			break
-		default:
-			log.Panicln("costMoney, unknow errCode:", result)
-			break
-		}
+	// log.Printf("onAAEnterRoomRequest, roomID:%s, userID:%s", roomID, userID)
+	// // roomType := int(gconst.RoomType_DafengMJ)
+	// diamond, result := payAndSave2Redis(roomID, userID)
+	// if result != int32(gconst.SSMsgError_ErrSuccess) {
+	// 	var errCode gconst.SSMsgError
+	// 	switch result {
+	// 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough):
+	// 		errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
+	// 		break
+	// 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO):
+	// 		errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
+	// 		break
+	// 	case int32(gconst.SSMsgError_ErrNoRoomConfig):
+	// 		errCode = gconst.SSMsgError_ErrNoRoomConfig
+	// 		break
+	// 	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedRepeat):
+	// 		// 如果已经扣取钻石，则直接返回成功，让用户再次进入房间
+	// 		errCode = gconst.SSMsgError_ErrSuccess
+	// 		break
+	// 	default:
+	// 		log.Panicln("costMoney, unknow errCode:", result)
+	// 		break
+	// 	}
 
-		replySSMsg(msgBag, errCode, nil)
+	// 	replySSMsg(msgBag, errCode, nil)
 
-		log.Printf("onAAEnterRoomRequest, pay failed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
-		return
-	}
+	// 	log.Printf("onAAEnterRoomRequest, pay failed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
+	// 	return
+	// }
 
-	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
+	// replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
 
-	log.Printf("onAAEnterRoomRequest, pay successed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
+	// log.Printf("onAAEnterRoomRequest, pay successed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
 }
 
 func onDonateRequest(msgBag *gconst.SSMsgBag) {
@@ -450,11 +452,11 @@ func updateUserRoomList(userID string) {
 	// 	return
 	// }
 
-	var roomInfos = loadRoomInfos(userID)
+	// var roomInfos = loadRoomInfos(userID)
 
-	var msgUpdateRoomList = &MsgUpdateRoomList{}
-	msgUpdateRoomList.RoomInfos = roomInfos
-	SessionMgr.SendProtoMsgTo(userID, msgUpdateRoomList, int32(MessageCode_OPUpdateRoomList))
+	// var msgUpdateRoomList = &MsgUpdateRoomList{}
+	// msgUpdateRoomList.RoomInfos = roomInfos
+	// SessionMgr.SendProtoMsgTo(userID, msgUpdateRoomList, int32(MessageCode_OPUpdateRoomList))
 }
 
 func getRoomTypeWithServerID(gameServerID string) int {
@@ -466,4 +468,73 @@ func getRoomTypeWithServerID(gameServerID string) int {
 		return 0
 	}
 	return roomType
+}
+
+// redisSubscriber 订阅redis频道
+func redisSubscriber() {
+	for {
+		conn := pool.Get()
+
+		psc := redis.PubSubConn{Conn: conn}
+		psc.Subscribe(config.ServerID)
+		keep := true
+		fmt.Println("begin to wait redis publish msg")
+		for keep {
+			switch v := psc.Receive().(type) {
+			case redis.Message:
+				// fmt.Printf("sub %s: message: %s\n", v.Channel, v.Data)
+				// 因为只订阅一个主题，因此忽略change参数
+				// 同时不可能是
+				processRedisPublish(v.Data)
+			case redis.Subscription:
+				fmt.Printf("sub %s: %s %d\n", v.Channel, v.Kind, v.Count)
+			case redis.PMessage:
+				fmt.Printf("sub %s: %s %s\n", v.Channel, v.Pattern, v.Data)
+			case error:
+				log.Println("RoomMgr redisSubscriber redis error:", v)
+				conn.Close()
+				keep = false
+				time.Sleep(2 * time.Second)
+				break
+			}
+		}
+	}
+}
+
+func processRedisPublish(data []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			accSysExceptionCount++
+			debug.PrintStack()
+			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
+		}
+	}()
+
+	ssmsgBag := &gconst.SSMsgBag{}
+	err := proto.Unmarshal(data, ssmsgBag)
+	if err != nil {
+		log.Println("processRedisPublish, decode error:", err)
+		return
+	}
+
+	var msgType = ssmsgBag.GetMsgType()
+	switch int32(msgType) {
+	case int32(gconst.SSMsgType_Notify):
+		onNotifyMessage(ssmsgBag)
+		break
+	case int32(gconst.SSMsgType_Request):
+		go onGameServerRequest(ssmsgBag)
+		break
+	case int32(gconst.SSMsgType_Response):
+		onGameServerRespone(ssmsgBag)
+		break
+	default:
+		log.Printf("No handler for this type %d message", int32(msgType))
+	}
+}
+
+// InitWith init
+func InitWith() {
+	// 新起一个goroutine去订阅redis
+	go redisSubscriber()
 }

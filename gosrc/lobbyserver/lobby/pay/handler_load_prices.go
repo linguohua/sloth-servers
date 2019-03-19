@@ -3,6 +3,7 @@ package pay
 import (
 	"encoding/json"
 	"fmt"
+	"lobbyserver/lobby"
 	"lobbyserver/pricecfg"
 	"net/http"
 
@@ -24,7 +25,7 @@ func handleLoadPrices(w http.ResponseWriter, r *http.Request, userID string) {
 
 	if r.ContentLength < 1 {
 		log.Println("handleLoadPrices failed, content length is zero")
-		loadPricesReplyError(w, int32(MsgError_ErrRequestInvalidParam))
+		loadPricesReplyError(w, int32(lobby.MsgError_ErrRequestInvalidParam))
 		return
 	}
 
@@ -32,7 +33,7 @@ func handleLoadPrices(w http.ResponseWriter, r *http.Request, userID string) {
 	n, _ := r.Body.Read(message)
 	if n != int(r.ContentLength) {
 		log.Println("handleLoadPrices failed, content length is not match")
-		loadPricesReplyError(w, int32(MsgError_ErrRequestInvalidParam))
+		loadPricesReplyError(w, int32(lobby.MsgError_ErrRequestInvalidParam))
 		return
 	}
 
@@ -44,13 +45,13 @@ func handleLoadPrices(w http.ResponseWriter, r *http.Request, userID string) {
 	err := json.Unmarshal(message, loadPriceRequest)
 	if err != nil {
 		log.Println("handleLoadPrices, Unmarshal error:", err)
-		loadPricesReplyError(w, int32(MsgError_ErrRequestInvalidParam))
+		loadPricesReplyError(w, int32(lobby.MsgError_ErrRequestInvalidParam))
 		return
 	}
 
 	if len(loadPriceRequest.RoomTypes) < 1 {
 		log.Println("handleLoadPrices, loadPriceRequest params len(roomType) < 1")
-		loadPricesReplyError(w, int32(MsgError_ErrRequestInvalidParam))
+		loadPricesReplyError(w, int32(lobby.MsgError_ErrRequestInvalidParam))
 		return
 	}
 
@@ -65,7 +66,7 @@ func handleLoadPrices(w http.ResponseWriter, r *http.Request, userID string) {
 	buf, err := json.Marshal(priceCfgs)
 	if err != nil {
 		log.Println("handleLoadPrices, loadPriceRequest params len(roomType) < 1")
-		loadPricesReplyError(w, int32(MsgError_ErrEncode))
+		loadPricesReplyError(w, int32(lobby.MsgError_ErrEncode))
 		return
 	}
 

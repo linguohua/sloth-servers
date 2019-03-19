@@ -1,21 +1,17 @@
-package room
+package lobby
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"gconst"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 )
 
-const (
-	aapay    = 1
-	fundPay  = 2
-	groupPay = 2
-)
-
 var (
-	roomConfigs = make(map[string]string)
+	// RoomConfigs room configs
+	RoomConfigs = make(map[string]string)
 )
 
 // RoomConfigJSON 游戏房间配置
@@ -56,11 +52,12 @@ func loadAllRoomConfigFromRedis() {
 	for i := 0; i < len(values); i = i + 2 {
 		var key = values[i]
 		var value = values[i+1]
-		roomConfigs[key] = value
+		RoomConfigs[key] = value
 	}
 }
 
-func parseRoomConfigFromString(roomConfigString string) *RoomConfigJSON {
+// ParseRoomConfigFromString json parse
+func ParseRoomConfigFromString(roomConfigString string) *RoomConfigJSON {
 	var roomConfigJSON = &RoomConfigJSON{}
 	err := json.Unmarshal([]byte(roomConfigString), roomConfigJSON)
 	if err != nil {
@@ -73,10 +70,10 @@ func parseRoomConfigFromString(roomConfigString string) *RoomConfigJSON {
 
 // GetRoomConfig 导出房间配置
 func GetRoomConfig(cfgID string) *RoomConfigJSON {
-	cfg, ok := roomConfigs[cfgID]
+	cfg, ok := RoomConfigs[cfgID]
 	if !ok {
 		return nil
 	}
 
-	return parseRoomConfigFromString(cfg)
+	return ParseRoomConfigFromString(cfg)
 }

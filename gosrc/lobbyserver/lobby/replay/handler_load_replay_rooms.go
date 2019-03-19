@@ -157,3 +157,9 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 
 	return bytes
 }
+
+// InitWith init
+func InitWith(mainRouter* mux.Router) {
+	// accUserIDHTTPHandlers["/lrproom"] = handleLoadReplayRooms
+	// accUserIDHTTPHandlers["/lrprecord"] = handleLoadReplayRecord
+}

@@ -3,6 +3,7 @@ package room
 import (
 	"gconst"
 	"lobbyserver/config"
+	"lobbyserver/lobby"
 	"net/http"
 	"strconv"
 	"time"
@@ -50,7 +51,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 	log.Printf("deleteRoomInfoFromRedis, roomID:%s, userID:%s", roomID, userIDString)
 	// 1. 先删除房间信息
 	// 2. 从用户房间列表中删除房间，AA制的房间可能不放在用户的房间列表中
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	vs, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomNumber", "groupID", "ownerID"))
@@ -92,7 +93,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 		return
 	}
 
-	var roomIDList = &RoomIDList{}
+	var roomIDList = &lobby.RoomIDList{}
 	err = proto.Unmarshal(bytes, roomIDList)
 	if err != nil {
 		log.Println("deleteRoomInfoFromRedis, error:", err)
@@ -121,33 +122,33 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	roomID := r.URL.Query().Get("roomID")
 	if roomID == "" {
-		var errCode = int32(MsgError_ErrRoomIDIsEmpty)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrRoomIDIsEmpty)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
 	log.Printf("handlerDeleteRoom, userID:%s, roomID:%s", userID, roomID)
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	exist, err := redis.Int(conn.Do("HEXISTS", gconst.RoomTablePrefix+roomID))
 	if exist == 0 {
-		var errCode = int32(MsgError_ErrRoomNotExist)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrRoomNotExist)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
 	fields, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "ownerID", "roomType"))
 	if err == redis.ErrNil {
-		var errCode = int32(MsgError_ErrRoomNotExist)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrRoomNotExist)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
 	if err != nil {
-		var errCode = int32(MsgError_ErrDatabase)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrDatabase)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
@@ -155,16 +156,16 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	var ownerID = fields[0]
 	if ownerID != userID {
 		log.Printf("onMessageDeleteRoom, %s not room creator,cant delete room, owner is %s", userID, ownerID)
-		var errCode = int32(MsgError_ErrNotRoomCreater)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrNotRoomCreater)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
 	var roomTypeStr = fields[1]
 	roomType, err := strconv.Atoi(roomTypeStr)
 	if err != nil {
-		var errCode = int32(MsgError_ErrDecode)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrDecode)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
@@ -185,8 +186,8 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	msgDeleteRoomBuf, err := proto.Marshal(msgDeleteRoom)
 	if err != nil {
 		log.Println("parse roomConfig err： ", err)
-		var errCode = int32(MsgError_ErrEncode)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrEncode)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
@@ -196,7 +197,7 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 
 	msgBag := &gconst.SSMsgBag{}
 	msgBag.MsgType = &msgType
-	var sn = generateSn()
+	var sn = lobby.GenerateSn()
 	msgBag.SeqNO = &sn
 	msgBag.RequestCode = &requestCode
 	msgBag.Status = &status
@@ -207,20 +208,20 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	// log.Println("roomType:", roomType)
 	var gameServerID = getGameServerID(int(roomType))
 
-	succeed, msgBagReply := sendAndWait(gameServerID, msgBag, time.Second)
+	succeed, msgBagReply := lobby.SendAndWait(gameServerID, msgBag, time.Second)
 
 	if succeed {
 		errCode := msgBagReply.GetStatus()
 		if errCode != 0 {
 
 			errCode = converGameServerErrCode2AccServerErrCode(errCode)
-			replyDeleteRoom(w, errCode, ErrorString[errCode])
+			replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 			return
 		}
 
 		deleteRoomInfoFromRedis(roomID, ownerID)
 
-		replyDeleteRoom(w, int32(MsgError_ErrSuccess), "ok")
+		replyDeleteRoom(w, int32(lobby.MsgError_ErrSuccess), "ok")
 		// order := refund2UserAndSave2Redis(roomID, , 0)
 		// if order != nil && order.Refund != nil && (order.Refund.Result == int32(gconst.SSMsgError_ErrSuccess)) {
 		// 	user.updateMoney(uint32(order.Refund.RemainDiamond))
@@ -234,7 +235,7 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		// releaseRoomRsp.RoomID = &roomID
 		// user.sendMsg(releaseRoomRsp, int32(MessageCode_OPDeleteRoom))
 	} else {
-		var errCode = int32(MsgError_ErrRequestGameServerTimeOut)
-		replyDeleteRoom(w, errCode, ErrorString[errCode])
+		var errCode = int32(lobby.MsgError_ErrRequestGameServerTimeOut)
+		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 	}
 }

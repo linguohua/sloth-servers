@@ -39,13 +39,18 @@ var (
 	accSysExceptionCount int // 异常计数
 	// chost                = &clubHost{}
 
-	accRawHTTPHandlers    = make(map[string]accRawHTTPHandler)
-	accUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
+	accRawHTTPHandlers = make(map[string]accRawHTTPHandler)
+
+	// AccUserIDHTTPHandlers trust handlers
+	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
 
 	// SessionMgr mgr
 	SessionMgr ISessionMgr
+	// RoomUtil room helper functions
+	RoomUtil IRoomUtil
 
-	randGenerator *rand.Rand
+	// RandGenerator rand generator
+	RandGenerator *rand.Rand
 )
 
 func loadCharm(userID string) int32 {
@@ -56,32 +61,30 @@ func loadCharm(userID string) int32 {
 	return int32(charm)
 }
 
-func initAccUserIDHTTPHandlers() {
-	accUserIDHTTPHandlers["/lrproom"] = handleLoadReplayRooms
-	accUserIDHTTPHandlers["/lrprecord"] = handleLoadReplayRecord
-	accUserIDHTTPHandlers["/createRoom"] = handlerCreateRoom
-	accUserIDHTTPHandlers["/requestRoomInfo"] = handlerRequestRoomInfo
-	accUserIDHTTPHandlers["/loadUserScoreInfo"] = handleLoadUserScoreInfo
-	accUserIDHTTPHandlers["/loadUserHeadIconURI"] = handleLoadUserHeadIconURI
-	accUserIDHTTPHandlers["/uploadLogFile"] = handleUploadLogFile
-	accUserIDHTTPHandlers["/updateUserLocation"] = handleUpdateUserLocation
-	accUserIDHTTPHandlers["/loadPrices"] = handleLoadPrices
-	accUserIDHTTPHandlers["/clubCreateOrder"] = OnCreateClubOrderForWX       // 创建俱乐部基金订单
-	accUserIDHTTPHandlers["/addAgentInfo"] = OnAddAgentInfo                  // 添加代理信息到后台
-	accUserIDHTTPHandlers["/getClubShopConfig"] = OnGetClubShopConfig        // 获取俱乐部商城配置
-	accUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo     // 拉取用户最后所在的房间
-	accUserIDHTTPHandlers["/lgrouprproom"] = handleLoadGroupReplayRooms      // 拉取茶馆战绩
-	accUserIDHTTPHandlers["/lgroupbw"] = handleLoadGroupBigWinner            // 拉取大赢家
-	accUserIDHTTPHandlers["/queryUserRoomInfo"] = handleQueryUserRoomInfo    // 查询房间状态
-	accUserIDHTTPHandlers["/deleteRoom"] = handlerDeleteRoom                 // 删除房间
-	accUserIDHTTPHandlers["/deleteRoomForGroup"] = handlerDeleteRoomForGroup // 删除房间
-	accUserIDHTTPHandlers["/confirmBigWinner"] = handleConfirmGroupBigWinner // 茶馆确认是否是大赢家
-}
+// func initAccUserIDHTTPHandlers() {
+// 	accUserIDHTTPHandlers["/createRoom"] = handlerCreateRoom
+// 	accUserIDHTTPHandlers["/requestRoomInfo"] = handlerRequestRoomInfo
+// 	accUserIDHTTPHandlers["/loadUserScoreInfo"] = handleLoadUserScoreInfo
+// 	accUserIDHTTPHandlers["/loadUserHeadIconURI"] = handleLoadUserHeadIconURI
+// 	accUserIDHTTPHandlers["/uploadLogFile"] = handleUploadLogFile
+// 	accUserIDHTTPHandlers["/updateUserLocation"] = handleUpdateUserLocation
+// 	accUserIDHTTPHandlers["/loadPrices"] = handleLoadPrices
+// 	accUserIDHTTPHandlers["/clubCreateOrder"] = OnCreateClubOrderForWX       // 创建俱乐部基金订单
+// 	accUserIDHTTPHandlers["/addAgentInfo"] = OnAddAgentInfo                  // 添加代理信息到后台
+// 	accUserIDHTTPHandlers["/getClubShopConfig"] = OnGetClubShopConfig        // 获取俱乐部商城配置
+// 	accUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo     // 拉取用户最后所在的房间
+// 	accUserIDHTTPHandlers["/lgrouprproom"] = handleLoadGroupReplayRooms      // 拉取茶馆战绩
+// 	accUserIDHTTPHandlers["/lgroupbw"] = handleLoadGroupBigWinner            // 拉取大赢家
+// 	accUserIDHTTPHandlers["/queryUserRoomInfo"] = handleQueryUserRoomInfo    // 查询房间状态
+// 	accUserIDHTTPHandlers["/deleteRoom"] = handlerDeleteRoom                 // 删除房间
+// 	accUserIDHTTPHandlers["/deleteRoomForGroup"] = handlerDeleteRoomForGroup // 删除房间
+// 	accUserIDHTTPHandlers["/confirmBigWinner"] = handleConfirmGroupBigWinner // 茶馆确认是否是大赢家
+// }
 
 func initAccRawHTTPHandlers() {
 	// accRawHTTPHandlers["/acc"] = acceptWebsocket
-	accRawHTTPHandlers["/updateDiamond"] = handleUpdateDiamond
-	accRawHTTPHandlers["/orderresult"] = OnOrderResultForWX // 这个是url是易洋web服务器定的，与大厅商店的url一样
+	// accRawHTTPHandlers["/updateDiamond"] = handleUpdateDiamond
+	// accRawHTTPHandlers["/orderresult"] = OnOrderResultForWX // 这个是url是易洋web服务器定的，与大厅商店的url一样
 }
 
 func echoVersion(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +127,7 @@ func LoginReply(ws *websocket.Conn, userID string) {
 	var tk = genTK(userID)
 	msgLoginReply.Token = &tk
 
-	var lastRoomInfo = loadLastRoomInfo(userID)
+	var lastRoomInfo = RoomUtil.LoadLastRoomInfo(userID)
 	if lastRoomInfo != nil {
 		msgLoginReply.LastRoomInfo = lastRoomInfo
 	}
@@ -196,7 +199,7 @@ func LoginReply(ws *websocket.Conn, userID string) {
 func authorizedHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestPath := "/" + path.Base(r.URL.Path)
-		h2, ok := accUserIDHTTPHandlers[requestPath]
+		h2, ok := AccUserIDHTTPHandlers[requestPath]
 		if ok {
 			userID, rt := verifyTokenByQuery(r)
 			if rt {
@@ -214,7 +217,7 @@ func authorizedHandler() http.Handler {
 
 // CreateHTTPServer 启动服务器
 func CreateHTTPServer() {
-	randGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
+	RandGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
 	// TODO: just for test, please remove later
 	log.Println("For cub test:" + genTK("10024063"))
 
@@ -222,16 +225,16 @@ func CreateHTTPServer() {
 
 	loadRoomTypeFromRedis()
 
-	initGamePropCfgs()
+	//initGamePropCfgs()
 
 	// subscriberUserConnectEvent()
 	// subscriberUserDisConnectEvent()
 
-	loadAllRoomConfigFromRedis()
+	//loadAllRoomConfigFromRedis()
 
 	pricecfg.LoadAllPriceCfg(pool)
 
-	initAccUserIDHTTPHandlers()
+	//initAccUserIDHTTPHandlers()
 	initAccRawHTTPHandlers()
 
 	// 所有模块看到的mainRouter

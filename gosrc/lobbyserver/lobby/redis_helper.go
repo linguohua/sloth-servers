@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gconst"
 	"lobbyserver/config"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +21,8 @@ var (
 
 	waitingMap = make(map[int]*WaitSubcriberRsp) // 正在等待的集合
 
-	luaScript *redis.Script
+	// LuaScript lua script
+	LuaScript *redis.Script
 )
 
 // WaitSubcriberRsp 等待游戏服务器的返回
@@ -51,9 +51,6 @@ func startRedisClient() {
 		log.Panicln("The same UUID server instance exists, failed to startup, server ID:", config.ServerID)
 		return
 	}
-
-	// 新起一个goroutine去订阅redis
-	go redisSubscriber()
 
 	// 如果etcd服务器地址确定，则写入自己的版本号
 	if config.EtcdServer != "" {
@@ -97,37 +94,6 @@ func newPool(addr string) *redis.Pool {
 	}
 }
 
-// redisSubscriber 订阅redis频道
-func redisSubscriber() {
-	for {
-		conn := pool.Get()
-
-		psc := redis.PubSubConn{Conn: conn}
-		psc.Subscribe(config.ServerID)
-		keep := true
-		fmt.Println("begin to wait redis publish msg")
-		for keep {
-			switch v := psc.Receive().(type) {
-			case redis.Message:
-				// fmt.Printf("sub %s: message: %s\n", v.Channel, v.Data)
-				// 因为只订阅一个主题，因此忽略change参数
-				// 同时不可能是
-				processRedisPublish(v.Data)
-			case redis.Subscription:
-				fmt.Printf("sub %s: %s %d\n", v.Channel, v.Kind, v.Count)
-			case redis.PMessage:
-				fmt.Printf("sub %s: %s %s\n", v.Channel, v.Pattern, v.Data)
-			case error:
-				log.Println("RoomMgr redisSubscriber redis error:", v)
-				conn.Close()
-				keep = false
-				time.Sleep(2 * time.Second)
-				break
-			}
-		}
-	}
-}
-
 func serverIDSubscriberExist(conn redis.Conn) bool {
 	subCounts, err := redis.Int64Map(conn.Do("PUBSUB", "NUMSUB", config.ServerID))
 	if err != nil {
@@ -142,38 +108,6 @@ func serverIDSubscriberExist(conn redis.Conn) bool {
 	return false
 }
 
-func processRedisPublish(data []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			accSysExceptionCount++
-			debug.PrintStack()
-			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
-		}
-	}()
-
-	ssmsgBag := &gconst.SSMsgBag{}
-	err := proto.Unmarshal(data, ssmsgBag)
-	if err != nil {
-		log.Println("processRedisPublish, decode error:", err)
-		return
-	}
-
-	var msgType = ssmsgBag.GetMsgType()
-	switch int32(msgType) {
-	case int32(gconst.SSMsgType_Notify):
-		onNotifyMessage(ssmsgBag)
-		break
-	case int32(gconst.SSMsgType_Request):
-		go onGameServerRequest(ssmsgBag)
-		break
-	case int32(gconst.SSMsgType_Response):
-		onGameServerRespone(ssmsgBag)
-		break
-	default:
-		log.Printf("No handler for this type %d message", int32(msgType))
-	}
-}
-
 func onGameServerRespone(ssmsgBag *gconst.SSMsgBag) {
 	sn := int(ssmsgBag.GetSeqNO())
 	wait, ok := waitingMap[sn]
@@ -186,8 +120,8 @@ func onGameServerRespone(ssmsgBag *gconst.SSMsgBag) {
 	}
 }
 
-// sendAndWait 给dst发送消息（通过redis推送），并等待回复，timeout 指定超时时间
-func sendAndWait(dst string, msg *gconst.SSMsgBag, timeout time.Duration) (bool, *gconst.SSMsgBag) {
+// SendAndWait 给dst发送消息（通过redis推送），并等待回复，timeout 指定超时时间
+func SendAndWait(dst string, msg *gconst.SSMsgBag, timeout time.Duration) (bool, *gconst.SSMsgBag) {
 	if dst == "" {
 		log.Panicln("publishMessage, need dst")
 		return false, nil
@@ -205,7 +139,7 @@ func sendAndWait(dst string, msg *gconst.SSMsgBag, timeout time.Duration) (bool,
 	wait.waitChan = make(chan bool, 1)
 	waitingMap[int(msg.GetSeqNO())] = wait
 
-	publishMsg(dst, msg)
+	PublishMsg(dst, msg)
 
 	var rspGot = false
 	select {
@@ -221,8 +155,8 @@ func sendAndWait(dst string, msg *gconst.SSMsgBag, timeout time.Duration) (bool,
 	return rspGot, wait.rspMsg
 }
 
-// publishMsg 往redis publish消息
-func publishMsg(dst string, msg *gconst.SSMsgBag) {
+// PublishMsg 往redis publish消息
+func PublishMsg(dst string, msg *gconst.SSMsgBag) {
 	bytes, err := proto.Marshal(msg)
 	if err != nil {
 		log.Println(err)
@@ -249,7 +183,7 @@ func createLuaScript() {
 					end
 				end`
 
-	luaScript = redis.NewScript(3, script)
+	LuaScript = redis.NewScript(3, script)
 }
 
 // GetRedisPool 导出redisPool

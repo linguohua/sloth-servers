@@ -1,4 +1,4 @@
-package userInfo
+package userinfo
 
 // UserInfo 授权成功返回结果
 type UserInfo struct {

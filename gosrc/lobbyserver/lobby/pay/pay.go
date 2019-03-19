@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gconst"
+	"lobbyserver/lobby"
 	"lobbyserver/pricecfg"
 	"math"
 	"strconv"
@@ -19,6 +20,15 @@ import (
 const (
 	dbServerID  = "8def07dc-a53f-4851-a88d-9d45d7db126a"
 	dbServerURL = "tservice.dafeng.xy.qianz.com:9101"
+)
+
+const (
+	// AApay aa pay
+	AApay = 1
+	// FundPay fund pay
+	FundPay = 2
+	// GroupPay group pay
+	GroupPay = 2
 )
 
 // UserCost 保存用户支付记录
@@ -49,23 +59,23 @@ type OrderRecord struct {
 	Refund     *UserRefund `json:"refund"`
 }
 
-func loadGameNoAndGroupID(roomID string) (gameNo string, groupID string) {
-	groupRoomInfo := groupRoomInfoMap[roomID]
-	if groupRoomInfo != nil {
-		gameNo = fmt.Sprintf("%d", groupRoomInfo.GameNo)
-		groupID = groupRoomInfo.ClubID
-	}
-	return
-}
+// func loadGameNoAndGroupID(roomID string) (gameNo string, groupID string) {
+// 	groupRoomInfo := groupRoomInfoMap[roomID]
+// 	if groupRoomInfo != nil {
+// 		gameNo = fmt.Sprintf("%d", groupRoomInfo.GameNo)
+// 		groupID = groupRoomInfo.ClubID
+// 	}
+// 	return
+// }
 
 func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType int) (int, error) {
 	log.Printf("getPayDiamondNum, payType:%d, playerNumAcquired:%d, handNum:%d, roomType:%d", payType, playerNumAcquired, handNum, roomType)
 
 	var payKey = fmt.Sprintf("ownerPay:%d:%d", playerNumAcquired, handNum)
-	if payType == aapay {
+	if payType == AApay {
 		payKey = fmt.Sprintf("aaPay:%d:%d", playerNumAcquired, handNum)
-	} else if payType == groupPay {
-		payKey = fmt.Sprintf("groupPay:%d:%d", playerNumAcquired, handNum)
+	} else if payType == GroupPay {
+		payKey = fmt.Sprintf("GroupPay:%d:%d", playerNumAcquired, handNum)
 	}
 
 	// log.Println("payKey", payKey)
@@ -79,7 +89,7 @@ func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType 
 		return 0, fmt.Errorf("Original price config not exist")
 	}
 
-	if cfg.ActivityPriceCfg != nil && cfg.ActivityPriceCfg.DiscountCfg != nil && payType != fundPay {
+	if cfg.ActivityPriceCfg != nil && cfg.ActivityPriceCfg.DiscountCfg != nil && payType != FundPay {
 		var discountCfg = cfg.ActivityPriceCfg.DiscountCfg
 		pay, ok := discountCfg[payKey]
 		if ok {
@@ -109,7 +119,7 @@ func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType 
 // 用户对于同个房间只能有一个正在处理的订单
 func isUserHavePay(roomID string, userID string) bool {
 	log.Printf("isUserHavePay, roomID:%s, userID:%s", roomID, userID)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	exist, _ := redis.Int(conn.Do("HEXISTS", gconst.RoomUnRefund+userID, roomID))
@@ -120,8 +130,8 @@ func isUserHavePay(roomID string, userID string) bool {
 	return false
 }
 
-// TODO：需要返回扣钱失败的具体原因，如余额不足，io失败等
-func payAndSave2RedisWith(roomType int, roomConfigID string, roomID string, userID string, gameNo string) (remainDiamond int, errCode int32) {
+// DoPayAndSave2RedisWith TODO：需要返回扣钱失败的具体原因，如余额不足，io失败等
+func DoPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, userID string, gameNo string) (remainDiamond int, errCode int32) {
 	log.Printf("payAndSave2RedisWith, roomType:%d, roomConfigID:%s, roomID:%s, userID:%s", roomType, roomConfigID, roomID, userID)
 	// 如果用户已经支付过，则不用再次支付
 	var isPay = isUserHavePay(roomID, userID)
@@ -132,14 +142,14 @@ func payAndSave2RedisWith(roomType int, roomConfigID string, roomID string, user
 		return
 	}
 
-	roomConfigString, ok := roomConfigs[roomConfigID]
+	roomConfigString, ok := lobby.RoomConfigs[roomConfigID]
 	if !ok {
 		remainDiamond = 0
 		errCode = int32(gconst.SSMsgError_ErrNoRoomConfig)
 		return
 	}
 
-	roomConfig := parseRoomConfigFromString(roomConfigString)
+	roomConfig := lobby.ParseRoomConfigFromString(roomConfigString)
 
 	// var pay = 0
 	// if roomType != int(gconst.RoomType_GuanDang) {
@@ -153,20 +163,20 @@ func payAndSave2RedisWith(roomType int, roomConfigID string, roomID string, user
 
 	// var subGameID = 0 // getSubGameIDByRoomType(roomType)
 
-	var groupID = ""
-	if roomConfig.IsGroup {
-		_, groupID = loadGameNoAndGroupID(roomID)
-		log.Printf("payAndSave2RedisWith, group pay,,groupID:%s", groupID)
-	}
+	// var groupID = ""
+	// if roomConfig.IsGroup {
+	// 	_, groupID = loadGameNoAndGroupID(roomID)
+	// 	log.Printf("payAndSave2RedisWith, group pay,,groupID:%s", groupID)
+	// }
 
 	// 扣钻类型
 	var modDiamondType = ownerModDiamondCreateRoom
-	if roomConfig.PayType == aapay {
+	if roomConfig.PayType == AApay {
 		modDiamondType = aaModDiamondCreateRoom
 		if roomConfig.IsGroup {
 			modDiamondType = aaModDiamondCreateRoomForGroup
 		}
-	} else if roomConfig.PayType == groupPay {
+	} else if roomConfig.PayType == GroupPay {
 		modDiamondType = masterModDiamondCreateRoomForGroup
 	} else {
 		if roomConfig.IsGroup {
@@ -216,10 +226,12 @@ func loadUsersInRoom(roomID string, conn redis.Conn) []string {
 }
 
 // 生成一个新的订单保存到redis
-func savePay2Redis(roomConfig *RoomConfigJSON, roomID string, userID string, cost int, remainDiamond int, result int32) {
-	log.Printf("savePay2Redis,payType:%d, roomID:%s, userID:%s, cost:%d, remainDiamond:%d, result:%d", roomConfig.PayType, roomID, userID, cost, remainDiamond, result)
+func savePay2Redis(roomConfig *lobby.RoomConfigJSON, roomID string, userID string,
+	cost int, remainDiamond int, result int32) {
+	log.Printf("savePay2Redis,payType:%d, roomID:%s, userID:%s, cost:%d, remainDiamond:%d, result:%d",
+		roomConfig.PayType, roomID, userID, cost, remainDiamond, result)
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	var userIDs = loadUsersInRoom(roomID, conn)
@@ -277,7 +289,7 @@ func savePay2Redis(roomConfig *RoomConfigJSON, roomID string, userID string, cos
 
 func payAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32) {
 	log.Printf("payAndSave2Redis, roomID:%s, userID:%s", roomID, userID)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	vs, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomConfigID", "roomType", "gameNo"))
@@ -311,7 +323,7 @@ func payAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode 
 		return
 	}
 
-	return payAndSave2RedisWith(rooTypeInt, roomConfigID, roomID, userID, gameNo)
+	return DoPayAndSave2RedisWith(rooTypeInt, roomConfigID, roomID, userID, gameNo)
 
 }
 
@@ -324,7 +336,7 @@ func getRetrunDiamond(pay int, handNum int, handFinish int) int {
 }
 
 func saveRefund(orderRecord *OrderRecord, orderID string) {
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// remove user from room
@@ -373,9 +385,10 @@ func saveRefund(orderRecord *OrderRecord, orderID string) {
 
 }
 
-func refund2UserAndSave2Redis(roomID string, userID string, handFinish int) *OrderRecord {
+// Refund2UserAndSave2Redis refund money to user
+func Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) *OrderRecord {
 	log.Printf("refund2UserAndSave2Redis, roomID:%s, userID:%s, handFinish:%d", roomID, userID, handFinish)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// 获取未返还的订单，同个用户一个房间只能有一个未返还的订单
@@ -450,12 +463,12 @@ func refund2UserAndSave2Redis(roomID string, userID string, handFinish int) *Ord
 
 	// 哪种类型的返还
 	var modDiamondType = ownerModDiamondReturn
-	if orderRecord.PayType == aapay {
+	if orderRecord.PayType == AApay {
 		modDiamondType = aaModDiamondReturn
 		if groupID != "" {
 			modDiamondType = aaModDiamondCreateRoomForGroupReturn
 		}
-	} else if orderRecord.PayType == groupPay {
+	} else if orderRecord.PayType == GroupPay {
 		modDiamondType = masterModDiamondCreateRoomForGroupReturn
 	} else {
 		if groupID != "" {
@@ -503,10 +516,10 @@ func isUserExist(userID string, userIDs []string) bool {
 	return false
 }
 
-// inGameUserIDs 是房间里面游戏的用户，不是要返还钻石的用户，只用检查作返还的用户是否是游戏里面的用户
-func refund2Users(roomID string, handFinish int, inGameUserIDs []string) []*OrderRecord {
+// Refund2Users inGameUserIDs 是房间里面游戏的用户，不是要返还钻石的用户，只用检查作返还的用户是否是游戏里面的用户
+func Refund2Users(roomID string, handFinish int, inGameUserIDs []string) []*OrderRecord {
 	log.Printf("refund, roomID:%s,  handFinish:%d", roomID, handFinish)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	var userIDs = loadUsersInRoom(roomID, conn)
@@ -518,7 +531,7 @@ func refund2Users(roomID string, handFinish int, inGameUserIDs []string) []*Orde
 			finish = 0
 		}
 
-		orderRecord := refund2UserAndSave2Redis(roomID, userID, finish)
+		orderRecord := Refund2UserAndSave2Redis(roomID, userID, finish)
 		if orderRecord != nil {
 			orderRecords = append(orderRecords, orderRecord)
 		}
@@ -540,14 +553,14 @@ func clubPayAndSave2Redis(roomType int, roomConfigID string, roomID string, club
 		return
 	}
 
-	roomConfigString, ok := roomConfigs[roomConfigID]
+	roomConfigString, ok := lobby.RoomConfigs[roomConfigID]
 	if !ok {
 		remainDiamond = 0
 		errCode = int32(gconst.SSMsgError_ErrNoRoomConfig)
 		return
 	}
 
-	roomConfig := parseRoomConfigFromString(roomConfigString)
+	roomConfig := lobby.ParseRoomConfigFromString(roomConfigString)
 
 	var pay = 0
 	if roomType != int(gconst.RoomType_GuanDang) {
@@ -560,7 +573,7 @@ func clubPayAndSave2Redis(roomType int, roomConfigID string, roomID string, club
 	}
 
 	var modDiamondType = ownerModDiamondCreateRoom
-	if roomConfig.PayType == aapay {
+	if roomConfig.PayType == AApay {
 		modDiamondType = aaModDiamondCreateRoom
 	}
 	log.Println("payAndSave2RedisWith modDiamondType:", modDiamondType)
@@ -575,7 +588,7 @@ func clubPayAndSave2Redis(roomType int, roomConfigID string, roomID string, club
 
 func modifyClubDiamond(clubID string, pay int) (remaindDiamond int, errCode int32) {
 	log.Printf("modifyClubDiamond, clubID:%s, pay:%d", clubID, pay)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	diamond, err := redis.Int(conn.Do("HGET", gconst.ClubTablePrefix+clubID, "diamond"))
@@ -607,7 +620,7 @@ func modifyClubDiamond(clubID string, pay int) (remaindDiamond int, errCode int3
 
 func refund2Club(roomID string, handFinish int) *OrderRecord {
 	log.Printf("refund2Club, roomID:%s, handFinish:%d", roomID, handFinish)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	var userIDs = loadUsersInRoom(roomID, conn)
@@ -623,7 +636,7 @@ func refund2Club(roomID string, handFinish int) *OrderRecord {
 func refund2ClubAndSave2Redis(roomID string, clubID string, handFinish int) *OrderRecord {
 	log.Printf("refund2ClubAndSave2Redis, roomID:%s, clubID:%s, handFinish:%d", roomID, clubID, handFinish)
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// 获取未返还的订单，同个用户一个房间只能有一个未返还的订单
