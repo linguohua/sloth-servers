@@ -36,7 +36,7 @@ func notifyUserRoomIsFull(roomNum string, userIDs []string) {
 	var data = []byte(msgString)
 
 	for _, usreID := range userIDs {
-		push(int32(MessageCode_OPNotifyUserRoomIsFull), data, usreID)
+		push(int32(pb.MessageCode_OPNotifyUserRoomIsFull), data, usreID)
 	}
 }
 
