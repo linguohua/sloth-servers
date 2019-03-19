@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"gconst"
+	"lobbyserver/lobby"
 	"strings"
 	"sync"
 	"time"
@@ -81,7 +82,7 @@ func (u *User) send(bytes []byte) {
 }
 
 func (u *User) sendMsg(pb proto.Message, ops int32) {
-	accessoryMessage := &AccessoryMessage{}
+	accessoryMessage := &lobby.AccessoryMessage{}
 	accessoryMessage.Ops = &ops
 
 	if pb != nil {
@@ -110,14 +111,14 @@ func (u *User) onWebsocketClosed(ws *websocket.Conn) {
 }
 
 func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
-	accessoryMessage := &AccessoryMessage{}
+	accessoryMessage := &lobby.AccessoryMessage{}
 	err := proto.Unmarshal(message, accessoryMessage)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	var msgCode = MessageCode(accessoryMessage.GetOps())
+	var msgCode = lobby.MessageCode(accessoryMessage.GetOps())
 
 	switch msgCode {
 	// case MessageCode_OPCreateRoom:
@@ -126,16 +127,16 @@ func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
 	// case MessageCode_OPRequestRoomInfo:
 	// 	onMessageRequestRoomInfo(u, accessoryMessage)
 	// 	break
-	case MessageCode_OPDeleteRoom:
+	case lobby.MessageCode_OPDeleteRoom:
 		// onMessageDeleteRoom(u, accessoryMessage)
 		break
-	case MessageCode_OPChat:
+	case lobby.MessageCode_OPChat:
 		onMessageChat(u, accessoryMessage)
 		break
-	case MessageCode_OPUpdateUserInfo:
+	case lobby.MessageCode_OPUpdateUserInfo:
 		onMessageUpdateUserInfo(u, accessoryMessage)
 		break
-	case MessageCode_OPVoiceData:
+	case lobby.MessageCode_OPVoiceData:
 		onMessageVoiceChat(u, message)
 		break
 	default:
@@ -150,10 +151,10 @@ func userID2Str(userID int64) string {
 	return hex.EncodeToString(b)
 }
 
-func (u *User) saveAuthInfo(userInfo *UserInfo, realIP string) {
+func (u *User) saveAuthInfo(userInfo *lobby.UserInfo, realIP string) {
 	log.Println("saveAuthInfo")
 	if userInfo == nil {
-		userInfo = &UserInfo{}
+		userInfo = &lobby.UserInfo{}
 	}
 
 	var ws = u.ws
@@ -169,10 +170,11 @@ func (u *User) saveAuthInfo(userInfo *UserInfo, realIP string) {
 	// diamond, _ := webdata.QueryDiamond(u.uID)
 	// log.Println("ip:", ip)
 	diamond := 0
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	conn.Do("HMSET", gconst.AsUserTablePrefix+u.uID, "userName", userInfo.SdkUserName, "userNick", userInfo.SdkUserNick, "userSex", userInfo.SdkUserSex, "userLogo", userInfo.SdkUserLogo, "ip", ip, "diaomond", diamond)
+	conn.Do("HMSET", gconst.AsUserTablePrefix+u.uID, "userName", userInfo.SdkUserName,
+		"userNick", userInfo.SdkUserNick, "userSex", userInfo.SdkUserSex, "userLogo", userInfo.SdkUserLogo, "ip", ip, "diaomond", diamond)
 }
 
 func (u *User) detach() {
@@ -180,4 +182,21 @@ func (u *User) detach() {
 		u.ws.Close()
 		u.ws = nil
 	}
+}
+
+func onMessageUpdateUserInfo(user *User, accessoryMessage *lobby.AccessoryMessage) {
+	log.Println("onMessageUpdateUserInfo")
+	var buf = accessoryMessage.GetData()
+	var updateUserInfo = &lobby.MsgUpdateUserInfo{}
+	err := proto.Unmarshal(buf, updateUserInfo)
+	if err != nil {
+		log.Println("onMessageUpdateUserInfo, decode error:", err)
+		return
+	}
+
+	var userIDstring = user.userID()
+	var location = updateUserInfo.GetLocation()
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+	conn.Do("HSET", gconst.AsUserTablePrefix+userIDstring, "location", location)
 }

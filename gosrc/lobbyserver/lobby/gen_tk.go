@@ -7,11 +7,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,7 +28,8 @@ func timeNow() int {
 	return int(unix)
 }
 
-func verifyToken(r *http.Request) (string, bool) {
+// VerifyToken verify token
+func VerifyToken(r *http.Request) (string, bool) {
 	var tk = r.URL.Query().Get("token")
 	if tk == "" {
 		return "", false
@@ -45,7 +47,6 @@ func verifyTokenByQuery(r *http.Request) (string, bool) {
 
 	return parseTK(tk)
 }
-
 
 // GenTK 生成token
 func GenTK(account string) string {

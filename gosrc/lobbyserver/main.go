@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
+	sessions "lobbyserver/lobby/sessions"
 	support "lobbyserver/lobby/support"
 
 	log "github.com/sirupsen/logrus"
@@ -89,6 +90,7 @@ func main() {
 	log.Println("start lobbyserver ok!")
 
 	support.InitWith(lobby.MainRouter)
+	sessions.InitWith(lobby.MainRouter)
 
 	// go syncdata.SyncRedisData2DB()
 	// go syncdata.StartSyncDataSchedule()

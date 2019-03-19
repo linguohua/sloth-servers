@@ -2,8 +2,10 @@ package sessions
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	gconst "gconst"
+	"lobbyserver/lobby"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -11,9 +13,9 @@ import (
 )
 
 // onMessageChat 处理聊天消息
-func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
+func onMessageChat(user *User, accessoryMessage *lobby.AccessoryMessage) {
 	log.Println("onMessageChat, userID:", user.uID)
-	chatMsg := &MsgChat{}
+	chatMsg := &lobby.MsgChat{}
 	err := proto.Unmarshal(accessoryMessage.Data, chatMsg)
 	if err != nil {
 		log.Println("onMessageChat decode failed:", err)
@@ -21,7 +23,7 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 	}
 
 	// 过滤文本
-	if chatMsg.GetDataType() == int32(ChatDataType_Text) {
+	if chatMsg.GetDataType() == int32(lobby.ChatDataType_Text) {
 		// 从消息体中取出文本聊天消息
 		type MsgContent struct {
 			Msg      string `json:"msg"`
@@ -54,9 +56,9 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 		}
 	}
 
-	var scope = ChatScopeType(chatMsg.GetScope())
+	var scope = lobby.ChatScopeType(chatMsg.GetScope())
 	switch scope {
-	case ChatScopeType_UniCast:
+	case lobby.ChatScopeType_UniCast:
 		to := chatMsg.GetTo()
 		if to == "" {
 			log.Println("unicast chat must supply target")
@@ -70,12 +72,12 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 		}
 
 		chatMsg.From = &user.uID
-		toUser.sendMsg(chatMsg, int32(MessageCode_OPChat))
+		toUser.sendMsg(chatMsg, int32(lobby.MessageCode_OPChat))
 
 		// 给自己也发一份，以便客户端更新聊天界面
-		user.sendMsg(chatMsg, int32(MessageCode_OPChat))
+		user.sendMsg(chatMsg, int32(lobby.MessageCode_OPChat))
 		break
-	case ChatScopeType_InRoom:
+	case lobby.ChatScopeType_InRoom:
 		// 先从redis中读取用户当前所在的房间中的所有用户ID
 		userIDList := readUserIDListInRoom(user.userID())
 		chatMsg.From = &user.uID
@@ -84,7 +86,7 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 		for _, uID := range userIDList {
 			var toUser = userMgr.getUserByID(uID)
 			if toUser != nil {
-				toUser.sendMsg(chatMsg, int32(MessageCode_OPChat))
+				toUser.sendMsg(chatMsg, int32(lobby.MessageCode_OPChat))
 
 				if uID == user.uID {
 					selfSent = true
@@ -94,7 +96,7 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 
 		// 如果碰巧列表中没有自己，那就给自己发一份
 		if !selfSent {
-			user.sendMsg(chatMsg, int32(MessageCode_OPChat))
+			user.sendMsg(chatMsg, int32(lobby.MessageCode_OPChat))
 		}
 		break
 	default:
@@ -105,11 +107,11 @@ func onMessageChat(user *User, accessoryMessage *AccessoryMessage) {
 
 func readUserIDListInRoom(who string) []string {
 	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// 首先读取who所在的房间ID
-	roomID := loadUserLastEnterRoomID(who)
+	roomID := lobby.LoadUserLastEnterRoomID(who)
 	if roomID == "" {
 		log.Println("readUserIDListInRoom, get user last room failed:")
 		return []string{}
