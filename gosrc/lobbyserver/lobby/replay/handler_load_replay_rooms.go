@@ -1,11 +1,13 @@
 package replay
 
 import (
-	log "github.com/sirupsen/logrus"
-	"net/http"
 	"gconst"
+	"lobbyserver/lobby"
+	"net/http"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
 
@@ -56,7 +58,7 @@ func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, userID string
 	}
 
 	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	// 取出玩家的回播房间列表
@@ -94,8 +96,8 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 
 	log.Println("handleLoadReplayRooms, values length:", len(values))
 
-	msgLoadReplayRoomReply := &MsgAccLoadReplayRoomsReply{}
-	msgReplayRooms := make([]*MsgAccReplayRoom, 0, len(values))
+	msgLoadReplayRoomReply := &lobby.MsgAccLoadReplayRoomsReply{}
+	msgReplayRooms := make([]*lobby.MsgAccReplayRoom, 0, len(values))
 	for i := 0; i < len(values); i++ {
 		vx, err := redis.Values(values[i], nil)
 		if err != nil {
@@ -115,7 +117,7 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 			continue
 		}
 
-		var replayRoom = &MsgReplayRoom{}
+		var replayRoom = &lobby.MsgReplayRoom{}
 		err = proto.Unmarshal(bytes, replayRoom)
 		if err != nil {
 			log.Println("handleLoadReplayRooms, parser replay room error :", err)
@@ -123,7 +125,7 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 		}
 
 		var roomConfigID = replayRoom.GetRoomConfigID()
-		var roomConfigJSON = GetRoomConfig(roomConfigID)
+		var roomConfigJSON = lobby.GetRoomConfig(roomConfigID)
 		if roomConfigJSON != nil && roomConfigJSON.Race == 1 {
 			log.Println("Not need to load Race room")
 			continue
@@ -138,7 +140,7 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 			continue
 		}
 
-		msgReplayRoom := &MsgAccReplayRoom{}
+		msgReplayRoom := &lobby.MsgAccReplayRoom{}
 		msgReplayRoom.ReplayRoomBytes = bytes
 		var rrt32 = int32(rrtInt)
 		msgReplayRoom.RecordRoomType = &rrt32
@@ -156,10 +158,4 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 	}
 
 	return bytes
-}
-
-// InitWith init
-func InitWith(mainRouter* mux.Router) {
-	// accUserIDHTTPHandlers["/lrproom"] = handleLoadReplayRooms
-	// accUserIDHTTPHandlers["/lrprecord"] = handleLoadReplayRecord
 }

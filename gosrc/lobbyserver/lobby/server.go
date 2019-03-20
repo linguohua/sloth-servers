@@ -33,24 +33,8 @@ var (
 	// 根router，只有http server看到
 	rootRouter = mux.NewRouter()
 
-	// MainRouter main-router
-	MainRouter *mux.Router
-
 	accSysExceptionCount int // 异常计数
-	// chost                = &clubHost{}
-
-	accRawHTTPHandlers = make(map[string]accRawHTTPHandler)
-
-	// AccUserIDHTTPHandlers trust handlers
-	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
-
-	// SessionMgr mgr
-	SessionMgr ISessionMgr
-	// RoomUtil room helper functions
-	RoomUtil IRoomUtil
-
-	// RandGenerator rand generator
-	RandGenerator *rand.Rand
+	accRawHTTPHandlers   = make(map[string]accRawHTTPHandler)
 )
 
 func loadCharm(userID string) int32 {
@@ -127,7 +111,7 @@ func LoginReply(ws *websocket.Conn, userID string) {
 	var tk = genTK(userID)
 	msgLoginReply.Token = &tk
 
-	var lastRoomInfo = RoomUtil.LoadLastRoomInfo(userID)
+	var lastRoomInfo = RoomUtil().LoadLastRoomInfo(userID)
 	if lastRoomInfo != nil {
 		msgLoginReply.LastRoomInfo = lastRoomInfo
 	}

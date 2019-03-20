@@ -108,7 +108,7 @@ func InitWith() {
 
 	startAliveKeeper()
 
-	lobby.SessionMgr = userMgr
+	lobby.SetSessionMgr(userMgr)
 
 	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
 	sessions.HandleFunc("/", acceptWebsocket)

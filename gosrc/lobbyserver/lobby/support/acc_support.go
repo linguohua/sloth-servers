@@ -30,7 +30,7 @@ func accSupportVerify(w http.ResponseWriter, r *http.Request) bool {
 
 func onQueryOnlineUser(w http.ResponseWriter, r *http.Request) {
 	var resultString = `{"count":%d}`
-	w.Write([]byte(fmt.Sprintf(resultString, lobby.SessionMgr.UserCount())))
+	w.Write([]byte(fmt.Sprintf(resultString, lobby.SessionMgr().UserCount())))
 }
 
 // // AddUser2Blacklist 添加用户到黑名单

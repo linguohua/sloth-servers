@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	gconst "gconst"
 	"lobbyserver/lobby"
-	"lobbyserver/lobby/room"
 
 	log "github.com/sirupsen/logrus"
 
@@ -112,7 +111,7 @@ func readUserIDListInRoom(who string) []string {
 	defer conn.Close()
 
 	// 首先读取who所在的房间ID
-	roomID := room.LoadUserLastEnterRoomID(who)
+	roomID := lobby.RoomUtil().LoadUserLastEnterRoomID(who)
 	if roomID == "" {
 		log.Println("readUserIDListInRoom, get user last room failed:")
 		return []string{}

@@ -34,12 +34,12 @@ func onNotifyMessage(msgBag *gconst.SSMsgBag) {
 func notifyUserRoomIsFull(roomNum string, userIDs []string) {
 	log.Printf("notifyUserRoomIsFull, roomNum:%s, userIDs:%v", roomNum, userIDs)
 
-	var msgString = fmt.Sprintf(`{"roomNumber":%s}`, roomNum)
-	var data = []byte(msgString)
+	// var msgString = fmt.Sprintf(`{"roomNumber":%s}`, roomNum)
+	// var data = []byte(msgString)
 
-	for _, usreID := range userIDs {
-		push(int32(MessageCode_OPNotifyUserRoomIsFull), data, usreID)
-	}
+	// for _, usreID := range userIDs {
+	// 	push(int32(MessageCode_OPNotifyUserRoomIsFull), data, usreID)
+	// }
 }
 
 func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
@@ -171,7 +171,7 @@ func updateMoney(diamond uint32, userID string) {
 	var updateUserMoney = &MsgUpdateUserMoney{}
 	var userDiamond = diamond
 	updateUserMoney.Diamond = &userDiamond
-	SessionMgr.SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
+	SessionMgr().SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {

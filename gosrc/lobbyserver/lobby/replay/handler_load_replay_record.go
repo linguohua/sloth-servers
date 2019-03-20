@@ -137,7 +137,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	var msgHandRecorder = &MsgAccLoadReplayRecord{}
+	var msgHandRecorder = &lobby.MsgAccLoadReplayRecord{}
 	// err = proto.Unmarshal(bytesArray, msgHandRecorder)
 	// if err != nil {
 	// 	log.Println("handleLoadReplayRecord, unmarshal err:", err)
@@ -146,7 +146,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 
 	msgHandRecorder.ReplayRecordBytes = bytesArray
 	roomConfigID := cid
-	var roomConfig = roomConfigs[roomConfigID]
+	var roomConfig = lobby.RoomConfigs[roomConfigID]
 	msgHandRecorder.RoomJSONConfig = &roomConfig
 
 	//loadPlayerHeadIconURI(msgHandRecorder.GetPlayers())

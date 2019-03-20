@@ -18,8 +18,8 @@ type UserRoomInfo struct {
 	GameServerPort    int32
 }
 
-// GetUserRoomInfo 获取用户房间信息
-func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
+// getUserRoomInfo 获取用户房间信息
+func getUserRoomInfo(userID string) (*UserRoomInfo, error) {
 	log.Println("GetUserRoomInfo, userID:", userID)
 	enterRoomID := loadUserLastEnterRoomID(userID)
 	if enterRoomID == "" {
@@ -63,9 +63,4 @@ func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
 	userRoomInfo.RoomNumber = roomNumber
 
 	return userRoomInfo, nil
-}
-
-// InitWith init
-func InitWith() {
-
 }

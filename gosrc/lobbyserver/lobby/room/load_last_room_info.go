@@ -31,11 +31,6 @@ func getPropCfg(roomType int) string {
 	return string(buf)
 }
 
-// LoadUserLastEnterRoomID load last enter room
-func LoadUserLastEnterRoomID(userID string) string {
-	return loadUserLastEnterRoomID(userID)
-}
-
 func loadUserLastEnterRoomID(userID string) string {
 	log.Println("loadUserLastEnterRoomID, userID:", userID)
 	var timeAsLeave = 6 * 60 * 60
