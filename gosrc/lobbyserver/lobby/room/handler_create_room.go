@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"gconst"
+	"gpubsub"
 	"lobbyserver/config"
 	"lobbyserver/lobby"
 	"lobbyserver/lobby/pay"
@@ -706,7 +707,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	//等待游戏服务器的回应
 	log.Printf("handlerCreateRoom, request gameServer create room userID:%s, roomNumber:%s, roomID:%s, gameServerID:%s",
 		userID, roomNumberString, roomIDString, gameServerID)
-	succeed, msgBagReply := lobby.SendAndWait(gameServerID, msgBag, 10*time.Second)
+	succeed, msgBagReply := gpubsub.SendAndWait(gameServerID, msgBag, 10*time.Second)
 
 	if succeed {
 		errCode := msgBagReply.GetStatus()

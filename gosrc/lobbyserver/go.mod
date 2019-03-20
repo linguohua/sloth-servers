@@ -14,6 +14,7 @@ require (
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/sirupsen/logrus v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20190316192920-e2bddce071ad // indirect
+	gpubsub v0.0.0
 
 	gscfg v0.0.0
 )
@@ -21,3 +22,5 @@ require (
 replace gscfg => ../gscfg
 
 replace gconst => ../gconst
+
+replace gpubsub => ../gpubsub

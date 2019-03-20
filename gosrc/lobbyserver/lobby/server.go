@@ -3,6 +3,7 @@ package lobby
 import (
 	"fmt"
 	"gconst"
+	"gpubsub"
 	"lobbyserver/config"
 	"math/rand"
 	"net/http"
@@ -240,6 +241,8 @@ func CreateHTTPServer() {
 
 	// 恢复俱乐部房间
 	//chost.clubRoomsListener.RestoreClubRoomsFromRedis()
+
+	gpubsub.Startup(pool, config.ServerID, onNotifyMessage, onGameServerRequest)
 
 	go acceptHTTPRequest()
 }

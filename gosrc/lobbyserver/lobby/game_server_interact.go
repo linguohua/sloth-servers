@@ -1,12 +1,9 @@
 package lobby
 
 import (
-	"fmt"
 	"gconst"
-	"lobbyserver/config"
 	"runtime/debug"
 	"strconv"
-	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
@@ -470,71 +467,65 @@ func getRoomTypeWithServerID(gameServerID string) int {
 	return roomType
 }
 
-// redisSubscriber 订阅redis频道
-func redisSubscriber() {
-	for {
-		conn := pool.Get()
+// // redisSubscriber 订阅redis频道
+// func redisSubscriber() {
+// 	for {
+// 		conn := pool.Get()
 
-		psc := redis.PubSubConn{Conn: conn}
-		psc.Subscribe(config.ServerID)
-		keep := true
-		fmt.Println("begin to wait redis publish msg")
-		for keep {
-			switch v := psc.Receive().(type) {
-			case redis.Message:
-				// fmt.Printf("sub %s: message: %s\n", v.Channel, v.Data)
-				// 因为只订阅一个主题，因此忽略change参数
-				// 同时不可能是
-				processRedisPublish(v.Data)
-			case redis.Subscription:
-				fmt.Printf("sub %s: %s %d\n", v.Channel, v.Kind, v.Count)
-			case redis.PMessage:
-				fmt.Printf("sub %s: %s %s\n", v.Channel, v.Pattern, v.Data)
-			case error:
-				log.Println("RoomMgr redisSubscriber redis error:", v)
-				conn.Close()
-				keep = false
-				time.Sleep(2 * time.Second)
-				break
-			}
-		}
-	}
-}
+// 		psc := redis.PubSubConn{Conn: conn}
+// 		psc.Subscribe(config.ServerID)
+// 		keep := true
+// 		fmt.Println("begin to wait redis publish msg")
+// 		for keep {
+// 			switch v := psc.Receive().(type) {
+// 			case redis.Message:
+// 				// fmt.Printf("sub %s: message: %s\n", v.Channel, v.Data)
+// 				// 因为只订阅一个主题，因此忽略change参数
+// 				// 同时不可能是
+// 				processRedisPublish(v.Data)
+// 			case redis.Subscription:
+// 				fmt.Printf("sub %s: %s %d\n", v.Channel, v.Kind, v.Count)
+// 			case redis.PMessage:
+// 				fmt.Printf("sub %s: %s %s\n", v.Channel, v.Pattern, v.Data)
+// 			case error:
+// 				log.Println("RoomMgr redisSubscriber redis error:", v)
+// 				conn.Close()
+// 				keep = false
+// 				time.Sleep(2 * time.Second)
+// 				break
+// 			}
+// 		}
+// 	}
+// }
 
-func processRedisPublish(data []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			accSysExceptionCount++
-			debug.PrintStack()
-			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
-		}
-	}()
+// func processRedisPublish(data []byte) {
+// 	defer func() {
+// 		if r := recover(); r != nil {
+// 			accSysExceptionCount++
+// 			debug.PrintStack()
+// 			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
+// 		}
+// 	}()
 
-	ssmsgBag := &gconst.SSMsgBag{}
-	err := proto.Unmarshal(data, ssmsgBag)
-	if err != nil {
-		log.Println("processRedisPublish, decode error:", err)
-		return
-	}
+// 	ssmsgBag := &gconst.SSMsgBag{}
+// 	err := proto.Unmarshal(data, ssmsgBag)
+// 	if err != nil {
+// 		log.Println("processRedisPublish, decode error:", err)
+// 		return
+// 	}
 
-	var msgType = ssmsgBag.GetMsgType()
-	switch int32(msgType) {
-	case int32(gconst.SSMsgType_Notify):
-		onNotifyMessage(ssmsgBag)
-		break
-	case int32(gconst.SSMsgType_Request):
-		go onGameServerRequest(ssmsgBag)
-		break
-	case int32(gconst.SSMsgType_Response):
-		onGameServerRespone(ssmsgBag)
-		break
-	default:
-		log.Printf("No handler for this type %d message", int32(msgType))
-	}
-}
-
-// InitWith init
-func InitWith() {
-	// 新起一个goroutine去订阅redis
-	go redisSubscriber()
-}
+// 	var msgType = ssmsgBag.GetMsgType()
+// 	switch int32(msgType) {
+// 	case int32(gconst.SSMsgType_Notify):
+// 		onNotifyMessage(ssmsgBag)
+// 		break
+// 	case int32(gconst.SSMsgType_Request):
+// 		go onGameServerRequest(ssmsgBag)
+// 		break
+// 	case int32(gconst.SSMsgType_Response):
+// 		onGameServerRespone(ssmsgBag)
+// 		break
+// 	default:
+// 		log.Printf("No handler for this type %d message", int32(msgType))
+// 	}
+// }

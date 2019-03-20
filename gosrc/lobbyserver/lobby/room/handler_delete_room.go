@@ -2,6 +2,7 @@ package room
 
 import (
 	"gconst"
+	"gpubsub"
 	"lobbyserver/config"
 	"lobbyserver/lobby"
 	"net/http"
@@ -208,7 +209,7 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	// log.Println("roomType:", roomType)
 	var gameServerID = getGameServerID(int(roomType))
 
-	succeed, msgBagReply := lobby.SendAndWait(gameServerID, msgBag, time.Second)
+	succeed, msgBagReply := gpubsub.SendAndWait(gameServerID, msgBag, time.Second)
 
 	if succeed {
 		errCode := msgBagReply.GetStatus()

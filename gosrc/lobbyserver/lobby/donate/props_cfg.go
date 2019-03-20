@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gconst"
+	"gpubsub"
 	"lobbyserver/config"
 	"lobbyserver/lobby"
 
@@ -382,5 +383,5 @@ func sendPropCfg2GameServer(propCfgString string, serverID string) {
 	msgBag.SourceURL = &url
 	msgBag.Params = []byte(propCfgString)
 
-	lobby.PublishMsg(serverID, msgBag)
+	gpubsub.PublishMsg(serverID, msgBag)
 }

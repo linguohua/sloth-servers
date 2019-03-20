@@ -2,11 +2,12 @@ package prunfast
 
 import (
 	"fmt"
+	"gconst"
+	"gpubsub"
 	"gscfg"
 	"math/rand"
 	"pokerface"
 	"sort"
-	"gconst"
 	"sync"
 	"time"
 
@@ -554,7 +555,7 @@ func (r *Room) requireRoomServer2Delete() bool {
 	msgBag.Params = msgDeleteRoomBuf
 
 	//等待游戏服务器的回应
-	succeed, _ := sendAndWait(gscfg.RoomServerID, msgBag, 10*time.Second)
+	succeed, _ := gpubsub.SendAndWait(gscfg.RoomServerID, msgBag, 10*time.Second)
 
 	if succeed {
 		r.cl.Println("room server reply ok for delete room require")
@@ -1099,7 +1100,7 @@ func (r *Room) onDonateRequest(user IUser, gmsg *pokerface.GameMessage) {
 	msgBag.Params = ssMsgDonateBuf
 
 	//等待房间服务器的回应
-	success, reply := sendAndWait(gscfg.RoomServerID, msgBag, 5*time.Second)
+	success, reply := gpubsub.SendAndWait(gscfg.RoomServerID, msgBag, 5*time.Second)
 	if !success {
 		r.cl.Println("Donate Waiting room server time out")
 		return
@@ -1573,7 +1574,7 @@ func (r *Room) takeOffDiamond(userID string) (bool, pokerface.EnterRoomStatus) {
 	msgBag.Params = msgUpdateBalanceBuf
 
 	//等待房间服务器的回应
-	succeed, reply := sendAndWait(gscfg.RoomServerID, msgBag, 15*time.Second)
+	succeed, reply := gpubsub.SendAndWait(gscfg.RoomServerID, msgBag, 15*time.Second)
 	if !succeed {
 		r.cl.Println("wait room server time out, TakeoffDiamondFailedIO")
 		return false, pokerface.EnterRoomStatus_TakeoffDiamondFailedIO

@@ -20,6 +20,9 @@ const (
 	// RoomTableACCSet ACC维护的房间set
 	RoomTableACCSet = "c:r:accrs"
 
+	// MsgListPrefix 消息队列前缀
+	MsgListPrefix = "msg:"
+
 	// ClubSysTable 俱乐部系统表格，主要是存储一些全局信息
 	ClubSysTable = "m:club:sys"
 	// PlayerClubSetPrefix 玩家俱乐部set
