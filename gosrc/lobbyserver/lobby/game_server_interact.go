@@ -59,7 +59,7 @@ func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
 	defer conn.Close()
 
 	// 下面的代码通知俱乐部
-	strs, _ := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "groupID", "roomType", "ownerID", "roomConfigID", "roomNumber", "clubID"))
+	strs, _ := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "groupID", "roomType", "ownerID", "roomConfigID", "roomNumber", "clubID"))
 	groupID := strs[0]
 	roomTypeStr := strs[1]
 	ownerID := strs[2]
@@ -127,7 +127,7 @@ func onHandBeginNotify(msgBag *gconst.SSMsgBag) {
 	// conn := pool.Get()
 	// defer conn.Close()
 
-	// roomConfigID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+roomID, "roomConfigID"))
+	// roomConfigID, err := redis.String(conn.Do("HGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID"))
 	// if err != nil {
 	// 	log.Println("onHandBeginNotify err:", err)
 	// 	return
@@ -217,7 +217,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	// conn := pool.Get()
 	// defer conn.Close()
 
-	// fields, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "ownerID", "clubID", "roomConfigID", "groupID", "roomType"))
+	// fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "clubID", "roomConfigID", "groupID", "roomType"))
 	// if err == redis.ErrNil {
 	// 	log.Printf("onDeleteRoomRequest room %s not exit", roomID)
 	// 	replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
@@ -459,7 +459,7 @@ func updateUserRoomList(userID string) {
 func getRoomTypeWithServerID(gameServerID string) int {
 	conn := pool.Get()
 	defer conn.Close()
-	roomType, err := redis.Int(conn.Do("HGET", gconst.GameServerKeyPrefix+gameServerID, "roomtype"))
+	roomType, err := redis.Int(conn.Do("HGET", gconst.GameServerInstancePrefix+gameServerID, "roomtype"))
 	if err != nil {
 		log.Println("getRoomTypeWithServerID, error:", err)
 		return 0

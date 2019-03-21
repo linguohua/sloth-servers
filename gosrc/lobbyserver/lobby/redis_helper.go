@@ -46,7 +46,6 @@ func startRedisClient() {
 	if config.EtcdServer != "" {
 		registerWithEtcd()
 	}
-
 }
 
 // registerWithEtcd 往etcd注册自己
@@ -99,7 +98,7 @@ func serverIDSubscriberExist(conn redis.Conn) bool {
 }
 
 //lua脚本
-// KEYS[1] 表前缀stateless.RoomNumberTable
+// KEYS[1] 表前缀stateless.LobbyRoomNumberTablePrefix
 // KEYS[2] roomID
 // KEYS[3] roomNumbers
 func createLuaScript() {
@@ -112,9 +111,4 @@ func createLuaScript() {
 				end`
 
 	LuaScript = redis.NewScript(3, script)
-}
-
-// GetRedisPool 导出redisPool
-func GetRedisPool() *redis.Pool {
-	return pool
 }

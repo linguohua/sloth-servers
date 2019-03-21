@@ -98,7 +98,7 @@ func appendRoom2UserRoomList(msgCreateRoom *gconst.SSMsgCreateRoom) {
 
 	var userIDString = msgCreateRoom.GetUserID()
 
-	buf, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userIDString, "rooms"))
+	buf, err := redis.Bytes(conn.Do("HGET", gconst.LobbyUserTablePrefix+userIDString, "rooms"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("get user rooms err:", err)
 		return
@@ -122,7 +122,7 @@ func appendRoom2UserRoomList(msgCreateRoom *gconst.SSMsgCreateRoom) {
 		return
 	}
 
-	_, err = conn.Do("HSET", gconst.AsUserTablePrefix+userIDString, "rooms", bytes)
+	_, err = conn.Do("HSET", gconst.LobbyUserTablePrefix+userIDString, "rooms", bytes)
 	if err != nil {
 		log.Println("appendRoom2UserRoomList err:", err)
 	}
@@ -143,26 +143,26 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 
 	lastActiveTime := timeStampInSecond / 60
 	// "userID, roomID, configID"
-	var record = userID + "," + roomID + "," + roomConfigID + "," + groupID
+	// var record = userID + "," + roomID + "," + roomConfigID + "," + groupID
 	conn.Send("MULTI")
-	conn.Send("HSET", gconst.RoomGameNo, gameNo, record)
-	conn.Send("HSET", gconst.AsUserTablePrefix+userID, "roomID", roomID)
-	conn.Send("HSET", gconst.RoomNumberTable+roomNumberString, "roomID", roomID)
-	conn.Send("HMSET", gconst.RoomTablePrefix+roomID, "ownerID", userID, "roomConfigID",
+	// conn.Send("HSET", gconst.RoomGameNo, gameNo, record)
+	conn.Send("HSET", gconst.LobbyUserTablePrefix+userID, "roomID", roomID)
+	conn.Send("HSET", gconst.LobbyRoomNumberTablePrefix+roomNumberString, "roomID", roomID)
+	conn.Send("HMSET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", userID, "roomConfigID",
 		roomConfigID, "gameServerID", gameServerID, "roomNumber", roomNumberString, "timeStamp", timeStampInSecond,
 		"lastActiveTime", lastActiveTime, "roomType", roomType, "clubID", clubID, "groupID", groupID,
 		"arenaID", arenaID, "raceTemplateID", raceTemplateID, "gameNo", gameNo)
-	conn.Send("SADD", gconst.RoomTableACCSet, roomID)
+	conn.Send("SADD", gconst.LobbyRoomTableSet, roomID)
 
-	if groupID != "" {
+	// if groupID != "" {
 
-		// TODO: 记住在解散牌友群的时候把这个对应的数据删除
-		conn.Send("SADD", gconst.GroupRoomsSetPrefix+groupID, roomID)
+	// 	// TODO: 记住在解散牌友群的时候把这个对应的数据删除
+	// 	conn.Send("SADD", gconst.GroupRoomsSetPrefix+groupID, roomID)
 
-		groupMemberRoomsSetKey := fmt.Sprintf(gconst.GroupMemberRoomsSet, groupID, userID)
-		conn.Send("SADD", groupMemberRoomsSetKey, roomID)
+	// 	groupMemberRoomsSetKey := fmt.Sprintf(gconst.GroupMemberRoomsSet, groupID, userID)
+	// 	conn.Send("SADD", groupMemberRoomsSetKey, roomID)
 
-	}
+	// }
 	_, err := conn.Do("EXEC")
 	if err != nil {
 		log.Println("saveRoomInfo err: ", err)
@@ -173,7 +173,7 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 func getGameServerURL(gameServerID string) string {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
-	url, _ := redis.String(conn.Do("HGET", gconst.GameServerKeyPrefix+gameServerID, "url"))
+	url, _ := redis.String(conn.Do("HGET", gconst.GameServerInstancePrefix+gameServerID, "url"))
 	if url == "" {
 		url = config.GameServerURL
 	}
@@ -193,14 +193,14 @@ func strArray2Comma(ss []string) string {
 
 // 这个是为了写牌局记录到sql, sql保存牌局需要这个GameNo
 func generateGameNo() (int64, error) {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
+	// conn := lobby.Pool().Get()
+	// defer conn.Close()
 
-	gameNo, err := redis.Int64(conn.Do("INCR", gconst.CurrentRoomGameNo))
-	if err != nil {
-		log.Println("generateGameNo error:", err)
-		return 0, err
-	}
+	// gameNo, err := redis.Int64(conn.Do("INCR", gconst.CurrentRoomGameNo))
+	// if err != nil {
+	// 	log.Println("generateGameNo error:", err)
+	// 	return 0, err
+	// }
 
 	// TODO: llwant mysql
 
@@ -212,7 +212,7 @@ func generateGameNo() (int64, error) {
 	// 	}
 	// }
 
-	return gameNo, nil
+	return 0, nil
 }
 
 // 1.检查数据库是否已经存在随机数
@@ -221,7 +221,7 @@ func validRandNumber(roomNumbers string, roomID string) string {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 	// luaScript 在startRedis中创建
-	randNumber, err := redis.String(lobby.LuaScript.Do(conn, gconst.RoomNumberTable, roomID, roomNumbers))
+	randNumber, err := redis.String(lobby.LuaScript.Do(conn, gconst.LobbyRoomNumberTablePrefix, roomID, roomNumbers))
 	if err != nil {
 		log.Printf("randromNumber error, roomNumbers %s, roomID %s, error:%v ", roomNumbers, roomID, err)
 	}
@@ -250,9 +250,9 @@ func saveRoomConfigIfNotExist(roomConfig string) (roomConfigID string, errorCode
 	md5Value := md5.Sum(bytes)
 	roomConfigID = fmt.Sprintf("%x", md5Value)
 
-	result, _ := redis.Int(conn.Do("HEXISTS", gconst.RoomConfigTable, roomConfigID))
+	result, _ := redis.Int(conn.Do("HEXISTS", gconst.LobbyRoomConfigTable, roomConfigID))
 	if result != 1 {
-		_, err := conn.Do("HSET", gconst.RoomConfigTable, roomConfigID, bytes)
+		_, err := conn.Do("HSET", gconst.LobbyRoomConfigTable, roomConfigID, bytes)
 		if err != nil {
 			log.Println("save room config err:", err)
 			errorCode = int32(lobby.MsgError_ErrDatabase)
@@ -303,7 +303,7 @@ func getGameServerID(myRoomType int) string {
 		myRoomType = int(gconst.RoomType_DafengMJ)
 	}
 
-	var setkey = fmt.Sprintf("%s%d", gconst.GameServerKeyPrefix, myRoomType)
+	var setkey = fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, myRoomType)
 	log.Println("setkey:", setkey)
 	gameServerIDs, err := redis.Strings(conn.Do("SMEMBERS", setkey))
 	if err != nil {
@@ -315,7 +315,7 @@ func getGameServerID(myRoomType int) string {
 
 	conn.Send("MULTI")
 	for _, key := range gameServerIDs {
-		var gameServerKey = fmt.Sprintf("%s%s", gconst.GameServerKeyPrefix, key)
+		var gameServerKey = fmt.Sprintf("%s%s", gconst.GameServerInstancePrefix, key)
 		log.Println("gameServerKey:", gameServerKey)
 		conn.Send("HGET", gameServerKey, "ver")
 	}
@@ -348,7 +348,7 @@ func checkRoomLimit(userID string) (errCode int32) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "rooms"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "rooms"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("get rooms err:", err)
 		errCode = int32(lobby.MsgError_ErrDatabase)
@@ -392,8 +392,8 @@ func ifNotExistInGameServerAndCleanRoom(roomInfo *lobby.RoomInfo, owner string) 
 
 	// startHand, err := redis.Int(conn.Send("HGET",  gconst.GameRoomStatistics+roomID,  "hrStartted"))
 	conn.Send("MULTI")
-	conn.Send("HGET", gconst.GameRoomStatistics+roomID, "hrStartted")
-	conn.Send("EXISTS", gconst.GsRoomTablePrefix+roomID)
+	conn.Send("HGET", gconst.GameServerRoomStatisticsPrefix+roomID, "hrStartted")
+	conn.Send("EXISTS", gconst.GameServerRoomTablePrefix+roomID)
 	values, err := redis.Ints(conn.Do("EXEC"))
 	if err != nil {
 		log.Println("ifNotExistInGameServerAndCleanRoom, err:", err)
@@ -421,7 +421,7 @@ func loadUserRoom(userID string) *lobby.RoomInfo {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "rooms"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "rooms"))
 	if err != nil && err != redis.ErrNil {
 		return nil
 	}
@@ -448,7 +448,7 @@ func loadUserRoom(userID string) *lobby.RoomInfo {
 
 	log.Println("loadUserRoom:", roomID)
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomNumber", "roomConfigID", "gameServerID"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomNumber", "roomConfigID", "gameServerID"))
 	if err != nil {
 		log.Println("load room info err:", err)
 		return nil
@@ -487,7 +487,7 @@ func removeUserCreateRoomLock(userID string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	conn.Do("DEL", gconst.UserCreatRoomLock+userID)
+	conn.Do("DEL", gconst.LobbyUserCreatRoomLockPrefix+userID)
 }
 
 func isUserCreateRoomLock(userID string, roomID string) bool {
@@ -497,7 +497,7 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 
 	// 10秒后自动清除
 	var lockTime = 10
-	var key = fmt.Sprintf("%s%s", gconst.UserCreatRoomLock, userID)
+	var key = fmt.Sprintf("%s%s", gconst.LobbyUserCreatRoomLockPrefix, userID)
 	result, err := conn.Do("set", key, roomID, "ex", lockTime, "nx")
 	if err != nil {
 		log.Println("isUserCreateRoomLock, err:", err)
@@ -554,7 +554,8 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		var errString = lobby.ErrorString[errorCode]
 		msgCreateRoomRsp.RetMsg = &errString
 		msgCreateRoomRsp.RoomInfo = lastRoomInfo
-		log.Printf("handlerCreateRoom, User %s in other room, roomNumber: %s, roomId:%s", userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
+		log.Printf("handlerCreateRoom, User %s in other room, roomNumber: %s, roomId:%s",
+			userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
 		reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
 		return
 	}

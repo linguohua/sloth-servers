@@ -1,10 +1,8 @@
 package room
 
 import (
-	"fmt"
 	"gconst"
 	"lobbyserver/lobby"
-	"lobbyserver/lobby/pay"
 	"net/http"
 	"strconv"
 
@@ -14,7 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func replyJoinClubRoomError(w http.ResponseWriter, errorCode int32, clubID string) {
+/*func replyJoinClubRoomError(w http.ResponseWriter, errorCode int32, clubID string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 	clubNumber, _ := redis.String(conn.Do("HGET", gconst.ClubTablePrefix+clubID, "clubNumber"))
@@ -26,7 +24,7 @@ func replyJoinClubRoomError(w http.ResponseWriter, errorCode int32, clubID strin
 	msgRequestRoomInfoRsp.RetMsg = &errString
 
 	reply(w, msgRequestRoomInfoRsp, int32(lobby.MessageCode_OPRequestRoomInfo))
-}
+}*/
 
 func replyRequestRoomInfo(w http.ResponseWriter, errorCode int32, roomInfo *lobby.RoomInfo) {
 
@@ -41,7 +39,7 @@ func replyRequestRoomInfo(w http.ResponseWriter, errorCode int32, roomInfo *lobb
 
 func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString string) bool {
 	// 判断房间是否已经满
-	buf, err := redis.Bytes(conn.Do("HGET", gconst.GsRoomTablePrefix+roomID, "players"))
+	buf, err := redis.Bytes(conn.Do("HGET", gconst.GameServerRoomTablePrefix+roomID, "players"))
 	if err != nil {
 		log.Println("Get room players failed:", err)
 		return false
@@ -77,7 +75,7 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 
 }
 
-func isClubMember(clubID string, userID string) bool {
+/*func isClubMember(clubID string, userID string) bool {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
@@ -92,9 +90,9 @@ func isClubMember(clubID string, userID string) bool {
 	}
 
 	return true
-}
+}*/
 
-func isGroupMember(groupID string, userID string) bool {
+/*func isGroupMember(groupID string, userID string) bool {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
@@ -111,7 +109,7 @@ func isGroupMember(groupID string, userID string) bool {
 	}
 
 	return false
-}
+}*/
 
 func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID string) {
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
@@ -163,7 +161,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	roomID, err := redis.String(conn.Do("HGET", gconst.RoomNumberTable+roomNumber, "roomID"))
+	roomID, err := redis.String(conn.Do("HGET", gconst.LobbyRoomNumberTablePrefix+roomNumber, "roomID"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("onMessageRequestRoomInfo get roomID err: ", err)
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDatabase), nil)
@@ -176,7 +174,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomConfigID", "gameServerID", "groupID", "roomType", "arenaID"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "gameServerID", "groupID", "roomType", "arenaID"))
 	if err != nil {
 		log.Println("onMessageRequestRoomInfo get roomConfigID, gameServerID err: ", err)
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDatabase), nil)
@@ -185,7 +183,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 
 	var roomConfigID = values[0]
 	var gameServerID = values[1]
-	var groupID = values[2]
+	// var groupID = values[2]
 	var roomType = values[3]
 	var arenaID = values[4]
 	// var clubID  = values[2]
@@ -195,7 +193,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 	// 	return
 	// }
 
-	roomConfig, err := redis.String(conn.Do("HGET", gconst.RoomConfigTable, roomConfigID))
+	roomConfig, err := redis.String(conn.Do("HGET", gconst.LobbyRoomConfigTable, roomConfigID))
 	if err != nil {
 		log.Println("onMessageRequestRoomInfo get roomConfig err: ", err)
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDatabase), nil)
@@ -208,11 +206,11 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	roomConfigJSON := lobby.ParseRoomConfigFromString(roomConfig)
-	if groupID != "" && roomConfigJSON.PayType == pay.GroupPay && !isGroupMember(groupID, userID) {
-		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrUserCanNotJoinCLubRoom), nil)
-		return
-	}
+	// roomConfigJSON := lobby.ParseRoomConfigFromString(roomConfig)
+	// if groupID != "" && roomConfigJSON.PayType == pay.GroupPay && !isGroupMember(groupID, userID) {
+	// 	replyRequestRoomInfo(w, int32(lobby.MsgError_ErrUserCanNotJoinCLubRoom), nil)
+	// 	return
+	// }
 
 	var gameServerURL = getGameServerURL(gameServerID)
 	roomTypeInt, _ := strconv.Atoi(roomType)

@@ -35,7 +35,7 @@ func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID str
 	var location = updateUserInfo.GetLocation()
 	conn := lobby.Pool().Get()
 	defer conn.Close()
-	conn.Do("HSET", gconst.AsUserTablePrefix+userID, "location", location)
+	conn.Do("HSET", gconst.LobbyUserTablePrefix+userID, "location", location)
 
 	sendLocation2GameServer(location, userID)
 }
@@ -51,7 +51,7 @@ func sendLocation2GameServer(location string, userID string) {
 	// conn := lobby.Pool().Get()
 	// defer conn.Close()
 
-	// serverID, err := redis.String(conn.Do("HGET", gconst.RoomTablePrefix+enterRoomID, "gameServerID"))
+	// serverID, err := redis.String(conn.Do("HGET", gconst.LobbyRoomTablePrefix+enterRoomID, "gameServerID"))
 	// if err != nil {
 	// 	log.Println("load gameServerID error:", err)
 	// 	return

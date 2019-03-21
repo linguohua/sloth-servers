@@ -174,7 +174,7 @@ func (u *User) saveAuthInfo(userInfo *userinfo.UserInfo, realIP string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	conn.Do("HMSET", gconst.AsUserTablePrefix+u.uID, "userName", userInfo.SdkUserName,
+	conn.Do("HMSET", gconst.LobbyUserTablePrefix+u.uID, "userName", userInfo.SdkUserName,
 		"userNick", userInfo.SdkUserNick, "userSex", userInfo.SdkUserSex, "userLogo", userInfo.SdkUserLogo, "ip", ip, "diaomond", diamond)
 }
 
@@ -199,5 +199,5 @@ func onMessageUpdateUserInfo(user *User, accessoryMessage *lobby.AccessoryMessag
 	var location = updateUserInfo.GetLocation()
 	conn := lobby.Pool().Get()
 	defer conn.Close()
-	conn.Do("HSET", gconst.AsUserTablePrefix+userIDstring, "location", location)
+	conn.Do("HSET", gconst.LobbyUserTablePrefix+userIDstring, "location", location)
 }

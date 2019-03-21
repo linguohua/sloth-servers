@@ -176,7 +176,7 @@ func loadAllRoomPropCfgs() {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.RoomTypeSet))
+	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.GameServerRoomTypeSet))
 	if err != nil {
 		log.Println("loadAllRoomPropCfgs, err:", err)
 		return
@@ -186,7 +186,7 @@ func loadAllRoomPropCfgs() {
 
 	conn.Send("MULTI")
 	for _, roomType := range gconst.RoomType_value {
-		conn.Do("HGET", gconst.GamePropsCfgTable, roomType)
+		conn.Do("HGET", gconst.LobbyPropsCfgTable, roomType)
 		roomTypes = append(roomTypes, roomType)
 	}
 
@@ -194,7 +194,7 @@ func loadAllRoomPropCfgs() {
 		roomTypeInt32 := int32(roomType)
 		_, ok := gconst.RoomType_name[roomTypeInt32]
 		if !ok {
-			conn.Do("HGET", gconst.GamePropsCfgTable, roomType)
+			conn.Do("HGET", gconst.LobbyPropsCfgTable, roomType)
 			roomTypes = append(roomTypes, roomTypeInt32)
 		}
 	}
@@ -235,7 +235,7 @@ func loadPropTable(conn redis.Conn) map[int]PP {
 
 	ppMap := make(map[int]PP)
 	// 拉取配置表
-	ppString, err := redis.String(conn.Do("GET", gconst.PropsTable))
+	ppString, err := redis.String(conn.Do("GET", gconst.LobbyPropsTable))
 	if err != nil {
 		log.Println("err:", err)
 		return ppMap
@@ -343,9 +343,9 @@ func UpdateRoomPropsCfg(JSONString string) error {
 
 	ClientPropCfgsMap[propsCfg.RoomType] = propCfgMap
 
-	key := fmt.Sprintf("%s%d", gconst.GameServerKeyPrefix, propsCfg.RoomType)
+	key := fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, propsCfg.RoomType)
 	conn.Send("MULTI")
-	conn.Send("HSET", gconst.GamePropsCfgTable, propsCfg.RoomType, string(buf))
+	conn.Send("HSET", gconst.LobbyPropsCfgTable, propsCfg.RoomType, string(buf))
 	conn.Send("SMEMBERS", key)
 
 	vs, err := redis.Values(conn.Do("EXEC"))

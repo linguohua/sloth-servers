@@ -25,7 +25,7 @@ import (
 // 	conn.Send("MULTI")
 
 // 	for _, player := range players {
-// 		conn.Send("HMGET", gconst.AsUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
+// 		conn.Send("HMGET", gconst.LobbyUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
 // 	}
 
 // 	values, err := redis.Values(conn.Do("EXEC"))
@@ -62,7 +62,7 @@ func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, userID string
 	defer conn.Close()
 
 	// 取出玩家的回播房间列表
-	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.PlayerTablePrefix+userID, "rr"))
+	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+userID, "rr"))
 	if err != nil {
 		log.Println("handleLoadReplayRooms, err:", err)
 		return
@@ -85,7 +85,7 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 	conn.Send("MULTI")
 	for _, rr := range replayRoomIDs {
 		// "d" 二进制数据， "rrt" 回播房间类型：1是大丰，2是东台，3是盐城等等，具体看game_replay.proto定义
-		conn.Send("HMGET", gconst.MJReplayRoomTablePrefix+rr, "d", "rrt")
+		conn.Send("HMGET", gconst.GameServerMJReplayRoomTablePrefix+rr, "d", "rrt")
 	}
 	values, err := redis.Values(conn.Do("EXEC"))
 

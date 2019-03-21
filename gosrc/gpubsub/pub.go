@@ -63,7 +63,7 @@ func PublishMsg(dst string, msg *gconst.SSMsgBag) {
 	defer conn.Close()
 
 	// 写入到目标服务器的消息队列
-	var targetMsgListID = gconst.MsgListPrefix + dst
+	var targetMsgListID = gconst.LobbyMsgListPrefix + dst
 	_, err = conn.Do("RPUSH", targetMsgListID, bytes)
 	if err != nil {
 		log.Panic("PublishMsg failed, RPUSH error:", err)

@@ -17,6 +17,8 @@ var (
 	requestMsgDispatcher MsgDispatchHandler
 
 	waitingMap = make(map[int]*waitSubcriberRsp) // 正在等待的集合
+
+	isInProcessState = false
 )
 
 // Startup startup
@@ -28,4 +30,7 @@ func Startup(myPool *redis.Pool, myServerID1 string,
 	requestMsgDispatcher = requestMsgDispatcher1
 
 	go redisSubscriber()
+
+	// 启动时读取一次redis，处理历史遗留消息
+	go loadMsgsAndDispatch()
 }

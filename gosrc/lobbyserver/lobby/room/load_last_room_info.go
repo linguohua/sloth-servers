@@ -38,7 +38,7 @@ func loadUserLastEnterRoomID(userID string) string {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.PlayerTablePrefix+userID, "enterRoom", "enterTime", "leaveRoom", "leaveTime"))
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyPlayerTablePrefix+userID, "enterRoom", "enterTime", "leaveRoom", "leaveTime"))
 	if err != nil {
 		log.Println("loadLastRoomNumber err:", err)
 		return ""
@@ -87,7 +87,7 @@ func loadLastRoomInfo(userID string) *lobby.RoomInfo {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType", "arenaID", "raceTemplateID"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType", "arenaID", "raceTemplateID"))
 	if err != nil {
 		log.Println("load room info err:", err)
 		return nil

@@ -25,7 +25,7 @@ func handleUploadLogFile(w http.ResponseWriter, r *http.Request, userID string) 
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	saveLogTimeStr, err := redis.String(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "saveLogTime"))
+	saveLogTimeStr, err := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "saveLogTime"))
 	if err != nil {
 		saveLogTimeStr = "0"
 	}
@@ -70,7 +70,7 @@ func handleUploadLogFile(w http.ResponseWriter, r *http.Request, userID string) 
 		return
 	}
 
-	conn.Do("HSET", gconst.AsUserTablePrefix+userID, "saveLogTime", timeStampInSecond)
+	conn.Do("HSET", gconst.LobbyUserTablePrefix+userID, "saveLogTime", timeStampInSecond)
 
 	w.Write([]byte(`{"error":0}`))
 }

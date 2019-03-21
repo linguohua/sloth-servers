@@ -136,7 +136,7 @@ func savePriceCfg2Redis(roomType int, cfgString string) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	key := fmt.Sprintf("%s%d", gconst.PriceConfig, roomType)
+	key := fmt.Sprintf("%s%d", gconst.LobbyPriceConfigPrefix, roomType)
 
 	conn.Do("hset", key, "originalPrice", cfgString)
 }

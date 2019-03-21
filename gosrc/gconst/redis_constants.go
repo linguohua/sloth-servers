@@ -1,5 +1,6 @@
 package gconst
 
+/*
 const (
 	// RoomConfigTable m 管理型服务器前缀，r表示房间，c表示配置
 	RoomConfigTable = "m:r:c"
@@ -240,3 +241,4 @@ const (
 	// MaxGroupReplayRoomsNum 最多保存的牌友群回播记录数量
 	MaxGroupReplayRoomsNum = 300
 )
+*/

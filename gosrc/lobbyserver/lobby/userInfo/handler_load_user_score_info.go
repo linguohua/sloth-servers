@@ -38,7 +38,7 @@ func handleLoadUserScoreInfo(w http.ResponseWriter, r *http.Request, userID stri
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	values, err := redis.Ints(conn.Do("HMGET", gconst.PlayerTablePrefix+userID, "dfHands", "dfHMW"))
+	values, err := redis.Ints(conn.Do("HMGET", gconst.LobbyPlayerTablePrefix+userID, "dfHands", "dfHMW"))
 
 	if err != nil && err != redis.ErrNil {
 		log.Println("handleLoadUserScoreInfo get user score info err: ", err)

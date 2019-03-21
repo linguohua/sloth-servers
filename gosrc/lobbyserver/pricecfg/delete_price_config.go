@@ -24,13 +24,13 @@ func DeletePriceCfg(roomType int, priceCfgType string) {
 		cfg = nil
 	}
 
-	if cfg == nil {
-		// 只有在原价表与活动表都没有的情况下才删除配置
-		notifyAllUserPriceChange(roomType, cfg, deletePriceCfg)
-	} else {
-		// 原价表与活动表存在任何一种都只是更新配置
-		notifyAllUserPriceChange(roomType, cfg, updatePriceCfg)
-	}
+	// if cfg == nil {
+	// 	// 只有在原价表与活动表都没有的情况下才删除配置
+	// 	notifyAllUserPriceChange(roomType, cfg, deletePriceCfg)
+	// } else {
+	// 	// 原价表与活动表存在任何一种都只是更新配置
+	// 	notifyAllUserPriceChange(roomType, cfg, updatePriceCfg)
+	// }
 }
 
 // PushAllPlayer 推送数据给所有用户

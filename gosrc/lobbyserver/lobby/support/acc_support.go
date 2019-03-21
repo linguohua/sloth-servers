@@ -19,7 +19,7 @@ func accSupportVerify(w http.ResponseWriter, r *http.Request) bool {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	tableName := gconst.AccMonkeyAccountTalbe
+	tableName := gconst.LobbyMonkeyAccountTalbe
 	pass, e := redis.String(conn.Do("HGET", tableName, account))
 	if e != nil || password != pass {
 		return false

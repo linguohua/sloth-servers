@@ -22,9 +22,6 @@ var (
 	chairs2P = []int{0, 2}
 	chairs3P = []int{0, 1, 2}
 	chairs4P = []int{0, 1, 2, 3}
-
-	// SystemFloat2ProtoScale 分数放大倍数，主要是proto不方便存储浮点数
-	// SystemFloat2ProtoScale float32 = 10.0
 )
 
 // Room 一个房间（等价于一个牌桌）
@@ -43,8 +40,6 @@ type Room struct {
 	bankerSwitchCount int    // 庄家切换次数，用于切换风圈（风圈切换了后pseudoFlowerCardID也会跟着变化）
 	qaIndex           int    // 流水号，注意每一手牌开始流水号都会重置
 	markup            int    // 连续荒庄计数
-
-	// isKongFollowLocked bool // 新疆麻将特有，房间是否处于锁杠状态
 
 	config    *RoomConfig // 房间的配置对象
 	configID  string
@@ -520,6 +515,7 @@ func (r *Room) forceDisband() {
 }
 
 // requireRoomServer2Delete 发送删除房间的请求给房间管理服务器
+// 主要是为了让房间管理服务器计算是否需要退款给用户
 // 并等待回复
 func (r *Room) requireRoomServer2Delete() bool {
 
@@ -600,14 +596,14 @@ func (r *Room) destroy() {
 
 	conn.Send("MULTI")
 	for _, p := range r.players {
-		conn.Do("HMSET", gconst.PlayerTablePrefix+p.userID(), "leaveRoom", r.ID, "leaveTime", time.Now().Unix())
+		conn.Do("HMSET", gconst.LobbyPlayerTablePrefix+p.userID(), "leaveRoom", r.ID, "leaveTime", time.Now().Unix())
 	}
 	conn.Do("EXEC")
 
 	r.players = nil
 
 	// 删除Game server管理的room记录
-	conn.Do("DEL", gconst.GsRoomTablePrefix+r.ID)
+	conn.Do("DEL", gconst.GameServerRoomTablePrefix+r.ID)
 }
 
 // onUserOffline 处理用户离线，不同的状态下，玩家离线表现不同
@@ -763,12 +759,12 @@ func (r *Room) userTryEnter(ws *websocket.Conn, userID string) IUser {
 	}
 
 	// 如果房间是俱乐部房间，则要求进入者必须是俱乐部成员
-	if r.clubID != "" {
-		if !r.isUserClubMember(userID) {
-			sendEnterRoomError(ws, userID, pokerface.EnterRoomStatus_NotClubMember)
-			return nil
-		}
-	}
+	// if r.clubID != "" {
+	// 	if !r.isUserClubMember(userID) {
+	// 		sendEnterRoomError(ws, userID, pokerface.EnterRoomStatus_NotClubMember)
+	// 		return nil
+	// 	}
+	// }
 
 	// 可以进入房间，新建player对象
 	guser := newGUser(userID, ws, r)
@@ -819,7 +815,7 @@ func (r *Room) writePlayerEnter2Redis(player *PlayerHolder) {
 	r.writeOnlinePlayerList2Redis(conn)
 
 	// 写用户的最后所在房间
-	conn.Do("HMSET", gconst.PlayerTablePrefix+player.userID(), "enterRoom", r.ID, "enterTime", time.Now().Unix())
+	conn.Do("HMSET", gconst.LobbyPlayerTablePrefix+player.userID(), "enterRoom", r.ID, "enterTime", time.Now().Unix())
 }
 
 // writePlayerLeave2Redis 把用户离开事件写入redis，包括room当前的玩家列表以及玩家最后处于的room
@@ -836,7 +832,7 @@ func (r *Room) writePlayerLeave2Redis(player *PlayerHolder, clearLastRoom bool) 
 
 	// 写用户的最后所在房间
 	if clearLastRoom {
-		conn.Do("HMSET", gconst.PlayerTablePrefix+player.userID(), "leaveRoom", r.ID, "leaveTime", time.Now().Unix())
+		conn.Do("HMSET", gconst.LobbyPlayerTablePrefix+player.userID(), "leaveRoom", r.ID, "leaveTime", time.Now().Unix())
 	}
 }
 
@@ -857,7 +853,7 @@ func (r *Room) writeOnlinePlayerList2Redis(conn redis.Conn) {
 	if err != nil {
 		r.cl.Println("writeOnlinePlayerList2Redis error:", err)
 	} else {
-		conn.Do("HSET", gconst.GsRoomTablePrefix+r.ID, "players", buf)
+		conn.Do("HSET", gconst.GameServerRoomTablePrefix+r.ID, "players", buf)
 	}
 }
 
@@ -1299,13 +1295,13 @@ func (r *Room) writeHandBegin2Redis() {
 	defer conn.Close()
 
 	conn.Send("MULTI")
-	conn.Send("HMSET", gconst.GsRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
+	conn.Send("HMSET", gconst.GameServerRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
 		"bankerID", r.bankerUserID,
 		"hp", buf)
 
-	conn.Send("HSET", gconst.GameRoomStatistics+r.ID, "hrStartted", r.handRoundStarted)
+	conn.Send("HSET", gconst.GameServerRoomStatisticsPrefix+r.ID, "hrStartted", r.handRoundStarted)
 	// key 24小时后过期
-	conn.Send("EXPIRE", gconst.GameRoomStatistics+r.ID, 24*60*60)
+	conn.Send("EXPIRE", gconst.GameServerRoomStatisticsPrefix+r.ID, 24*60*60)
 
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -1338,7 +1334,7 @@ func (r *Room) writePlayersStatis() {
 
 	// 房间管理服务器获取统计信息，其中dfHands为玩家一共进行了多少局游戏，dfHMW为最多的单局得分，dfHML为最大得单局失分
 	for _, p := range r.players {
-		conn.Send("HINCRBY", gconst.PlayerTablePrefix+p.userID(), "dfHands", 1)
+		conn.Send("HINCRBY", gconst.LobbyPlayerTablePrefix+p.userID(), "dfHands", 1)
 
 		userID := p.userID()
 		// g:yyyymmdd:userID:dsu(roomType)
@@ -1346,7 +1342,7 @@ func (r *Room) writePlayersStatis() {
 		if p.sctx != nil {
 			var totalWinScore = p.sctx.calcTotalWinScore()
 			if totalWinScore != 0 {
-				luaScriptForHandScore.Send(conn, gconst.PlayerTablePrefix+p.userID(), totalWinScore)
+				luaScriptForHandScore.Send(conn, gconst.LobbyPlayerTablePrefix+p.userID(), totalWinScore)
 
 				if totalWinScore > 0 {
 					// 赢牌次数
@@ -1400,7 +1396,7 @@ func (r *Room) writeHandEnd2Redis() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	conn.Do("HMSET", gconst.GsRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
+	conn.Do("HMSET", gconst.GameServerRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
 		"bankerID", r.bankerUserID,
 		"sr", bytes,
 		"hp", buf)
@@ -1411,7 +1407,7 @@ func (r *Room) writeHandEnd2Redis() {
 // readHandInfoFromRedis4Restore 恢复房间时，从redis读取手牌信息
 func (r *Room) readHandInfoFromRedis4Restore(conn redis.Conn) {
 	// 读取一下已经完成的手牌局数，以及玩家列表等一手牌相关的信息
-	values, err := redis.Values(conn.Do("hmget", gconst.GsRoomTablePrefix+r.ID, "hrfinished", "bankerID",
+	values, err := redis.Values(conn.Do("hmget", gconst.GameServerRoomTablePrefix+r.ID, "hrfinished", "bankerID",
 		"sr", "hp"))
 	if err == nil {
 		handRoundFinished, err := redis.Int(values[0], nil)
@@ -1624,6 +1620,7 @@ func (r *Room) updateUserLocation(userID string, location string) {
 	}
 }
 
+/*
 func (r *Room) isUserClubMember(userID string) bool {
 	// 获取redis链接，并退出函数时释放
 	conn := pool.Get()
@@ -1640,7 +1637,7 @@ func (r *Room) isUserClubMember(userID string) bool {
 	}
 
 	return true
-}
+}*/
 
 // calcSaveGreatWinnersForClubRoom 计算并保存大赢家，注意函数会增加一次对局计数和大赢家计数，因此必须是新对局完成后调用本函数
 func (r *Room) calcSaveGreatWinnersForClubRoom() {
@@ -1727,7 +1724,7 @@ func (r *Room) calcSaveGreatWinnersForClubRoom() {
 	for userID, score := range clubScoreMap {
 		conn.Send("ZADD", scoreSetKey, score, userID)
 	}
-	conn.Send("HSET", gconst.MJReplayRoomTablePrefix+r.ID, "gw", greatWinnersStr)
+	conn.Send("HSET", gconst.GameServerMJReplayRoomTablePrefix+r.ID, "gw", greatWinnersStr)
 	conn.Do("EXEC")
 }
 

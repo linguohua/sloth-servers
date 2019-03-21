@@ -106,7 +106,7 @@ func parserActivityPriceCfgStr2Map(activityPriceCfgStr string) *ActivityCfg {
 func loadAllPriceConfigFromRedis() {
 	conn := pool.Get()
 	defer conn.Close()
-	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.RoomTypeSet))
+	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.GameServerRoomTypeSet))
 	if err != nil {
 		log.Println("loadAllRoomPropCfgs, err:", err)
 		return
@@ -114,7 +114,7 @@ func loadAllPriceConfigFromRedis() {
 
 	conn.Send("MULTI")
 	for _, roomType := range gconst.RoomType_value {
-		var k = fmt.Sprintf("%s%d", gconst.PriceConfig, roomType)
+		var k = fmt.Sprintf("%s%d", gconst.LobbyPriceConfigPrefix, roomType)
 		// log.Println("k:", k)
 		conn.Send("HMGET", k, "originalPrice", "activityPrice")
 	}
@@ -123,7 +123,7 @@ func loadAllPriceConfigFromRedis() {
 		roomTypeInt32 := int32(roomType)
 		_, ok := gconst.RoomType_name[roomTypeInt32]
 		if !ok {
-			var k = fmt.Sprintf("%s%d", gconst.PriceConfig, roomType)
+			var k = fmt.Sprintf("%s%d", gconst.LobbyPriceConfigPrefix, roomType)
 			conn.Send("HMGET", k, "originalPrice", "activityPrice")
 		}
 	}

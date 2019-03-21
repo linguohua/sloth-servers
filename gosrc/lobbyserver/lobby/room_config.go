@@ -44,7 +44,7 @@ func loadAllRoomConfigFromRedis() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	values, err := redis.Strings(conn.Do("HGETALL", gconst.RoomConfigTable))
+	values, err := redis.Strings(conn.Do("HGETALL", gconst.LobbyRoomConfigTable))
 	if err != nil {
 		log.Println("loadAllRoomConfig, err:", err)
 	}

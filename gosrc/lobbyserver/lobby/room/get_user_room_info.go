@@ -29,7 +29,7 @@ func getUserRoomInfo(userID string) (*UserRoomInfo, error) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType"))
 	if err != nil {
 		return nil, fmt.Errorf("Get Room Info error %v", err)
 	}
@@ -44,7 +44,7 @@ func getUserRoomInfo(userID string) (*UserRoomInfo, error) {
 		return nil, fmt.Errorf("Parser roomType to int error %v", err)
 	}
 
-	port, err := redis.Int(conn.Do("HGET", gconst.GameServerKeyPrefix+gameServerID, "p"))
+	port, err := redis.Int(conn.Do("HGET", gconst.GameServerInstancePrefix+gameServerID, "p"))
 	if err != nil {
 		return nil, fmt.Errorf("Load game server port error:%v", err)
 	}

@@ -122,7 +122,7 @@ func isUserHavePay(roomID string, userID string) bool {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	exist, _ := redis.Int(conn.Do("HEXISTS", gconst.RoomUnRefund+userID, roomID))
+	exist, _ := redis.Int(conn.Do("HEXISTS", gconst.LobbyPayRoomUnRefundPrefix+userID, roomID))
 	if exist == 1 {
 		return true
 	}
@@ -209,7 +209,7 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 
 func loadUsersInRoom(roomID string, conn redis.Conn) []string {
 	// 获取房间内的用户列表
-	buf, err := redis.Bytes(conn.Do("HGET", gconst.RoomPayUsers+roomID, "users"))
+	buf, err := redis.Bytes(conn.Do("HGET", gconst.LobbyRoomPayUsersPrefix+roomID, "users"))
 	if err != nil {
 		log.Println("readUserIDListInRoom, get room players failed:", err)
 		return []string{}
@@ -272,12 +272,12 @@ func savePay2Redis(roomConfig *lobby.RoomConfigJSON, roomID string, userID strin
 	}
 
 	conn.Send("MULTI")
-	conn.Send("HSET", gconst.UserOrderRecord+userID, orderID, string(buf))
+	conn.Send("HSET", gconst.LobbyPayUserOrderPrefix+userID, orderID, string(buf))
 
 	if result == int32(gconst.SSMsgError_ErrSuccess) {
-		conn.Send("HSET", gconst.RoomUnRefund+userID, roomID, orderID)
-		conn.Send("HSET", gconst.RoomPayUsers+roomID, "users", userIDListBuf)
-		conn.Send("HSET", gconst.AsUserTablePrefix+userID, "diamond", remainDiamond)
+		conn.Send("HSET", gconst.LobbyPayRoomUnRefundPrefix+userID, roomID, orderID)
+		conn.Send("HSET", gconst.LobbyRoomPayUsersPrefix+roomID, "users", userIDListBuf)
+		conn.Send("HSET", gconst.LobbyUserTablePrefix+userID, "diamond", remainDiamond)
 	}
 
 	_, err = conn.Do("EXEC")
@@ -292,7 +292,7 @@ func payAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode 
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	vs, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomConfigID", "roomType", "gameNo"))
+	vs, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "roomType", "gameNo"))
 	if err != nil {
 		log.Println("payAndSave2Redis, get roomConfigID failed, err:", err)
 		remainDiamond = 0
@@ -363,19 +363,19 @@ func saveRefund(orderRecord *OrderRecord, orderID string) {
 	}
 	log.Println("saveRefund:", string(buf))
 	conn.Send("MULTI")
-	conn.Send("HSET", gconst.UserOrderRecord+orderRecord.UserID, orderID, string(buf))
-	conn.Send("HDEL", gconst.RoomUnRefund+orderRecord.UserID, orderRecord.RoomID)
+	conn.Send("HSET", gconst.LobbyPayUserOrderPrefix+orderRecord.UserID, orderID, string(buf))
+	conn.Send("HDEL", gconst.LobbyPayRoomUnRefundPrefix+orderRecord.UserID, orderRecord.RoomID)
 
 	if orderRecord.Refund.Result == int32(gconst.SSMsgError_ErrSuccess) {
-		conn.Send("HSET", gconst.AsUserTablePrefix+orderRecord.UserID, "diamond", orderRecord.Refund.RemainDiamond)
+		conn.Send("HSET", gconst.LobbyUserTablePrefix+orderRecord.UserID, "diamond", orderRecord.Refund.RemainDiamond)
 	} else {
-		conn.Send("HSET", gconst.RoomRefundFailed+orderRecord.UserID, orderRecord.RoomID, orderID)
+		conn.Send("HSET", gconst.LobbyPayRoomRefundFailedPrefix+orderRecord.UserID, orderRecord.RoomID, orderID)
 	}
 
 	if len(userIDs) > 0 {
-		conn.Send("HSET", gconst.RoomPayUsers+orderRecord.RoomID, "users", userIDListBuf)
+		conn.Send("HSET", gconst.LobbyRoomPayUsersPrefix+orderRecord.RoomID, "users", userIDListBuf)
 	} else {
-		conn.Send("HDEL", gconst.RoomPayUsers+orderRecord.RoomID, "users")
+		conn.Send("HDEL", gconst.LobbyRoomPayUsersPrefix+orderRecord.RoomID, "users")
 	}
 
 	_, err = conn.Do("EXEC")
@@ -392,10 +392,10 @@ func refund2UserAndSave2Redis(roomID string, userID string, handFinish int) *Ord
 	defer conn.Close()
 
 	// 获取未返还的订单，同个用户一个房间只能有一个未返还的订单
-	// orderID, err := redis.String(conn.Do("HGET", gconst.RoomUnRefund+userID, roomID))
+	// orderID, err := redis.String(conn.Do("HGET", gconst.LobbyPayRoomUnRefundPrefix+userID, roomID))
 	conn.Send("MULTI")
-	conn.Send("HGET", gconst.RoomUnRefund+userID, roomID)
-	conn.Send("HMGET", gconst.RoomTablePrefix+roomID, "roomType", "groupID", "gameNo")
+	conn.Send("HGET", gconst.LobbyPayRoomUnRefundPrefix+userID, roomID)
+	conn.Send("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomType", "groupID", "gameNo")
 	vs, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {
 		log.Println("refund2UserAndSave2Redis, load UnRefund order err:", err)
@@ -427,7 +427,7 @@ func refund2UserAndSave2Redis(roomID string, userID string, handFinish int) *Ord
 
 	log.Printf("refund2UserAndSave2Redis, orderID:%s, roomTypeInt:%d, groupID:%s", orderID, roomTypeInt, groupID)
 	// 获取用户的订单
-	order, err := redis.String(conn.Do("HGET", gconst.UserOrderRecord+userID, orderID))
+	order, err := redis.String(conn.Do("HGET", gconst.LobbyPayUserOrderPrefix+userID, orderID))
 	if err != nil {
 		log.Println("refund2UserAndSave2Redis, load user order err:", err)
 		return nil
@@ -540,6 +540,7 @@ func refund2Users(roomID string, handFinish int, inGameUserIDs []string) []*Orde
 	return orderRecords
 }
 
+/*
 // 俱乐部部创建房间扣钱
 func clubPayAndSave2Redis(roomType int, roomConfigID string, roomID string, clubID string) (remainDiamond int, payDiamond int, errCode int32) {
 	log.Printf("clubPayAndSave2Redis, roomType:%d, roomConfigID:%s, roomID:%s, clubID:%s", roomType, roomConfigID, roomID, clubID)
@@ -640,7 +641,7 @@ func refund2ClubAndSave2Redis(roomID string, clubID string, handFinish int) *Ord
 	defer conn.Close()
 
 	// 获取未返还的订单，同个用户一个房间只能有一个未返还的订单
-	orderID, err := redis.String(conn.Do("HGET", gconst.RoomUnRefund+clubID, roomID))
+	orderID, err := redis.String(conn.Do("HGET", gconst.LobbyPayRoomUnRefundPrefix+clubID, roomID))
 	if err != nil {
 		log.Println("refund2ClubAndSave2Redis, load UnRefund order err:", err)
 		return nil
@@ -652,7 +653,7 @@ func refund2ClubAndSave2Redis(roomID string, clubID string, handFinish int) *Ord
 	}
 
 	// 获取用户的订单
-	order, err := redis.String(conn.Do("HGET", gconst.UserOrderRecord+clubID, orderID))
+	order, err := redis.String(conn.Do("HGET", gconst.LobbyPayUserOrderPrefix+clubID, orderID))
 	if err != nil {
 		log.Println("refund2ClubAndSave2Redis, load user order err:", err)
 		return nil
@@ -702,3 +703,4 @@ func refund2ClubAndSave2Redis(roomID string, clubID string, handFinish int) *Ord
 
 	return orderRecord
 }
+*/

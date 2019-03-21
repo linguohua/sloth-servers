@@ -42,7 +42,7 @@ func loadCharm(userID string) int32 {
 	conn := pool.Get()
 	defer conn.Close()
 
-	charm, _ := redis.Int(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "charm"))
+	charm, _ := redis.Int(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "charm"))
 	return int32(charm)
 }
 
@@ -208,7 +208,7 @@ func CreateHTTPServer() {
 
 	startRedisClient()
 
-	loadRoomTypeFromRedis()
+	// loadRoomTypeFromRedis()
 
 	//initGamePropCfgs()
 
@@ -267,10 +267,10 @@ func acceptHTTPRequest() {
 }
 
 func loadRoomTypeFromRedis() {
-	conn := pool.Get()
+	/*conn := pool.Get()
 	defer conn.Close()
 
-	roomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.RoomTypeSet))
+	roomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.GameServerRoomTypeSet))
 	if err != nil {
 		log.Println("loadRoomTypeFromRedis, err:", err)
 		return
@@ -289,7 +289,7 @@ func loadRoomTypeFromRedis() {
 			var key = fmt.Sprintf("%d", roomType)
 			config.SubGameIDs[key] = gameID
 		}
-	}
+	}*/
 }
 
 // UpdateRoomGameID web那边更新gameID

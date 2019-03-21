@@ -23,7 +23,7 @@ func loadUsersProfile(userIDs []string) []*lobby.UserProfile {
 
 	conn.Send("MULTI")
 	for _, userID := range userIDs {
-		conn.Send("HMGET", gconst.AsUserTablePrefix+userID, "userName", "userNick")
+		conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "userName", "userNick")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))
@@ -55,7 +55,7 @@ func loadRoomInfos(userIDString string) []*lobby.RoomInfo {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userIDString, "rooms"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.LobbyUserTablePrefix+userIDString, "rooms"))
 	if err != nil {
 		log.Println("loadRoomInfos, err:", err)
 		return make([]*lobby.RoomInfo, 0)
@@ -81,8 +81,8 @@ func loadRoomInfos(userIDString string) []*lobby.RoomInfo {
 
 	conn.Send("MULTI")
 	for _, roomID := range roomIDs {
-		conn.Send("HMGET", gconst.RoomTablePrefix+roomID, "roomNumber", "gameServerID", "roomConfigID", "timeStamp", "lastActiveTime")
-		conn.Send("HMGET", gconst.GsRoomTablePrefix+roomID, "players", "state", "hrStartted")
+		conn.Send("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomNumber", "gameServerID", "roomConfigID", "timeStamp", "lastActiveTime")
+		conn.Send("HMGET", gconst.GameServerRoomTablePrefix+roomID, "players", "state", "hrStartted")
 	}
 	values, err := redis.Values(conn.Do("EXEC"))
 	if err != nil {

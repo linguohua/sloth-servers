@@ -28,7 +28,7 @@ import (
 // 	conn.Send("MULTI")
 
 // 	for _, player := range players {
-// 		conn.Send("HMGET", gconst.AsUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
+// 		conn.Send("HMGET", gconst.LobbyUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
 // 	}
 
 // 	values, err := redis.Values(conn.Do("EXEC"))
@@ -103,10 +103,10 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 			return
 		}
 
-		recordID, _ = redis.String(conn.Do("HGET", gconst.MJRecorderTablePrefix+sid, "rid"))
+		recordID, _ = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+sid, "rid"))
 		// 新的代码已经把sharedID放在MJRecorderShareIDTable哈希表中
 		if recordID == "" {
-			recordID, _ = redis.String(conn.Do("HGET", gconst.MJRecorderShareIDTable, sid))
+			recordID, _ = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderShareIDTable, sid))
 			if recordID == "" {
 				log.Println("handleLoadReplayRecord, no recordID found with sid:", sid)
 				return
@@ -115,7 +115,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 	}
 
 	// "d" 二进制数据， "cid" 房间配置id
-	values, err := redis.Values(conn.Do("HMGET", gconst.MJRecorderTablePrefix+recordID, "d", "cid"))
+	values, err := redis.Values(conn.Do("HMGET", gconst.GameServerMJRecorderTablePrefix+recordID, "d", "cid"))
 	if err != nil {
 		log.Println("handleLoadReplayRecord, HMGET err:", err)
 		return

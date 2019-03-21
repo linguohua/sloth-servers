@@ -5,10 +5,11 @@ import (
 	"container/list"
 	fmt "fmt"
 	"gconst"
-	log "github.com/sirupsen/logrus"
 	"pokerface"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/sirupsen/logrus"
@@ -22,6 +23,8 @@ const (
 	MaxShareAbleID = 99999999
 	// MinShareAbleID 最大分享ID
 	MinShareAbleID = 10000000
+
+	maxReplayRoomNumber = 50
 )
 
 // LoopContext 打牌循环上下文
@@ -283,7 +286,7 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	_, err = conn.Do("HMSET", gconst.MJRecorderTablePrefix+recordID, "d", buf, "r", s.room.ID, "cid", s.room.configID)
+	_, err = conn.Do("HMSET", gconst.GameServerMJRecorderTablePrefix+recordID, "d", buf, "r", s.room.ID, "cid", s.room.configID)
 	if err != nil {
 		log.Println(err)
 		return
@@ -294,7 +297,7 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 	// 为每一个玩家添加回播房间记录
 	for _, p := range lc.msgReplayRoom.Players {
 		var replayRooms []string
-		replayRoomStr, err := redis.String(conn.Do("HGET", gconst.PlayerTablePrefix+p.GetUserID(), "rr"))
+		replayRoomStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+p.GetUserID(), "rr"))
 		if err != nil {
 			// 由于玩家没有玩过本游戏因此可能mjrc不存在，redis返回nil错误，因此是正常情况不需要输出日志
 			//log.Println(err)
@@ -321,22 +324,22 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 
 		// 限制每个用户只能保存MJMaxReplayRoomNumber个最近记录
 		// 如果裁剪了用户的最近记录，则需要检查记录是否已经无人引用，如果是则彻底删除记录
-		if len(replayRooms) >= gconst.MJMaxReplayRoomNumber {
+		if len(replayRooms) >= maxReplayRoomNumber {
 			lc.unbindMJReplayRoomIfUseless(conn, replayRooms[0], p.GetUserID())
 			replayRooms = replayRooms[1:]
 		}
 
 		replayRooms = append(replayRooms, s.room.ID)
-		_, err = conn.Do("HSET", gconst.PlayerTablePrefix+p.GetUserID(), "rr", strArray2Comma(replayRooms))
+		_, err = conn.Do("HSET", gconst.LobbyPlayerTablePrefix+p.GetUserID(), "rr", strArray2Comma(replayRooms))
 		if err != nil {
 			log.Println(err)
 		}
 	}
 
 	// 如果房间是俱乐部房间，则需要把回播记录写到俱乐部的回播列表中
-	if lc.s.room.clubID != "" {
-		lc.appendCurrentReplayRoom2Club(conn)
-	}
+	// if lc.s.room.clubID != "" {
+	// 	lc.appendCurrentReplayRoom2Club(conn)
+	// }
 }
 
 func (lc *LoopContext) snapshootReplayRecordSummary(room *Room) {
@@ -412,7 +415,7 @@ func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID
 	recordsStr := ""
 	var bb []byte
 	var records []string
-	values, err := redis.Values(conn.Do("HMGET", gconst.MJReplayRoomTablePrefix+roomID, "hr", "d"))
+	values, err := redis.Values(conn.Do("HMGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr", "d"))
 	if err == nil {
 		recordsStr, err = redis.String(values[0], err)
 		if err == nil {
@@ -462,15 +465,16 @@ func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID
 	unixTimeInMinutes32 := unixTimeInMinutes()
 	// 记录加到房间的回放列表
 	conn.Send("MULTI")
-	conn.Send("HMSET", gconst.MJReplayRoomTablePrefix+roomID, "hr", strArray2Comma(records),
+	conn.Send("HMSET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr", strArray2Comma(records),
 		"d", buf, "rrt", int(gconst.RoomType_DafengGZ), "date", unixTimeInMinutes32)
 
 	for _, u := range userIDs {
-		conn.Send("SADD", gconst.ReplayRoomsReferenceSetPrefix+roomID, u)
+		conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
 	}
 	conn.Do("EXEC")
 }
 
+/*
 func (lc *LoopContext) appendCurrentReplayRoom2Club(conn redis.Conn) {
 	clubID := lc.s.room.clubID
 	roomID := lc.s.room.ID
@@ -509,7 +513,7 @@ func (lc *LoopContext) appendCurrentReplayRoom2Club(conn redis.Conn) {
 		if err == nil {
 			conn.Send("MULTI")
 			conn.Send("SREM", gconst.ClubReplayRoomsSetPrefix+clubID, removedRoomID)
-			conn.Send("SREM", gconst.ReplayRoomsReferenceSetPrefix+removedRoomID, clubID)
+			conn.Send("SREM", gconst.GameServerReplayRoomsReferenceSetPrefix+removedRoomID, clubID)
 			conn.Do("EXEC")
 
 			lc.unbindMJReplayRoomIfUseless(conn, removedRoomID, clubID)
@@ -518,6 +522,7 @@ func (lc *LoopContext) appendCurrentReplayRoom2Club(conn redis.Conn) {
 		}
 	}
 }
+*/
 
 // strArray2Comma 字符串数据转为逗号分隔字符串
 func strArray2Comma(ss []string) string {
@@ -538,9 +543,9 @@ func strArray2Comma(ss []string) string {
 // unbindMJReplayRoomIfUseless 解除回播房间的引用
 func (lc *LoopContext) unbindMJReplayRoomIfUseless(conn redis.Conn, roomID string, referenceBy string) {
 	conn.Send("MULTI")
-	conn.Send("SREM", gconst.ReplayRoomsReferenceSetPrefix+roomID, referenceBy)
-	conn.Send("SCARD", gconst.ReplayRoomsReferenceSetPrefix+roomID) // 新的回播房间引用关系是保存于这个set中
-	conn.Send("HGET", gconst.MJReplayRoomTablePrefix+roomID, "u")   // 旧的回播房间引用则是保存在这个field中，以逗号分隔
+	conn.Send("SREM", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, referenceBy)
+	conn.Send("SCARD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID) // 新的回播房间引用关系是保存于这个set中
+	conn.Send("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "u")   // 旧的回播房间引用则是保存在这个field中，以逗号分隔
 
 	values, err := redis.Values(conn.Do("EXEC"))
 	if err != nil && err != redis.ErrNil {
@@ -574,9 +579,9 @@ func (lc *LoopContext) unbindMJReplayRoomIfUseless(conn redis.Conn, roomID strin
 			// 更新引用的用户列表
 			conn.Send("MULTI")
 			for _, u := range users {
-				conn.Send("SADD", gconst.ReplayRoomsReferenceSetPrefix+roomID, u)
+				conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
 			}
-			conn.Send("HDEL", gconst.MJReplayRoomTablePrefix+roomID, "u") // 把旧的清理掉
+			conn.Send("HDEL", gconst.GameServerMJReplayRoomTablePrefix+roomID, "u") // 把旧的清理掉
 			conn.Do("EXEC")
 		}
 
@@ -592,8 +597,8 @@ func (lc *LoopContext) unbindMJReplayRoomIfUseless(conn redis.Conn, roomID strin
 
 		// 清理该房间的回播记录
 		conn.Send("MULTI")
-		conn.Send("DEL", gconst.ReplayRoomsReferenceSetPrefix+roomID)
-		conn.Send("DEL", gconst.MJReplayRoomTablePrefix+roomID)
+		conn.Send("DEL", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID)
+		conn.Send("DEL", gconst.GameServerMJReplayRoomTablePrefix+roomID)
 		_, err := conn.Do("EXEC")
 		if err != nil {
 			log.Println(err)
@@ -606,7 +611,7 @@ func (lc *LoopContext) unbindMJReplayRoomIfUseless(conn redis.Conn, roomID strin
 // unbindMJReplayRecords 解除回放记录引用
 func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 	var records []string
-	recordsStr, err := redis.String(conn.Do("HGET", gconst.MJReplayRoomTablePrefix+roomID, "hr"))
+	recordsStr, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
 	if err != nil {
 	} else {
 		records = strings.Split(recordsStr, ",")
@@ -620,13 +625,13 @@ func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 	conn.Send("MULTI")
 	for _, r := range records {
 		// 添加到已经被删除set中，以便定时清理任务可以通知sqlserver等持久化数据库做清理
-		conn.Send("SADD", gconst.MJRecorderDeletedSet, r)
+		conn.Send("SADD", gconst.GameServerMJRecorderDeletedSet, r)
 	}
 	conn.Do("EXEC")
 
 	conn.Send("MULTI")
 	for _, r := range records {
-		conn.Send("HGET", gconst.MJRecorderTablePrefix+r, "sid")
+		conn.Send("HGET", gconst.GameServerMJRecorderTablePrefix+r, "sid")
 	}
 	sids, _ := redis.Strings(conn.Do("EXEC"))
 
@@ -634,9 +639,9 @@ func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 	conn.Send("MULTI")
 	for _, sid := range sids {
 		if sid != "" {
-			conn.Send("DEL", gconst.MJRecorderTablePrefix+sid)
+			conn.Send("DEL", gconst.GameServerMJRecorderTablePrefix+sid)
 			// 新的sid存在于MJRecorderShareIDTable哈希表中
-			conn.Send("HDEL", gconst.MJRecorderShareIDTable, sid)
+			conn.Send("HDEL", gconst.GameServerMJRecorderShareIDTable, sid)
 			lc.cl.Println("delete hand record sid:", sid)
 		}
 	}
@@ -645,7 +650,7 @@ func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 	// 先从redis中删除，回播记录可能已经不存在于redis，已经被腾挪到持久化数据库
 	conn.Send("MULTI")
 	for _, r := range records {
-		conn.Send("DEL", gconst.MJRecorderTablePrefix+r)
+		conn.Send("DEL", gconst.GameServerMJRecorderTablePrefix+r)
 		lc.cl.Println("delete hand record:", r)
 	}
 	conn.Do("EXEC")
@@ -653,7 +658,7 @@ func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 
 func loadMJLastRecordForRoom(conn redis.Conn, roomID string) []byte {
 	// 加载回播房间记录
-	recordsStr, err := redis.String(conn.Do("HGET", gconst.MJReplayRoomTablePrefix+roomID, "hr"))
+	recordsStr, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
 	if err != nil {
 		recordsStr = ""
 	}
@@ -670,8 +675,8 @@ func loadMJLastRecordForRoom(conn redis.Conn, roomID string) []byte {
 }
 
 func loadMJRecord(conn redis.Conn, recordID string) []byte {
-	log.Printf("load %s from %s\n", recordID, gconst.MJRecorderTablePrefix+recordID)
-	buf, err := redis.Bytes(conn.Do("HGET", gconst.MJRecorderTablePrefix+recordID, "d"))
+	log.Printf("load %s from %s\n", recordID, gconst.GameServerMJRecorderTablePrefix+recordID)
+	buf, err := redis.Bytes(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+recordID, "d"))
 	if err != nil && err != redis.ErrNil {
 		log.Println(err)
 		return nil
@@ -707,7 +712,7 @@ func loadMJLastRecordForUser(userID string) []byte {
 	conn := pool.Get()
 	defer conn.Close()
 
-	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.PlayerTablePrefix+userID, "rr"))
+	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+userID, "rr"))
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -729,13 +734,13 @@ func loadMJLastRecordForUser(userID string) []byte {
 // 来加载其所在的房间的所有shareID，然后再逐个回播记录加载，并保存到文件夹中
 func loadMJRoomRecardShareIDs(conn redis.Conn, recordID string) ([]byte, error) {
 
-	roomID, err := redis.String(conn.Do("HGET", gconst.MJRecorderTablePrefix+recordID, "r"))
+	roomID, err := redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+recordID, "r"))
 	if err != nil {
 		log.Println("loadMJRoomRecardShareIDs, roomID failed:", err)
 		return nil, err
 	}
 
-	ridsWithComma, err := redis.String(conn.Do("HGET", gconst.MJReplayRoomTablePrefix+roomID, "hr"))
+	ridsWithComma, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
 	if err != nil {
 		log.Println("loadMJRoomRecardShareIDs, hr failed:", err)
 		return nil, err
@@ -744,7 +749,7 @@ func loadMJRoomRecardShareIDs(conn redis.Conn, recordID string) ([]byte, error) 
 	records := strings.Split(ridsWithComma, ",")
 	conn.Send("MULTI")
 	for _, r := range records {
-		conn.Send("HGET", gconst.MJRecorderTablePrefix+r, "sid")
+		conn.Send("HGET", gconst.GameServerMJRecorderTablePrefix+r, "sid")
 	}
 
 	sids, err := redis.Strings(conn.Do("EXEC"))
@@ -797,8 +802,8 @@ func validRedisRandNumber(shareAbleIDStrs string, recordID string) string {
 	defer conn.Close()
 
 	// luaScript 在startRedis中创建
-	randNumber, err := redis.String(luaScript.Do(conn, gconst.MJRecorderTablePrefix, recordID,
-		shareAbleIDStrs, gconst.MJRecorderShareIDTable))
+	randNumber, err := redis.String(luaScript.Do(conn, gconst.GameServerMJRecorderTablePrefix, recordID,
+		shareAbleIDStrs, gconst.GameServerMJRecorderShareIDTable))
 	if err != nil {
 		logrus.Printf("randromNumber error, roomNumbers %s, roomID %s, error:%v \n", shareAbleIDStrs, recordID, err)
 	}

@@ -12,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"encoding/json"
-	"fmt"
 
 	"github.com/garyburd/redigo/redis"
 	proto "github.com/golang/protobuf/proto"
@@ -55,28 +54,28 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	vs, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "roomNumber", "groupID", "ownerID"))
+	vs, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomNumber", "groupID", "ownerID"))
 	if err != nil {
 		log.Println("deleteRoomInfoFromRedis, error:", err)
 		return
 	}
 
 	var roomNumberString = vs[0]
-	var groupID = vs[1]
-	var ownerID = vs[2]
+	// var groupID = vs[1]
+	// var ownerID = vs[2]
 
 	conn.Send("MULTI")
-	conn.Send("DEL", gconst.RoomTablePrefix+roomID)
-	conn.Send("DEL", gconst.RoomNumberTable+roomNumberString)
-	conn.Send("HDEL", gconst.AsUserTablePrefix+userIDString, "roomID")
-	conn.Send("SREM", gconst.RoomTableACCSet, roomID)
+	conn.Send("DEL", gconst.LobbyRoomTablePrefix+roomID)
+	conn.Send("DEL", gconst.LobbyRoomNumberTablePrefix+roomNumberString)
+	conn.Send("HDEL", gconst.LobbyUserTablePrefix+userIDString, "roomID")
+	conn.Send("SREM", gconst.LobbyRoomTableSet, roomID)
 
-	if groupID != "" {
-		conn.Send("SREM", gconst.GroupRoomsSetPrefix+groupID, roomID)
+	// if groupID != "" {
+	// 	conn.Send("SREM", gconst.GroupRoomsSetPrefix+groupID, roomID)
 
-		groupMemberRoomsSetKey := fmt.Sprintf(gconst.GroupMemberRoomsSet, groupID, ownerID)
-		conn.Send("SREM", groupMemberRoomsSetKey, roomID)
-	}
+	// 	groupMemberRoomsSetKey := fmt.Sprintf(gconst.GroupMemberRoomsSet, groupID, ownerID)
+	// 	conn.Send("SREM", groupMemberRoomsSetKey, roomID)
+	// }
 
 	_, err = conn.Do("EXEC")
 	if err != nil {
@@ -88,7 +87,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 		return
 	}
 
-	bytes, err := redis.Bytes(conn.Do("HGET", gconst.AsUserTablePrefix+userIDString, "rooms"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.LobbyUserTablePrefix+userIDString, "rooms"))
 	if err != nil {
 		log.Println("deleteRoomInfoFromRedis, error:", err)
 		return
@@ -116,7 +115,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 		return
 	}
 
-	conn.Do("HSET", gconst.AsUserTablePrefix+userIDString, "rooms", buf)
+	conn.Do("HSET", gconst.LobbyUserTablePrefix+userIDString, "rooms", buf)
 
 }
 
@@ -133,14 +132,14 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	exist, err := redis.Int(conn.Do("HEXISTS", gconst.RoomTablePrefix+roomID))
+	exist, err := redis.Int(conn.Do("HEXISTS", gconst.LobbyRoomTablePrefix+roomID))
 	if exist == 0 {
 		var errCode = int32(lobby.MsgError_ErrRoomNotExist)
 		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])
 		return
 	}
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+roomID, "ownerID", "roomType"))
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "roomType"))
 	if err == redis.ErrNil {
 		var errCode = int32(lobby.MsgError_ErrRoomNotExist)
 		replyDeleteRoom(w, errCode, lobby.ErrorString[errCode])

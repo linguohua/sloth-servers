@@ -44,29 +44,37 @@ func redisSubscriber() {
 }
 
 func processRedisPublish(data []byte) {
+	loadMsgsAndDispatch()
+}
+
+func loadMsgsAndDispatch() {
+	if isInProcessState {
+		return
+	}
+
+	isInProcessState = true
+
+	conn := pool.Get()
 	defer func() {
 		if r := recover(); r != nil {
 			debug.PrintStack()
 			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
 		}
+
+		conn.Close()
+		isInProcessState = false
 	}()
 
-	loadMsgsAndDispatch()
-}
-
-func loadMsgsAndDispatch() {
-	conn := pool.Get()
-	defer conn.Close()
-
-	var myMsgListID = gconst.MsgListPrefix + myServerID
+	var myMsgListID = gconst.LobbyMsgListPrefix + myServerID
 	for {
 		// 10 msg per-batch
 		values, err := redis.Values(conn.Do("LRANGE", myMsgListID, 0, 10))
 		if err != nil {
-			log.Println("loadMsgsAndDispatch error:", err)
+			log.Panic("loadMsgsAndDispatch error:", err)
 			break
 		}
 
+		valuesCount := 0
 		for _, v := range values {
 			bytes, err := redis.Bytes(v, nil)
 			if err != nil || bytes == nil {
@@ -76,9 +84,11 @@ func loadMsgsAndDispatch() {
 			ssmsgBag := &gconst.SSMsgBag{}
 			err = proto.Unmarshal(bytes, ssmsgBag)
 			if err != nil {
-				log.Println("processRedisPublish, decode error:", err)
-				return
+				log.Panic("loadMsgsAndDispatch, decode error:", err)
+				break
 			}
+
+			valuesCount++
 
 			var msgType = ssmsgBag.GetMsgType()
 			switch int32(msgType) {
@@ -92,7 +102,14 @@ func loadMsgsAndDispatch() {
 				onPeerServerRespone(ssmsgBag)
 				break
 			default:
-				log.Printf("No handler for this type %d message", int32(msgType))
+				log.Panicf("No handler for this type %d message", int32(msgType))
+			}
+		}
+
+		if valuesCount > 0 {
+			_, err = conn.Do("LTRIM", myMsgListID, 0, valuesCount-1)
+			if err != nil {
+				log.Panic("loadMsgsAndDispatch, LTRIM error:", err)
 			}
 		}
 

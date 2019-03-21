@@ -79,7 +79,7 @@ func handleLoadUserHeadIconURI(w http.ResponseWriter, r *http.Request, userID st
 	conn.Send("MULTI")
 
 	for _, userID := range userIDs {
-		conn.Send("HMGET", gconst.AsUserTablePrefix+userID, "userSex", "userLogo")
+		conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "userSex", "userLogo")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))

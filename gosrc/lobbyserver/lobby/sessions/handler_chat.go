@@ -118,7 +118,7 @@ func readUserIDListInRoom(who string) []string {
 	}
 
 	// 接着读取房间内的用户ID列表
-	buf, err := redis.Bytes(conn.Do("HGET", gconst.GsRoomTablePrefix+roomID, "players"))
+	buf, err := redis.Bytes(conn.Do("HGET", gconst.GameServerRoomTablePrefix+roomID, "players"))
 	if err != nil {
 		log.Println("readUserIDListInRoom, get room players failed:", err)
 		return []string{}
