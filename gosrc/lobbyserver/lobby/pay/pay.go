@@ -26,6 +26,10 @@ func (*myPayUtil) Refund2UserAndSave2Redis(roomID string, userID string, handFin
 	refund2UserAndSave2Redis(roomID, userID, handFinish)
 }
 
+func (*myPayUtil) DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32) {
+	return payAndSave2Redis(roomID, userID)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetPayUtil(payUtil)

@@ -20,6 +20,10 @@ func (*myRoomUtil) LoadUserLastEnterRoomID(userID string) string {
 	return loadUserLastEnterRoomID(userID)
 }
 
+func (*myRoomUtil) DeleteRoomInfoFromRedis(roomID string, userID string) {
+	deleteRoomInfoFromRedis(roomID, userID)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetRoomUtil(roomUtil)

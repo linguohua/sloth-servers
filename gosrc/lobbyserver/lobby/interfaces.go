@@ -80,6 +80,7 @@ type ISessionMgr interface {
 type IRoomUtil interface {
 	LoadLastRoomInfo(userID string) *RoomInfo
 	LoadUserLastEnterRoomID(userID string) string
+	DeleteRoomInfoFromRedis(roomID string, userID string)
 }
 
 // IPayUtil pay
@@ -89,4 +90,6 @@ type IPayUtil interface {
 		roomID string, userID string, gameNo string) (remainDiamond int, errCode int32)
 
 	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int)
+
+	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
 }
