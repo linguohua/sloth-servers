@@ -4,7 +4,7 @@ const (
 	// LobbyMsgListPrefix 消息队列前缀
 	LobbyMsgListPrefix = "l:msg:"
 	// LobbyRoomNumberTablePrefix m管理型服务器前缀，rn表示房间号,
-	LobbyRoomNumberTablePrefix = "m:rn:"
+	LobbyRoomNumberTablePrefix = "l:rn:"
 	// LobbyPlayerTablePrefix 用于表格，p表示用户
 	LobbyPlayerTablePrefix = "l:p:"
 	// LobbyRoomConfigTable r表示房间，c表示配置
