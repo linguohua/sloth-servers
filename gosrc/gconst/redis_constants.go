@@ -1,5 +1,6 @@
 package gconst
 
+/*
 const (
 	// RoomConfigTable m 管理型服务器前缀，r表示房间，c表示配置
 	RoomConfigTable = "m:r:c"
@@ -19,6 +20,9 @@ const (
 	RoomTablePrefix = "c:r:"
 	// RoomTableACCSet ACC维护的房间set
 	RoomTableACCSet = "c:r:accrs"
+
+	// MsgListPrefix 消息队列前缀
+	MsgListPrefix = "msg:"
 
 	// ClubSysTable 俱乐部系统表格，主要是存储一些全局信息
 	ClubSysTable = "m:club:sys"
@@ -237,3 +241,4 @@ const (
 	// MaxGroupReplayRoomsNum 最多保存的牌友群回播记录数量
 	MaxGroupReplayRoomsNum = 300
 )
+*/

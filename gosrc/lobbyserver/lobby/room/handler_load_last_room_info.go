@@ -1,8 +1,10 @@
 package room
 
 import (
-	log "github.com/sirupsen/logrus"
+	"lobbyserver/lobby"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func handlerLoadLastRoomInfo(w http.ResponseWriter, r *http.Request, userID string) {
@@ -15,5 +17,5 @@ func handlerLoadLastRoomInfo(w http.ResponseWriter, r *http.Request, userID stri
 		return
 	}
 
-	replyRequestRoomInfo(w, int32(MsgError_ErrRoomNotExist), nil)
+	replyRequestRoomInfo(w, int32(lobby.MsgError_ErrRoomNotExist), nil)
 }

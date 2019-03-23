@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gconst"
+	"gpubsub"
 	"gscfg"
 	"pokerface"
 	"runtime/debug"
@@ -18,7 +19,6 @@ import (
 var (
 	pool *redis.Pool
 	//redisServer = flag.String("redisServer", gscfg.RedisServer, "")
-	waitingMap              = make(map[int]*WaitSubcriberRsp) // 正在等待的集合
 	pubSubSequnce           = uint32(0)
 	luaScript               *redis.Script
 	luaScriptForHandScore   *redis.Script
@@ -29,12 +29,6 @@ var (
 type RoomMgr struct {
 	rooms map[string]*Room
 	//rand  *rand.Rand
-}
-
-// WaitSubcriberRsp 等待游戏服务器的返回
-type WaitSubcriberRsp struct {
-	waitChan chan bool
-	rspMsg   *gconst.SSMsgBag
 }
 
 func (rm *RoomMgr) startup() {
@@ -62,7 +56,7 @@ func (rm *RoomMgr) startup() {
 	rm.restoreRooms()
 
 	// 新起一个goroutine去订阅redis
-	go rm.redisSubscriber()
+	gpubsub.Startup(pool, gscfg.ServerID, processNotifyMsg, processNotifyMsg)
 
 	go roomMonitor()
 }
@@ -76,65 +70,10 @@ func newPool(addr string) *redis.Pool {
 	}
 }
 
-// redisSubscriber 订阅redis频道
-func (rm *RoomMgr) redisSubscriber() {
-	for {
-		conn := pool.Get()
-
-		psc := redis.PubSubConn{Conn: conn}
-		psc.Subscribe(gscfg.ServerID)
-		keep := true
-		fmt.Println("begin to wait redis publish msg")
-		for keep {
-			switch v := psc.Receive().(type) {
-			case redis.Message:
-				// fmt.Printf("sub %s: message: %s\n", v.Channel, v.Data)
-				// 因为只订阅一个主题，因此忽略change参数
-				// 同时不可能是
-				rm.processRedisPublish(v.Data)
-			case redis.Subscription:
-				fmt.Printf("sub %s: %s %d\n", v.Channel, v.Kind, v.Count)
-			case redis.PMessage:
-				fmt.Printf("sub %s: %s %s\n", v.Channel, v.Pattern, v.Data)
-			case error:
-				log.Println("RoomMgr redisSubscriber redis error:", v)
-				conn.Close()
-				keep = false
-				time.Sleep(2 * time.Second)
-				break
-			}
-		}
-	}
-}
-
-// processRedisPublish 处理redis publish过来的消息
-func (rm *RoomMgr) processRedisPublish(data []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			debug.PrintStack()
-			log.Printf("-----Recovered in processRedisPublish:%v\n", r)
-		}
-	}()
-
-	ssmsgBag := &gconst.SSMsgBag{}
-	err := proto.Unmarshal(data, ssmsgBag)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var msgType = ssmsgBag.GetMsgType()
-	if msgType == int32(gconst.SSMsgType_Response) {
-
-		processResponse(ssmsgBag)
-
-		return
-	} else if msgType != int32(gconst.SSMsgType_Request) {
-		log.Printf("only support request")
-		return
-	}
-
+// processRequestMsg 处理redis publish过来的消息
+func processRequestMsg(ssmsgBag *gconst.SSMsgBag) {
 	var reqCode = ssmsgBag.GetRequestCode()
+	var rm = roomMgr
 	switch reqCode {
 	case int32(gconst.SSMsgReqCode_CreateRoom):
 		rm.onCreateRoomReq(ssmsgBag)
@@ -149,6 +88,10 @@ func (rm *RoomMgr) processRedisPublish(data []byte) {
 		rm.onUpdatePropsCfg(ssmsgBag)
 		break
 	}
+}
+
+func processNotifyMsg(ssmsgBag *gconst.SSMsgBag) {
+	log.Panic("processNotifyMsg game server not support notify type msg")
 }
 
 // onCreateRoomReq 房间管理服务器请求创建房间
@@ -190,7 +133,7 @@ func (rm *RoomMgr) onCreateRoomReq(msgBag *gconst.SSMsgBag) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	cfgData, err := redis.Bytes(conn.Do("hget", gconst.RoomConfigTable, roomConfigID))
+	cfgData, err := redis.Bytes(conn.Do("hget", gconst.LobbyRoomConfigTable, roomConfigID))
 	if err != nil {
 		log.Println("load room config failed:", err)
 		rm.replySSMsg(msgBag, gconst.SSMsgError_ErrNoRoomConfig, nil)
@@ -384,12 +327,12 @@ func (rm *RoomMgr) register() {
 		return
 	}
 
-	hashKey := gconst.GameServerKeyPrefix + gscfg.ServerID
+	hashKey := gconst.GameServerInstancePrefix + gscfg.ServerID
 	conn.Send("MULTI")
 	conn.Send("hmset", hashKey, "roomtype", int(gconst.RoomType_DafengGZ), "ver", versionCode, "p", gscfg.ServerPort)
-	conn.Send("SADD", fmt.Sprintf("%s%d", gconst.GameServerKeyPrefix, int(gconst.RoomType_DafengGZ)), gscfg.ServerID)
-	conn.Send("SADD", gconst.RoomTypeSet, int(gconst.RoomType_DafengGZ))
-	conn.Send("HSET", fmt.Sprintf("%s%d", gconst.RoomTypeKey, gconst.RoomType_DafengGZ), "type", 1)
+	conn.Send("SADD", fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, int(gconst.RoomType_DafengGZ)), gscfg.ServerID)
+	conn.Send("SADD", gconst.GameServerRoomTypeSet, int(gconst.RoomType_DafengGZ))
+	// conn.Send("HSET", fmt.Sprintf("%s%d", gconst.RoomTypeKey, gconst.RoomType_DafengGZ), "type", 1)
 	_, err := conn.Do("EXEC")
 	if err != nil {
 		log.Panicln("failed to register server to redis:", err)
@@ -422,16 +365,16 @@ func (rm *RoomMgr) restoreRooms() {
 	defer conn.Close()
 
 	// 清空在线玩家数量
-	var key = fmt.Sprintf("%s%d", gconst.OnlineGameUserNum, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
 	conn.Do("HSET", key, gscfg.ServerID, 0)
 
-	// _, err := luaScriptForHandScore.Do(conn, gconst.PlayerTablePrefix+"1", -450)
+	// _, err := luaScriptForHandScore.Do(conn, gconst.LobbyPlayerTablePrefix+"1", -450)
 	// if err != nil {
 	// 	log.Println("luaScriptForHandScore err:", err)
 	// }
 
 	// 获取所有的房间ID
-	roomIDs, err := redis.Strings(conn.Do("SMEMBERS", gconst.RoomTableACCSet))
+	roomIDs, err := redis.Strings(conn.Do("SMEMBERS", gconst.LobbyRoomTableSet))
 	if err != nil {
 		log.Println("restoreRooms, err:", err)
 		return
@@ -445,7 +388,7 @@ func (rm *RoomMgr) restoreRooms() {
 
 	conn.Send("MULTI")
 	for _, roomID := range roomIDs {
-		conn.Send("hmget", gconst.RoomTablePrefix+roomID, "ownerID", "roomConfigID", "gameServerID", "roomNumber", "clubID")
+		conn.Send("hmget", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "roomConfigID", "gameServerID", "roomNumber", "clubID")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))
@@ -486,7 +429,7 @@ func (rm *RoomMgr) restoreRooms() {
 	}
 
 	// 加载配置
-	vs, err := redis.Values(conn.Do("hgetall", gconst.RoomConfigTable))
+	vs, err := redis.Values(conn.Do("hgetall", gconst.LobbyRoomConfigTable))
 	if err != nil {
 		log.Println("restoreRooms, get roomConfig err:", err)
 		return
@@ -570,21 +513,6 @@ func (rm *RoomMgr) forceDisbandRoom(r *Room, reason pokerface.RoomDeleteReason) 
 	delete(roomMgr.rooms, r.ID)
 }
 
-// publishMsg 往redis publish消息
-func publishMsg(dst string, msg *gconst.SSMsgBag) {
-	bytes, err := proto.Marshal(msg)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	conn.Do("PUBLISH", dst, bytes)
-}
-
 // pushNotify2RoomServer 给房间管理服务器发送通知
 func pushNotify2RoomServer(reqCode gconst.SSMsgReqCode, params proto.Message) {
 	var msg = &gconst.SSMsgBag{}
@@ -607,59 +535,7 @@ func pushNotify2RoomServer(reqCode gconst.SSMsgReqCode, params proto.Message) {
 		msg.Params = bytes
 	}
 
-	publishMsg(gscfg.RoomServerID, msg)
-}
-
-// processResponse 处理目标服务器的回复
-func processResponse(ssmsgBag *gconst.SSMsgBag) {
-	sn := int(ssmsgBag.GetSeqNO())
-	wait, ok := waitingMap[sn]
-	if ok {
-		delete(waitingMap, sn)
-		wait.rspMsg = ssmsgBag
-		wait.waitChan <- true
-	} else {
-		log.Println("processRedisPublish, can't find message sn")
-	}
-}
-
-// sendAndWait 给dst发送消息（通过redis推送），并等待回复，timeout 指定超时时间
-func sendAndWait(dst string, msg *gconst.SSMsgBag, timeout time.Duration) (bool, *gconst.SSMsgBag) {
-	if dst == "" {
-		log.Panicln("publishMessage, need dst")
-		return false, nil
-	}
-
-	if msg == nil {
-		log.Panicln("publishMessage, msg == nil")
-		return false, nil
-	}
-
-	seqNo := uint32(pubSubSequnce)
-	pubSubSequnce++
-	msg.SeqNO = &seqNo
-
-	// 填上源url，以便对方可以发回回复
-	msg.SourceURL = &gscfg.ServerID
-
-	var wait = &WaitSubcriberRsp{}
-	wait.waitChan = make(chan bool, 1)
-	waitingMap[int(seqNo)] = wait
-
-	publishMsg(dst, msg)
-
-	var rspGot = false
-	select {
-	case <-wait.waitChan:
-		rspGot = true
-		break
-	case <-time.After(timeout):
-		break
-	}
-
-	// 任何情况都删除这个seqNo
-	delete(waitingMap, int(seqNo))
-	return rspGot, wait.rspMsg
+	gpubsub.PublishMsg(gscfg.RoomServerID, msg)
 }
 
 //lua脚本
@@ -703,27 +579,28 @@ func createLuaScript() {
 
 	luaScriptForHandScore = redis.NewScript(2, script2)
 
-	// KEYS[1], clubID
-	// KEYS[2], roomID
-	// gconst.ClubTablePrefix+clubID
-	// gconst.ClubReplayRoomsSetPrefix+clubID
-	// gconst.ClubReplayRoomsListPrefix+clubID
-	// gconst.ReplayRoomsReferenceSetPrefix+roomID
-	script4 := `local clubID = KEYS[1]
-		local roomID = KEYS[2]
-		local clubTable = '%s'..clubID
-		local owner = redis.call('HGET', clubTable, 'owner')
-		if owner == false then
-			return
-		end
-		local clubReplayRoomsSet = '%s'..clubID
-		local clubReplayRoomsList = '%s'..clubID
-		local replayRoomsReferenceSet = '%s'..roomID
-		redis.call('SADD', clubReplayRoomsSet, roomID)
-		redis.call('LPUSH', clubReplayRoomsList, roomID)
-		redis.call('SADD', replayRoomsReferenceSet, clubID)`
-	script4Format := fmt.Sprintf(script4, gconst.ClubTablePrefix, gconst.ClubReplayRoomsSetPrefix,
-		gconst.ClubReplayRoomsListPrefix, gconst.ReplayRoomsReferenceSetPrefix)
-	// log.Println(script4Format)
-	luaScriptClubReplayRoom = redis.NewScript(2, script4Format)
+	/*
+		// KEYS[1], clubID
+		// KEYS[2], roomID
+		// gconst.ClubTablePrefix+clubID
+		// gconst.ClubReplayRoomsSetPrefix+clubID
+		// gconst.ClubReplayRoomsListPrefix+clubID
+		// gconst.GameServerReplayRoomsReferenceSetPrefix+roomID
+		script4 := `local clubID = KEYS[1]
+			local roomID = KEYS[2]
+			local clubTable = '%s'..clubID
+			local owner = redis.call('HGET', clubTable, 'owner')
+			if owner == false then
+				return
+			end
+			local clubReplayRoomsSet = '%s'..clubID
+			local clubReplayRoomsList = '%s'..clubID
+			local replayRoomsReferenceSet = '%s'..roomID
+			redis.call('SADD', clubReplayRoomsSet, roomID)
+			redis.call('LPUSH', clubReplayRoomsList, roomID)
+			redis.call('SADD', replayRoomsReferenceSet, clubID)`
+		script4Format := fmt.Sprintf(script4, gconst.ClubTablePrefix, gconst.ClubReplayRoomsSetPrefix,
+			gconst.ClubReplayRoomsListPrefix, gconst.GameServerReplayRoomsReferenceSetPrefix)
+		// log.Println(script4Format)
+		luaScriptClubReplayRoom = redis.NewScript(2, script4Format)*/
 }

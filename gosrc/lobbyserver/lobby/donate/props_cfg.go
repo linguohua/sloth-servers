@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"gconst"
+	"gpubsub"
 	"lobbyserver/config"
+	"lobbyserver/lobby"
 
 	"github.com/garyburd/redigo/redis"
 	log "github.com/sirupsen/logrus"
@@ -55,9 +57,9 @@ const (
 type PropCfgMap map[int]*Prop
 
 var (
-	// key index, value Prop
+	// ClientPropCfgsMap key index, value Prop
 	// 下发给客户端显示
-	clientPropCfgsMap = make(map[int]PropCfgMap)
+	ClientPropCfgsMap = make(map[int]PropCfgMap)
 	// key propID, value Prop
 	// 服务器扣钻加魅力值用
 	serverPropCfgsMap = make(map[int]PropCfgMap)
@@ -165,16 +167,16 @@ func parsePropsCfgJSON(roomType int, confgJSON string) {
 		serverPropCfgMap[prop.PropID] = &prop
 	}
 
-	clientPropCfgsMap[roomType] = clientPropCfgMap
+	ClientPropCfgsMap[roomType] = clientPropCfgMap
 	serverPropCfgsMap[roomType] = serverPropCfgMap
 }
 
 func loadAllRoomPropCfgs() {
 	log.Println("loadAllPropCfg")
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.RoomTypeSet))
+	gameRoomTypes, err := redis.Ints(conn.Do("SMEMBERS", gconst.GameServerRoomTypeSet))
 	if err != nil {
 		log.Println("loadAllRoomPropCfgs, err:", err)
 		return
@@ -184,7 +186,7 @@ func loadAllRoomPropCfgs() {
 
 	conn.Send("MULTI")
 	for _, roomType := range gconst.RoomType_value {
-		conn.Do("HGET", gconst.GamePropsCfgTable, roomType)
+		conn.Do("HGET", gconst.LobbyPropsCfgTable, roomType)
 		roomTypes = append(roomTypes, roomType)
 	}
 
@@ -192,7 +194,7 @@ func loadAllRoomPropCfgs() {
 		roomTypeInt32 := int32(roomType)
 		_, ok := gconst.RoomType_name[roomTypeInt32]
 		if !ok {
-			conn.Do("HGET", gconst.GamePropsCfgTable, roomType)
+			conn.Do("HGET", gconst.LobbyPropsCfgTable, roomType)
 			roomTypes = append(roomTypes, roomTypeInt32)
 		}
 	}
@@ -214,12 +216,12 @@ func loadAllRoomPropCfgs() {
 		}
 	}
 
-	log.Printf("loadAllRoomPropCfgs, from redis:%d, default:%d", fromRedis, len(clientPropCfgsMap)-fromRedis)
+	log.Printf("loadAllRoomPropCfgs, from redis:%d, default:%d", fromRedis, len(ClientPropCfgsMap)-fromRedis)
 }
 
 // GetAllRoomPropCfgs 导出给web
 func GetAllRoomPropCfgs() interface{} {
-	return clientPropCfgsMap
+	return ClientPropCfgsMap
 }
 
 // PP 道具属性，db那边预先定义好
@@ -233,7 +235,7 @@ func loadPropTable(conn redis.Conn) map[int]PP {
 
 	ppMap := make(map[int]PP)
 	// 拉取配置表
-	ppString, err := redis.String(conn.Do("GET", gconst.PropsTable))
+	ppString, err := redis.String(conn.Do("GET", gconst.LobbyPropsTable))
 	if err != nil {
 		log.Println("err:", err)
 		return ppMap
@@ -290,7 +292,7 @@ func UpdateRoomPropsCfg(JSONString string) error {
 	}
 
 	// 拉取配置表
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	ppMap := loadPropTable(conn)
@@ -339,11 +341,11 @@ func UpdateRoomPropsCfg(JSONString string) error {
 		return err
 	}
 
-	clientPropCfgsMap[propsCfg.RoomType] = propCfgMap
+	ClientPropCfgsMap[propsCfg.RoomType] = propCfgMap
 
-	key := fmt.Sprintf("%s%d", gconst.GameServerKeyPrefix, propsCfg.RoomType)
+	key := fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, propsCfg.RoomType)
 	conn.Send("MULTI")
-	conn.Send("HSET", gconst.GamePropsCfgTable, propsCfg.RoomType, string(buf))
+	conn.Send("HSET", gconst.LobbyPropsCfgTable, propsCfg.RoomType, string(buf))
 	conn.Send("SMEMBERS", key)
 
 	vs, err := redis.Values(conn.Do("EXEC"))
@@ -373,7 +375,7 @@ func sendPropCfg2GameServer(propCfgString string, serverID string) {
 
 	msgBag := &gconst.SSMsgBag{}
 	msgBag.MsgType = &msgType
-	var sn = generateSn()
+	var sn = lobby.GenerateSn()
 	msgBag.SeqNO = &sn
 	msgBag.RequestCode = &requestCode
 	msgBag.Status = &status
@@ -381,5 +383,5 @@ func sendPropCfg2GameServer(propCfgString string, serverID string) {
 	msgBag.SourceURL = &url
 	msgBag.Params = []byte(propCfgString)
 
-	publishMsg(serverID, msgBag)
+	gpubsub.PublishMsg(serverID, msgBag)
 }

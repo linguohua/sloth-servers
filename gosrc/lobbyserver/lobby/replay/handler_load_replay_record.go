@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"gconst"
+	"lobbyserver/lobby"
 	"net/http"
 	"strings"
 
@@ -27,7 +28,7 @@ import (
 // 	conn.Send("MULTI")
 
 // 	for _, player := range players {
-// 		conn.Send("HMGET", gconst.AsUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
+// 		conn.Send("HMGET", gconst.LobbyUserTablePrefix+player.GetUserID(), "userSex", "userLogo")
 // 	}
 
 // 	values, err := redis.Values(conn.Do("EXEC"))
@@ -89,7 +90,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 	}
 
 	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	recordID := r.URL.Query().Get("rid")
@@ -102,10 +103,10 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 			return
 		}
 
-		recordID, _ = redis.String(conn.Do("HGET", gconst.MJRecorderTablePrefix+sid, "rid"))
+		recordID, _ = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+sid, "rid"))
 		// 新的代码已经把sharedID放在MJRecorderShareIDTable哈希表中
 		if recordID == "" {
-			recordID, _ = redis.String(conn.Do("HGET", gconst.MJRecorderShareIDTable, sid))
+			recordID, _ = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderShareIDTable, sid))
 			if recordID == "" {
 				log.Println("handleLoadReplayRecord, no recordID found with sid:", sid)
 				return
@@ -114,7 +115,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 	}
 
 	// "d" 二进制数据， "cid" 房间配置id
-	values, err := redis.Values(conn.Do("HMGET", gconst.MJRecorderTablePrefix+recordID, "d", "cid"))
+	values, err := redis.Values(conn.Do("HMGET", gconst.GameServerMJRecorderTablePrefix+recordID, "d", "cid"))
 	if err != nil {
 		log.Println("handleLoadReplayRecord, HMGET err:", err)
 		return
@@ -136,7 +137,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	var msgHandRecorder = &MsgAccLoadReplayRecord{}
+	var msgHandRecorder = &lobby.MsgAccLoadReplayRecord{}
 	// err = proto.Unmarshal(bytesArray, msgHandRecorder)
 	// if err != nil {
 	// 	log.Println("handleLoadReplayRecord, unmarshal err:", err)
@@ -145,7 +146,7 @@ func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID strin
 
 	msgHandRecorder.ReplayRecordBytes = bytesArray
 	roomConfigID := cid
-	var roomConfig = roomConfigs[roomConfigID]
+	var roomConfig = lobby.RoomConfigs[roomConfigID]
 	msgHandRecorder.RoomJSONConfig = &roomConfig
 
 	//loadPlayerHeadIconURI(msgHandRecorder.GetPlayers())

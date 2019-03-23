@@ -9,8 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
-
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -104,12 +102,13 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 // InitWith init
-func InitWith(mainRouter *mux.Router) {
+func InitWith() {
+	var mainRouter = lobby.MainRouter
 	userMgr = newUserMgr()
 
 	startAliveKeeper()
 
-	lobby.SessionMgr = userMgr
+	lobby.SetSessionMgr(userMgr)
 
 	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
 	sessions.HandleFunc("/", acceptWebsocket)

@@ -27,7 +27,7 @@ func monkeyAccountVerify(w http.ResponseWriter, r *http.Request) bool {
 	conn := pool.Get()
 	defer conn.Close()
 
-	tableName := fmt.Sprintf("%s%d", gconst.MonkeyAccountTablePrefix, gconst.RoomType_DafengGZ)
+	tableName := fmt.Sprintf("%s%d", gconst.GameServerMonkeyAccountTablePrefix, gconst.RoomType_DafengGZ)
 	pass, e := redis.String(conn.Do("HGET", tableName, account))
 	if e != nil || password != pass {
 		return false
@@ -66,7 +66,7 @@ func onExportRoomReplayRecordsSIDs(w http.ResponseWriter, r *http.Request) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	recordID, err := redis.String(conn.Do("HGET", gconst.MJRecorderTablePrefix+recordSID, "rid"))
+	recordID, err := redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+recordSID, "rid"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("can't found rid for sid:", recordSID)
 		w.Write([]byte("no mj record found for record:" + recordSID))
@@ -75,7 +75,7 @@ func onExportRoomReplayRecordsSIDs(w http.ResponseWriter, r *http.Request) {
 
 	// 新的代码已经把sharedID放在MJRecorderShareIDTable哈希表中
 	if recordID == "" {
-		recordID, err = redis.String(conn.Do("HGET", gconst.MJRecorderShareIDTable, recordSID))
+		recordID, err = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderShareIDTable, recordSID))
 		if err != nil {
 			log.Println("can't found rid for sid:", recordSID)
 			w.Write([]byte("no mj record found for record:" + recordSID))
@@ -97,7 +97,7 @@ func exportRoomOperationsByRecordSID(w http.ResponseWriter, r *http.Request, rec
 	conn := pool.Get()
 	defer conn.Close()
 
-	recordID, err := redis.String(conn.Do("HGET", gconst.MJRecorderTablePrefix+recordSID, "rid"))
+	recordID, err := redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+recordSID, "rid"))
 	if err != nil && err != redis.ErrNil {
 		log.Println("can't found rid for sid:", recordSID)
 		w.Write([]byte("no mj record found for record:" + recordSID))
@@ -106,7 +106,7 @@ func exportRoomOperationsByRecordSID(w http.ResponseWriter, r *http.Request, rec
 
 	// 新的代码已经把sharedID放在MJRecorderShareIDTable哈希表中
 	if recordID == "" {
-		recordID, err = redis.String(conn.Do("HGET", gconst.MJRecorderShareIDTable, recordSID))
+		recordID, err = redis.String(conn.Do("HGET", gconst.GameServerMJRecorderShareIDTable, recordSID))
 		if err != nil {
 			log.Println("can't found rid for sid:", recordSID)
 			w.Write([]byte("no mj record found for record:" + recordSID))

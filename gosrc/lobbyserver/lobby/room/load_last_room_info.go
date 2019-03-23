@@ -3,6 +3,8 @@ package room
 import (
 	"encoding/json"
 	"gconst"
+	"lobbyserver/lobby"
+	"lobbyserver/lobby/donate"
 	"strconv"
 	"time"
 
@@ -19,7 +21,7 @@ func getPropCfg(roomType int) string {
 	// 	log.Println("loadPropCfg error:", err)
 	// 	return ""
 	// }
-	clientPropCfgMap := clientPropCfgsMap[roomType]
+	clientPropCfgMap := donate.ClientPropCfgsMap[roomType]
 
 	buf, err := json.Marshal(clientPropCfgMap)
 	if err != nil {
@@ -29,19 +31,14 @@ func getPropCfg(roomType int) string {
 	return string(buf)
 }
 
-// LoadUserLastEnterRoomID load last enter room
-func LoadUserLastEnterRoomID(userID string) string {
-	return loadUserLastEnterRoomID(userID)
-}
-
 func loadUserLastEnterRoomID(userID string) string {
 	log.Println("loadUserLastEnterRoomID, userID:", userID)
 	var timeAsLeave = 6 * 60 * 60
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.PlayerTablePrefix+userID, "enterRoom", "enterTime", "leaveRoom", "leaveTime"))
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyPlayerTablePrefix+userID, "enterRoom", "enterTime", "leaveRoom", "leaveTime"))
 	if err != nil {
 		log.Println("loadLastRoomNumber err:", err)
 		return ""
@@ -80,17 +77,17 @@ func loadUserLastEnterRoomID(userID string) string {
 	return enterRoomID
 }
 
-func loadLastRoomInfo(userID string) *RoomInfo {
+func loadLastRoomInfo(userID string) *lobby.RoomInfo {
 	log.Println("loadLastRoomInfo, userID:", userID)
 	enterRoomID := loadUserLastEnterRoomID(userID)
 	if enterRoomID == "" {
 		return nil
 	}
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType", "arenaID", "raceTemplateID"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType", "arenaID", "raceTemplateID"))
 	if err != nil {
 		log.Println("load room info err:", err)
 		return nil
@@ -113,7 +110,7 @@ func loadLastRoomInfo(userID string) *RoomInfo {
 
 	roomTypeInt, _ := strconv.Atoi(roomType)
 
-	var roomInfo = &RoomInfo{}
+	var roomInfo = &lobby.RoomInfo{}
 	roomInfo.RoomID = &enterRoomID
 	roomInfo.RoomNumber = &roomNumber
 	roomInfo.GameServerURL = &gameServerURL
@@ -123,7 +120,7 @@ func loadLastRoomInfo(userID string) *RoomInfo {
 	roomInfo.PropCfg = &propCfg
 
 	//log.Println("loadLastRoom, gserverURL:", gameServerURL)
-	roomConfig, ok := roomConfigs[roomConfigID]
+	roomConfig, ok := lobby.RoomConfigs[roomConfigID]
 	if ok {
 		roomInfo.Config = &roomConfig
 	}

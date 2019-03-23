@@ -3,10 +3,11 @@ package room
 import (
 	"fmt"
 	"gconst"
-	"strconv"
-	log "github.com/sirupsen/logrus"
-	"github.com/garyburd/redigo/redis"
 	"lobbyserver/lobby"
+	"strconv"
+
+	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 // UserRoomInfo 用户房间信息
@@ -17,18 +18,18 @@ type UserRoomInfo struct {
 	GameServerPort    int32
 }
 
-// GetUserRoomInfo 获取用户房间信息
-func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
+// getUserRoomInfo 获取用户房间信息
+func getUserRoomInfo(userID string) (*UserRoomInfo, error) {
 	log.Println("GetUserRoomInfo, userID:", userID)
 	enterRoomID := loadUserLastEnterRoomID(userID)
 	if enterRoomID == "" {
 		return nil, fmt.Errorf("Can't get Enter room ID")
 	}
 
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.RoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+enterRoomID, "roomNumber", "roomConfigID", "gameServerID", "roomType"))
 	if err != nil {
 		return nil, fmt.Errorf("Get Room Info error %v", err)
 	}
@@ -43,17 +44,17 @@ func GetUserRoomInfo(userID string) (*UserRoomInfo, error) {
 		return nil, fmt.Errorf("Parser roomType to int error %v", err)
 	}
 
-	port, err := redis.Int(conn.Do("HGET", gconst.GameServerKeyPrefix+gameServerID, "p"))
+	port, err := redis.Int(conn.Do("HGET", gconst.GameServerInstancePrefix+gameServerID, "p"))
 	if err != nil {
 		return nil, fmt.Errorf("Load game server port error:%v", err)
 	}
 
-	roomCfg, ok := roomConfigs[roomConfigID]
+	roomCfg, ok := lobby.RoomConfigs[roomConfigID]
 	if !ok {
 		return nil, fmt.Errorf("Can't get room config")
 	}
 
-	var roomCfgJSON = parseRoomConfigFromString(roomCfg)
+	var roomCfgJSON = lobby.ParseRoomConfigFromString(roomCfg)
 
 	var userRoomInfo = &UserRoomInfo{}
 	userRoomInfo.RoomType = int32(roomTypeInt)

@@ -70,7 +70,7 @@ package donate
 // 	conn := pool.Get()
 // 	defer conn.Close()
 
-// 	fields, err := redis.Strings(conn.Do("HMGET", gconst.AsUserTablePrefix+to, "charm", "isSyncCharm"))
+// 	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyUserTablePrefix+to, "charm", "isSyncCharm"))
 // 	if err != nil && err != redis.ErrNil {
 // 		var errMsg = fmt.Sprintf("load user %s charm failed, err:%v", to, err)
 // 		log.Panicln(errMsg)
@@ -88,9 +88,9 @@ package donate
 // 	var propIDfield = fmt.Sprintf("ExtendCoin:%d", propID)
 
 // 	conn.Send("MULTI")
-// 	conn.Send("HSET", gconst.AsUserTablePrefix+from, "diamond", remainDiamond)
-// 	conn.Send("HDEL", gconst.AsUserTablePrefix+from, propIDfield)
-// 	conn.Send("HSET", gconst.AsUserTablePrefix+to, "charm", newCharm)
+// 	conn.Send("HSET", gconst.LobbyUserTablePrefix+from, "diamond", remainDiamond)
+// 	conn.Send("HDEL", gconst.LobbyUserTablePrefix+from, propIDfield)
+// 	conn.Send("HSET", gconst.LobbyUserTablePrefix+to, "charm", newCharm)
 // 	conn.Send("HMSET", gconst.DonateTablePrefix+donateID, "from", from, "to", to, "propsType", propsType, "costDiamond", costDiamond, "charm", charm)
 // 	conn.Send("LPUSH", gconst.UserDonatePrefix+from, donateID)
 // 	conn.Send("LPUSH", gconst.UserDonatePrefix+to, donateID)
@@ -108,7 +108,7 @@ package donate
 // 		if err != nil {
 // 			log.Println("UpdateCharmValue error:", err)
 // 		} else {
-// 			conn.Do("HSET", gconst.AsUserTablePrefix+to, "isSyncCharm", "true")
+// 			conn.Do("HSET", gconst.LobbyUserTablePrefix+to, "isSyncCharm", "true")
 // 		}
 
 // 	} else {
@@ -135,7 +135,7 @@ package donate
 
 // 	var field = fmt.Sprintf("ExtendCoin:%d", propID)
 // 	log.Println("field:", field)
-// 	propNum, err := redis.Int(conn.Do("HGET", gconst.AsUserTablePrefix+userID, field))
+// 	propNum, err := redis.Int(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, field))
 // 	if err != nil {
 // 		log.Println("getUserPropNum error:", err)
 // 		return false
@@ -169,8 +169,8 @@ package donate
 // 	defer conn.Close()
 
 // 	conn.Send("MULTI")
-// 	conn.Do("HGET", gconst.AsUserTablePrefix+to, "charm")
-// 	conn.Do("HGET", gconst.AsUserTablePrefix+from, "diamond")
+// 	conn.Do("HGET", gconst.LobbyUserTablePrefix+to, "charm")
+// 	conn.Do("HGET", gconst.LobbyUserTablePrefix+from, "diamond")
 // 	vs, err := redis.Ints(conn.Do("EXEC"))
 // 	if err != nil {
 // 		log.Println("consumeUserProp get charm and diamond error:", err)
@@ -183,7 +183,7 @@ package donate
 // 	var donateID = generateDonateUUID()
 
 // 	conn.Send("MULTI")
-// 	conn.Send("HSET", gconst.AsUserTablePrefix+to, "charm", newCharm)
+// 	conn.Send("HSET", gconst.LobbyUserTablePrefix+to, "charm", newCharm)
 // 	conn.Send("HMSET", gconst.DonateTablePrefix+donateID, "from", from, "to", to, "propsType", propID, "costDiamond", 0, "charm", charm)
 // 	conn.Send("LPUSH", gconst.UserDonatePrefix+from, donateID)
 // 	conn.Send("LPUSH", gconst.UserDonatePrefix+to, donateID)

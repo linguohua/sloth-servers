@@ -38,7 +38,7 @@ It has these top-level messages:
 	MsgReplayPlayerInfo
 	MsgReplayRoom
 */
-package pb
+package lobby
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"

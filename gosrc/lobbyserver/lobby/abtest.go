@@ -1,14 +1,6 @@
 package lobby
 
-import (
-	"fmt"
-	log "github.com/sirupsen/logrus"
-	"gconst"
-	"strconv"
-
-	"github.com/garyburd/redigo/redis"
-)
-
+/*
 func isUserInABTest(userID string) bool {
 	conn := pool.Get()
 	defer conn.Close()
@@ -58,7 +50,7 @@ func getGameServerInfosByRoomType(myRoomType int) []*GameServerInfo {
 		myRoomType = int(gconst.RoomType_DafengMJ)
 	}
 
-	var setkey = fmt.Sprintf("%s%d", gconst.GameServerKeyPrefix, myRoomType)
+	var setkey = fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, myRoomType)
 	log.Println("setkey:", setkey)
 	gameServerIDs, err := redis.Strings(conn.Do("SMEMBERS", setkey))
 	if err != nil {
@@ -68,7 +60,7 @@ func getGameServerInfosByRoomType(myRoomType int) []*GameServerInfo {
 
 	conn.Send("MULTI")
 	for _, gameServerID := range gameServerIDs {
-		conn.Send("HMGET", gconst.GameServerKeyPrefix+gameServerID, "roomtype", "ver")
+		conn.Send("HMGET", gconst.GameServerInstancePrefix+gameServerID, "roomtype", "ver")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))
@@ -163,3 +155,4 @@ func getGamerServerInfo(userID string, roomType int) *GameServerInfo {
 	return getMaxVersionGameServerUnderBound(roomType)
 
 }
+*/

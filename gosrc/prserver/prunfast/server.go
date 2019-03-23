@@ -48,7 +48,7 @@ func incrOnlinePlayerNum() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	var key = fmt.Sprintf("%s%d", gconst.OnlineGameUserNum, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
 	conn.Do("HINCRBY", key, gscfg.ServerID, 1)
 }
 
@@ -57,7 +57,7 @@ func decrOnlinePlayerNum() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	var key = fmt.Sprintf("%s%d", gconst.OnlineGameUserNum, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
 	conn.Do("HINCRBY", key, gscfg.ServerID, -1)
 }
 

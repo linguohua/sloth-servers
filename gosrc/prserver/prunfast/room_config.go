@@ -109,7 +109,7 @@ func loadRoomConfigFromRedis(roomConfigID string) []byte {
 	conn := pool.Get()
 	defer conn.Close()
 
-	buf, err := redis.Bytes(conn.Do("hget", gconst.RoomConfigTable, roomConfigID))
+	buf, err := redis.Bytes(conn.Do("hget", gconst.LobbyRoomConfigTable, roomConfigID))
 	if err != nil {
 		log.Println("load room config from redis :", err)
 		return nil

@@ -3,6 +3,9 @@ package main
 import (
 	"lobbyserver/config"
 	"lobbyserver/lobby"
+	"lobbyserver/lobby/pay"
+	"lobbyserver/lobby/replay"
+	"lobbyserver/lobby/room"
 
 	//"accwebserver"
 	"flag"
@@ -80,23 +83,15 @@ func main() {
 		signal.Notify(sighup, syscall.SIGHUP)
 	}
 
-	// common.Startup(config.CommonCfgPath)
-
-	// cache.Startup(config.CacheCfgPath)
-	//初始化webdata 数据
-	// webdata.Startup(config.WebDataCfgFile)
-
 	lobby.CreateHTTPServer()
 	log.Println("start lobbyserver ok!")
 
-	support.InitWith(lobby.MainRouter)
-	sessions.InitWith(lobby.MainRouter)
-
-	// go syncdata.SyncRedisData2DB()
-	// go syncdata.StartSyncDataSchedule()
-
-	// go accwebserver.StartWebServer()
-	// log.Println("start accWebServer ok!")
+	// 加载各个子模块
+	support.InitWith()
+	sessions.InitWith()
+	room.InitWith()
+	replay.InitWith()
+	pay.InitWith()
 
 	if config.Daemon == "yes" {
 		waitForSignal()

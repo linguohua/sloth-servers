@@ -1,14 +1,16 @@
-package lobby
+package logupload
 
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	log "github.com/sirupsen/logrus"
-	"net/http"
 	"gconst"
+	"io/ioutil"
+	"lobbyserver/lobby"
+	"net/http"
 	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -16,15 +18,14 @@ import (
 const (
 	// 5分钟
 	maxTime = 60 * 5
-
 )
 
 func handleUploadLogFile(w http.ResponseWriter, r *http.Request, userID string) {
 	log.Println("handleUploadLogFile, userID:", userID)
-	conn := pool.Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	saveLogTimeStr, err := redis.String(conn.Do("HGET", gconst.AsUserTablePrefix+userID, "saveLogTime"))
+	saveLogTimeStr, err := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "saveLogTime"))
 	if err != nil {
 		saveLogTimeStr = "0"
 	}
@@ -69,7 +70,7 @@ func handleUploadLogFile(w http.ResponseWriter, r *http.Request, userID string) 
 		return
 	}
 
-	conn.Do("HSET", gconst.AsUserTablePrefix+userID, "saveLogTime", timeStampInSecond)
+	conn.Do("HSET", gconst.LobbyUserTablePrefix+userID, "saveLogTime", timeStampInSecond)
 
 	w.Write([]byte(`{"error":0}`))
 }

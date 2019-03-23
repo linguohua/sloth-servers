@@ -9,7 +9,6 @@ import (
 
 	//"webdata"
 	"github.com/garyburd/redigo/redis"
-	"github.com/gorilla/mux"
 )
 
 // accSupportVerify 检查monkey用户接入合法
@@ -20,7 +19,7 @@ func accSupportVerify(w http.ResponseWriter, r *http.Request) bool {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	tableName := gconst.AccMonkeyAccountTalbe
+	tableName := gconst.LobbyMonkeyAccountTalbe
 	pass, e := redis.String(conn.Do("HGET", tableName, account))
 	if e != nil || password != pass {
 		return false
@@ -31,7 +30,7 @@ func accSupportVerify(w http.ResponseWriter, r *http.Request) bool {
 
 func onQueryOnlineUser(w http.ResponseWriter, r *http.Request) {
 	var resultString = `{"count":%d}`
-	w.Write([]byte(fmt.Sprintf(resultString, lobby.SessionMgr.UserCount())))
+	w.Write([]byte(fmt.Sprintf(resultString, lobby.SessionMgr().UserCount())))
 }
 
 // // AddUser2Blacklist 添加用户到黑名单
@@ -88,7 +87,8 @@ func supportMiddleware(old http.Handler) http.Handler {
 }
 
 // InitWith init
-func InitWith(mainRouter *mux.Router) {
+func InitWith() {
+	var mainRouter = lobby.MainRouter
 	var support = mainRouter.PathPrefix("/support").Subrouter()
 	support.Use(supportMiddleware)
 

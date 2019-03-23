@@ -74,7 +74,7 @@ func schedule2StartTask(activityCfg *ActivityCfg) {
 		}
 
 		cfg.ActivityPriceCfg = activityCfg
-		notifyAllUserPriceChange(activityCfg.RoomType, cfg, updatePriceCfg)
+		//notifyAllUserPriceChange(activityCfg.RoomType, cfg, updatePriceCfg)
 
 		log.Printf("startTask, roomType:%d, endTime:%s", activityCfg.RoomType, convertUnixTime2TimeString(activityCfg.EndTime))
 	}()
@@ -96,7 +96,7 @@ func schedule2StopTask(activityCfg *ActivityCfg) {
 
 		// 停止活动
 		cfg.ActivityPriceCfg = nil
-		notifyAllUserPriceChange(activityCfg.RoomType, cfg, updatePriceCfg)
+		//notifyAllUserPriceChange(activityCfg.RoomType, cfg, updatePriceCfg)
 
 		log.Printf("StopTask, roomType:%d", activityCfg.RoomType)
 

@@ -1,7 +1,6 @@
 package pricecfg
 
 import (
-	"encoding/json"
 	"fmt"
 	"gconst"
 	"time"
@@ -9,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
-	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -24,7 +22,7 @@ func EnablePriceCfg(roomType int, priceCfgType string) error {
 	conn := pool.Get()
 	defer conn.Close()
 
-	var key = fmt.Sprintf("%s%d", gconst.PriceConfigDisable, roomType)
+	var key = fmt.Sprintf("%s%d", gconst.LobbyPriceConfigDisablePrefix, roomType)
 	pricecfg, err := redis.String(conn.Do("hget", key, priceCfgType))
 	if err != nil {
 		log.Println("EnablePriceCfg, get price cfg error:", err)
@@ -48,7 +46,7 @@ func EnablePriceCfg(roomType int, priceCfgType string) error {
 		originalPriceCfg, _ := parserOriginalPriceCfgStr2Map(pricecfg)
 		cfg.OriginalPriceCfg = originalPriceCfg
 		cfgs[roomType] = cfg
-		notifyAllUserPriceChange(roomType, cfg, updatePriceCfg)
+		//notifyAllUserPriceChange(roomType, cfg, updatePriceCfg)
 		return nil
 
 	}
@@ -84,7 +82,7 @@ func EnablePriceCfg(roomType int, priceCfgType string) error {
 		}
 
 		cfg.ActivityPriceCfg = activityPriceCfg
-		notifyAllUserPriceChange(activityPriceCfg.RoomType, cfg, updatePriceCfg)
+		//notifyAllUserPriceChange(activityPriceCfg.RoomType, cfg, updatePriceCfg)
 		schedule2StopTask(cfg.ActivityPriceCfg)
 		return nil
 	}
@@ -95,6 +93,7 @@ func EnablePriceCfg(roomType int, priceCfgType string) error {
 	return nil
 }
 
+/*
 func notifyAllUserPriceChange(roomType int, pricecfg *Cfg, action int) {
 	type NotifyPriceChange struct {
 		RoomType int  `json:"roomType"`
@@ -147,3 +146,4 @@ func pushAllPlayer(ops int32, data []byte) {
 		log.Printf("push allplayer server:%s push event %s", v, key)
 	}
 }
+*/
