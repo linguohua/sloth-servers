@@ -66,11 +66,13 @@ func waitWebsocketMessage(ws *websocket.Conn, userMapItem *UserMapItem, r *http.
 	user := userMapItem.user
 
 	ws.SetPongHandler(func(msg string) error {
+		//log.Printf("websocket recv ping msg:%s, size:%d\n", msg, len(msg))
 		userMapItem.lastReceivedTime = time.Now()
 		return nil
 	})
 
 	ws.SetPingHandler(func(msg string) error {
+		//log.Printf("websocket recv ping msg size:%d\n", len(msg))
 		userMapItem.lastReceivedTime = time.Now()
 		user.sendPong(msg)
 		return nil
@@ -226,7 +228,9 @@ func monkeySupportMiddleware(old http.Handler) http.Handler {
 		if monkeyAccountVerify(w, r) {
 			old.ServeHTTP(w, r)
 		} else {
-			w.Write([]byte("no authorization for call monkey handler:" + p))
+			var msg = "no authorization for call monkey handler:" + p
+			log.Println(msg)
+			w.Write([]byte(msg))
 		}
 	})
 }

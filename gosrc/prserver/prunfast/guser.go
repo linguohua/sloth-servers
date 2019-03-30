@@ -1,9 +1,10 @@
 package prunfast
 
 import (
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 )
@@ -98,12 +99,12 @@ func (gu *GUser) sendPong(msg string) {
 		gu.wsLock.Lock()
 		defer gu.wsLock.Unlock()
 
-		if msg == "" {
+		if len(msg) == 0 {
 			msg = "kr"
 		}
 
 		ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
-		err := ws.WriteMessage(websocket.PongMessage, []byte("kr"))
+		err := ws.WriteMessage(websocket.PongMessage, []byte(msg))
 		if err != nil {
 			log.Printf("user %s ws write err:", err)
 			ws.Close()
