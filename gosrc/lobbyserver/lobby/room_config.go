@@ -31,13 +31,7 @@ type RoomConfigJSON struct {
 	// 开房类型，比如立即开局、代人开房
 	OpenType int `json:"openType"`
 
-	// 判断是否是比赛场，0表示普通场，1表示比赛场
-	Race int `json:"is_race"`
-	// 比赛房进入托管状态的超时时间
-	ProxyTimeout int `json:"proxytimeout"`
-
-	// 判断是否是牌友群
-	IsGroup bool `json:"isClub"`
+	RoomType int `json:"roomType"`
 }
 
 func loadAllRoomConfigFromRedis() {

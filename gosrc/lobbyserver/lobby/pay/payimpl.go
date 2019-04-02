@@ -173,15 +173,15 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 	var modDiamondType = ownerModDiamondCreateRoom
 	if roomConfig.PayType == AApay {
 		modDiamondType = aaModDiamondCreateRoom
-		if roomConfig.IsGroup {
-			modDiamondType = aaModDiamondCreateRoomForGroup
-		}
+		// if roomConfig.IsGroup {
+		// 	modDiamondType = aaModDiamondCreateRoomForGroup
+		// }
 	} else if roomConfig.PayType == GroupPay {
 		modDiamondType = masterModDiamondCreateRoomForGroup
 	} else {
-		if roomConfig.IsGroup {
-			modDiamondType = ownerModDiamondCreateRoomForGroup
-		}
+		// if roomConfig.IsGroup {
+		// 	modDiamondType = ownerModDiamondCreateRoomForGroup
+		// }
 	}
 
 	log.Println("payAndSave2RedisWith modDiamondType:", modDiamondType)

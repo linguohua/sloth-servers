@@ -124,12 +124,12 @@ func loadReplayRoomsByIDs(replayRoomIDs []string, conn redis.Conn) []byte {
 			continue
 		}
 
-		var roomConfigID = replayRoom.GetRoomConfigID()
-		var roomConfigJSON = lobby.GetRoomConfig(roomConfigID)
-		if roomConfigJSON != nil && roomConfigJSON.Race == 1 {
-			log.Println("Not need to load Race room")
-			continue
-		}
+		// var roomConfigID = replayRoom.GetRoomConfigID()
+		// var roomConfigJSON = lobby.GetRoomConfig(roomConfigID)
+		// if roomConfigJSON != nil && roomConfigJSON.Race == 1 {
+		// 	log.Println("Not need to load Race room")
+		// 	continue
+		// }
 
 		t := time.Now().Local()
 		var startTime = time.Date(t.Year(), t.Month(), t.Day()-1, 0, 0, 0, 0, t.Location())

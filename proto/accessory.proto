@@ -131,14 +131,6 @@ enum OpenRoomType {
 message MsgCreateRoomReq
 {
 	required string config = 1; // JSON格式的规则
-	optional int32 exchangeId = 2; // 兑换Id
-	optional int32 roomType= 3; // 见RoomType
-	optional int32 openType= 4; // 见OpenRoomType
-	optional string clubID = 5; // 如果是俱乐部创建，则带上俱乐部ID
-	optional string arenaID = 6; // 比赛ID
-	repeated string userIDs = 7; // 创建比赛场的时候带所有用户ID到游戏服务器
-	optional int32 waitTime = 8; // 创建比赛场的时候带一个等待开局时间
-	optional string raceTemplateID = 9; // 比赛场模本ID
 }
 
 // 用户信息
@@ -170,10 +162,8 @@ message MsgCreateRoomRsp
 {
 	required int32 result = 1; //0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
 	optional RoomInfo roomInfo = 2; //房间信息
-	optional int32 openType= 3; // 见OpenRoomType
-	optional string retMsg = 4; // result对应的字符串
-	optional int32 roomType= 5; // 见RoomType
-	optional int32 diamond= 6;  // 若创建成功返回剩下的钻石
+	optional string retMsg = 3; // result对应的字符串
+	optional int32 diamond= 4;  // 若创建成功返回剩下的钻石
 }
 
 //解散玩家创建的房间
