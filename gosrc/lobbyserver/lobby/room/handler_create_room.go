@@ -379,27 +379,6 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	}
 }
 
-func writeGameStartRecord(roomType int, roomNumber string, ownerID string, roundType int, totalRoound int, gameRoule string, gameType int, mainType string, subType string, gameNo int64) {
-	// TODO: llwant mysql
-	// gameStartRecord := &webdata.GameStartRecord{}
-	// gameStartRecord.GameID = getSubGameIDByRoomType(roomType)
-	// gameStartRecord.GameType = gameType // 通过这个接口创建的房间是亲友房
-	// gameStartRecord.MainType = mainType // 亲友房不写
-	// gameStartRecord.SubType = subType   // 1局模式，2圈模式，3锅模式
-	// gameStartRecord.RoomNo = roomNumber
-	// gameStartRecord.OwnerPlayerID = ownerID
-	// gameStartRecord.RoundType = roundType
-	// gameStartRecord.TotalRound = totalRoound
-	// gameStartRecord.GameRoule = gameRoule
-	// gameStartRecord.WriteTime = time.Now().Local().Format("2006-01-02 15:04:05")
-	// gameStartRecord.GameNo = gameNo
-
-	// ok := webdata.WriteGameStartRecord(gameStartRecord)
-	// if !ok {
-	// 	log.Println("writeGameStartRecord failed!")
-	// }
-}
-
 func converGameServerErrCode2AccServerErrCode(gameServerErrCode int32) int32 {
 	var errCode = gameServerErrCode
 	if errCode == int32(gconst.SSMsgError_ErrEncode) {
