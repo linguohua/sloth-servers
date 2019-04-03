@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"gconst"
 	"lobbyserver/lobby"
-	"lobbyserver/lobby/userinfo"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +14,16 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
+
+// UserInfo 用户信息
+type UserInfo struct {
+	UserID      int64  `json:"userID"`
+	UserName    string `json:"userName"`
+	SdkUserName string `json:"sdkUserName"`
+	SdkUserNick string `json:"sdkUserNick"`
+	SdkUserSex  string `json:"sdkUserSex"`
+	SdkUserLogo string `json:"sdkUserLogo"`
+}
 
 // User 表示一个用户
 type User struct {
@@ -152,10 +161,10 @@ func userID2Str(userID int64) string {
 	return hex.EncodeToString(b)
 }
 
-func (u *User) saveAuthInfo(userInfo *userinfo.UserInfo, realIP string) {
+func (u *User) saveAuthInfo(userInfo *UserInfo, realIP string) {
 	log.Println("saveAuthInfo")
 	if userInfo == nil {
-		userInfo = &userinfo.UserInfo{}
+		userInfo = &UserInfo{}
 	}
 
 	var ws = u.ws

@@ -1,5 +1,4 @@
 package room
-
 import (
 	"crypto/md5"
 	"fmt"
@@ -73,7 +72,7 @@ func replayCreateRoom(w http.ResponseWriter, roomInfo *lobby.RoomInfo, errorCode
 	w.Write(bytes)
 }
 
-func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, roomNumberString string, timeStampInSecond int64, gameNo int64) {
+func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, roomNumberString string, timeStampInSecond int64) {
 	var userID = msgCreateRoom.GetUserID()
 	var roomID = msgCreateRoom.GetRoomID()
 	var roomConfigID = msgCreateRoom.GetRoomConfigID()
@@ -118,30 +117,6 @@ func strArray2Comma(ss []string) string {
 	result = result + ss[len(ss)-1]
 
 	return result
-}
-
-// 这个是为了写牌局记录到sql, sql保存牌局需要这个GameNo
-func generateGameNo() (int64, error) {
-	// conn := lobby.Pool().Get()
-	// defer conn.Close()
-
-	// gameNo, err := redis.Int64(conn.Do("INCR", gconst.CurrentRoomGameNo))
-	// if err != nil {
-	// 	log.Println("generateGameNo error:", err)
-	// 	return 0, err
-	// }
-
-	// TODO: llwant mysql
-
-	// 为了续上数据库里面的GameNo
-	// if gameNo <= 1 {
-	// 	_, gameNo, err = webdata.GenerateRoomNum("10000000")
-	// 	if err != nil {
-	// 		return 0, err
-	// 	}
-	// }
-
-	return 0, nil
 }
 
 // 1.检查数据库是否已经存在随机数
@@ -196,56 +171,6 @@ func saveRoomConfigIfNotExist(roomConfig string) (roomConfigID string, errorCode
 
 	errorCode = int32(lobby.MsgError_ErrSuccess)
 	return
-}
-
-func loadUserRoom(userID string) *lobby.RoomInfo {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-
-	roomID, err := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "roomID"))
-	if err != nil {
-		return nil
-	}
-
-	if roomID == "" {
-		return nil
-	}
-
-	log.Println("loadUserRoom:", roomID)
-
-	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomNumber", "roomConfigID", "gameServerID"))
-	if err != nil {
-		log.Println("load room info err:", err)
-		return nil
-	}
-
-	var roomNumber = values[0]
-	var roomConfigID = values[1]
-	var gameServerID = values[2]
-
-	if roomNumber == "" || roomConfigID == "" || gameServerID == "" {
-		log.Printf("loadLastRoom, roomID:%s, roomNumber:%s, roomConfigID:%s, gameServerID:%s\n", roomID, roomNumber, roomConfigID, gameServerID)
-		return nil
-	}
-
-	var gameServerURL = getGameServerURL(gameServerID)
-	if gameServerURL == "" {
-		log.Printf("loadLastRoom, roomID:%s, gameServerURL is nil\n", roomID)
-		return nil
-	}
-
-	var roomInfo = &lobby.RoomInfo{}
-	roomInfo.RoomID = &roomID
-	roomInfo.RoomNumber = &roomNumber
-	roomInfo.GameServerURL = &gameServerURL
-
-	//log.Println("loadLastRoom, gserverURL:", gameServerURL)
-	roomConfig, ok := lobby.RoomConfigs[roomConfigID]
-	if ok {
-		roomInfo.Config = &roomConfig
-	}
-
-	return roomInfo
 }
 
 func removeUserCreateRoomLock(userID string) {
@@ -342,7 +267,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	var roomType = roomConfig.RoomType
 
 	if gameServerID == "" {
-		gameServerID = lobby.LoadLatestGameServer(int(roomType))
+		gameServerID = loadLatestGameServer(int(roomType))
 	}
 
 	if gameServerID == "" {
@@ -360,18 +285,8 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		return
 	}
 
-	gameNo, err := generateGameNo()
-	if err != nil {
-		log.Println("handlerCreateRoom, generateGameNo error:", err)
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrGenerateRoomNumber), 0)
-		return
-	}
-
-	log.Printf("handlerCreateRoom, roomNumber:%s, gameNo:%d", roomNumberString, gameNo)
-
-	gameNoString := fmt.Sprintf("%d", gameNo)
 	var diamond = 0
-	diamond, errCode = lobby.PayUtil().DoPayAndSave2RedisWith(int(roomType), roomConfigID, roomIDString, userID, gameNoString)
+	diamond, errCode = lobby.PayUtil().DoPayAndSave2RedisWith(int(roomType), roomConfigID, roomIDString, userID)
 
 	// 如果是钻石不足，获取最新的钻石返回给客户端
 	if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
@@ -437,7 +352,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		t := time.Now().UTC()
 		timeStampInSecond := t.UnixNano() / int64(time.Second)
 
-		saveRoomInfo(msgCreateRoom, gameServerID, roomNumberString, timeStampInSecond, gameNo)
+		saveRoomInfo(msgCreateRoom, gameServerID, roomNumberString, timeStampInSecond)
 
 		roomInfo := &lobby.RoomInfo{}
 		roomInfo.RoomID = &roomIDString

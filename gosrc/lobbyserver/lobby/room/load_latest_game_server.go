@@ -1,9 +1,10 @@
-package lobby
+package room
 
 import (
 	"sort"
 	"log"
 	"fmt"
+	"lobbyserver/lobby"
 	"gconst"
 	"github.com/garyburd/redigo/redis"
 )
@@ -34,9 +35,9 @@ func sortGameServer(gameServerInfos []*GameServerInfo) {
 }
 
 // LoadLatestGameServer 拉取最新版本服务器ID
-func LoadLatestGameServer(myRoomType int) string {
+func loadLatestGameServer(myRoomType int) string {
 	log.Println("LoadGameServerID, myRoomType:", myRoomType)
-	conn := Pool().Get()
+	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	var setkey = fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, myRoomType)

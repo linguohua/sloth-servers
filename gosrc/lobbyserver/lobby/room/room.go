@@ -29,6 +29,6 @@ func InitWith() {
 	lobby.SetRoomUtil(roomUtil)
 	lobby.AccUserIDHTTPHandlers["/createRoom"] = handlerCreateRoom
 	lobby.AccUserIDHTTPHandlers["/requestRoomInfo"] = handlerRequestRoomInfo
-	lobby.AccUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo // 拉取用户最后所在的房间
+	// lobby.AccUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo // 拉取用户最后所在的房间
 	lobby.AccUserIDHTTPHandlers["/deleteRoom"] = handlerDeleteRoom             // 删除房间
 }

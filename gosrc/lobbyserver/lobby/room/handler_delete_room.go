@@ -206,7 +206,7 @@ func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
 	msgBag.Params = msgDeleteRoomBuf
 
 	// log.Println("roomType:", roomType)
-	var gameServerID = lobby.LoadLatestGameServer(int(roomType))
+	var gameServerID = loadLatestGameServer(int(roomType))
 
 	succeed, msgBagReply := gpubsub.SendAndWait(gameServerID, msgBag, time.Second)
 

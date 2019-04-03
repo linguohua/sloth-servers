@@ -5,7 +5,7 @@ import (
 	"gconst"
 	"lobbyserver/lobby"
 	"net/http"
-
+	"io/ioutil"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
 )
@@ -13,17 +13,15 @@ import (
 func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID string) {
 	log.Println("handleUpdateUserLocation, userID:", userID)
 
-	accessoryMessage, errCode := lobby.ParseAccessoryMessage(r)
-	if errCode != int32(lobby.MsgError_ErrSuccess) {
-		var msg = fmt.Sprintf("Update user location error, code:%d", errCode)
-		w.WriteHeader(404)
-		w.Write([]byte(msg))
+	// bytes := accessoryMessage.GetData()
+	body, err := ioutil.ReadAll(r.Body)
+	if (err != nil) {
+		log.Println("handlerCreateRoom error:", err)
 		return
 	}
 
-	var buf = accessoryMessage.GetData()
 	var updateUserInfo = &lobby.MsgUpdateUserInfo{}
-	err := proto.Unmarshal(buf, updateUserInfo)
+	err = proto.Unmarshal(body, updateUserInfo)
 	if err != nil {
 		log.Println("handleUpdateUserLocation, decode error:", err)
 		var msg = fmt.Sprintf("Decode error:%v", err)

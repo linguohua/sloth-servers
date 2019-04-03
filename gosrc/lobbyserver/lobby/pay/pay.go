@@ -18,8 +18,8 @@ func (*myPayUtil) Refund2Users(roomID string, handFinish int, inGameUserIDs []st
 }
 
 func (*myPayUtil) DoPayAndSave2RedisWith(roomType int, roomConfigID string,
-	roomID string, userID string, gameNo string) (remainDiamond int, errCode int32) {
-	return doPayAndSave2RedisWith(roomType, roomConfigID, roomID, userID, gameNo)
+	roomID string, userID string) (remainDiamond int, errCode int32) {
+	return doPayAndSave2RedisWith(roomType, roomConfigID, roomID, userID)
 }
 
 func (*myPayUtil) Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) {
