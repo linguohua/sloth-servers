@@ -98,16 +98,6 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 
 }
 
-func getGameServerURL(gameServerID string) string {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-	url, _ := redis.String(conn.Do("HGET", gconst.GameServerInstancePrefix+gameServerID, "url"))
-	if url == "" {
-		url = config.GameServerURL
-	}
-	return url
-}
-
 func strArray2Comma(ss []string) string {
 	result := ""
 	for i := 0; i < len(ss)-1; i++ {
@@ -362,8 +352,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		var lastActiveTime = uint32(timeStampInSecond / 60)
 		roomInfo.LastActiveTime = &lastActiveTime
 		roomInfo.Config = &configString
-		var gameServerURL = getGameServerURL(gameServerID)
-		roomInfo.GameServerURL = &gameServerURL
+		roomInfo.GameServerID = &gameServerID
 		var propCfg = getPropCfg(int(roomType))
 		roomInfo.PropCfg = &propCfg
 

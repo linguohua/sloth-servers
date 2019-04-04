@@ -107,15 +107,10 @@ func loadRoomInfos(userIDString string) []*lobby.RoomInfo {
 			continue
 		}
 
-		var gameServerURL = getGameServerURL(gameServerID)
-		if gameServerURL == "" {
-			continue
-		}
-
 		var roomInfo = &lobby.RoomInfo{}
 		roomInfo.RoomID = &roomID
 		roomInfo.RoomNumber = &roomNunmber
-		roomInfo.GameServerURL = &gameServerURL
+		roomInfo.GameServerID = &gameServerID
 		roomInfo.TimeStamp = &timeStamp
 
 		lastActiveTimeInt32, _ := strconv.Atoi(lastActiveTimeStr)

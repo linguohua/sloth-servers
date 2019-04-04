@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package accessory;
+package lobby;
 
 //编译：
 //cd src/accessory
@@ -145,7 +145,7 @@ message RoomInfo
 {
 	required string roomID = 1; // 房间唯一ID
 	required string roomNumber = 2; // 房间6位数字ID
-	required string gameServerURL=3; // 房间所在的游戏服务器url
+	required string gameServerID=3; // 房间所在的游戏服务器url
 	optional int32 state = 4; // 房间状态
 	optional string config = 5; // 房间配置,JSON格式
 	optional string timeStamp = 6; // 创建房间的时间截
@@ -153,8 +153,6 @@ message RoomInfo
 	optional int32 handStartted = 8; // 已经开始了多少轮牌局
 	optional uint32 lastActiveTime = 9; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
 	optional string propCfg = 10 ; // 道具配置
-	optional string arenaID = 11; // 比赛ID
-	optional string raceTemplateID = 12; // 比赛场模本ID
 }
 
 //玩家创建房间返回信息

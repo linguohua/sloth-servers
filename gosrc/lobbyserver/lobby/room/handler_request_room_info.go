@@ -186,7 +186,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "gameServerID", "groupID", "roomType", "arenaID"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "gameServerID","roomType"))
 	if err != nil {
 		log.Println("onMessageRequestRoomInfo get roomConfigID, gameServerID err: ", err)
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDatabase), nil)
@@ -195,15 +195,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 
 	var roomConfigID = values[0]
 	var gameServerID = values[1]
-	// var groupID = values[2]
-	var roomType = values[3]
-	var arenaID = values[4]
-	// var clubID  = values[2]
-	// if clubID != "" &&  !isClubMember(clubID, userID){
-	// 	log.Println("onMessageRequestRoomInfo get roomConfigID, gameServerID err: ", err)
-	// 	replyJoinClubRoomError(w, int32(MsgError_ErrUserCanNotJoinCLubRoom), clubID)
-	// 	return
-	// }
+	var roomType = values[2]
 
 	roomConfig, err := redis.String(conn.Do("HGET", gconst.LobbyRoomConfigTable, roomConfigID))
 	if err != nil {
@@ -224,20 +216,18 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 	// 	return
 	// }
 
-	var gameServerURL = getGameServerURL(gameServerID)
 	roomTypeInt, _ := strconv.Atoi(roomType)
 
 	var roomInfo = &lobby.RoomInfo{}
 	roomInfo.RoomID = &roomID
 	roomInfo.RoomNumber = &roomNumber
-	roomInfo.GameServerURL = &gameServerURL
+	roomInfo.GameServerID = &gameServerID
 	roomInfo.Config = &roomConfig
-	roomInfo.ArenaID = &arenaID
 
 	var propCfg = getPropCfg(roomTypeInt)
 	roomInfo.PropCfg = &propCfg
 
-	log.Printf("handlerRequestRoomInfo, userID: %s, roomNumber:%s, roomID:%s, gameServerURL:%s", userID, roomNumber, roomID, gameServerURL)
+	log.Printf("handlerRequestRoomInfo, userID: %s, roomNumber:%s, roomID:%s, GameServerID:%s", userID, roomNumber, roomID, gameServerID)
 
 	replyRequestRoomInfo(w, int32(lobby.MsgError_ErrSuccess), roomInfo)
 }
