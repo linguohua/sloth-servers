@@ -2,6 +2,7 @@ package pay
 
 import (
 	"lobbyserver/lobby"
+	"fmt"
 )
 
 var (
@@ -22,8 +23,17 @@ func (*myPayUtil) DoPayAndSave2RedisWith(roomType int, roomConfigID string,
 	return doPayAndSave2RedisWith(roomType, roomConfigID, roomID, userID)
 }
 
-func (*myPayUtil) Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) {
-	refund2UserAndSave2Redis(roomID, userID, handFinish)
+func (*myPayUtil) Refund2UserAndSave2Redis(roomID string, userID string, handFinish int)(remainDiamond int, err error) {
+	order := refund2UserAndSave2Redis(roomID, userID, handFinish)
+	if (order.Refund != nil && order.Refund.Result == 0) {
+		return order.Refund.RemainDiamond, nil
+	}
+
+	if (order.Refund == nil) {
+		return 0, fmt.Errorf("%s", "Not refund")
+	}
+
+	return 0, fmt.Errorf("Refund failed, error code %d", order.Refund.Result)
 }
 
 func (*myPayUtil) DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32) {

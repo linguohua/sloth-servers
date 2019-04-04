@@ -89,7 +89,7 @@ type IPayUtil interface {
 	DoPayAndSave2RedisWith(roomType int, roomConfigID string,
 		roomID string, userID string) (remainDiamond int, errCode int32)
 
-	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int)
+	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) (remainDiamond int, err error)
 
 	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
 }
