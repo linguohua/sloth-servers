@@ -59,15 +59,6 @@ type OrderRecord struct {
 	Refund     *UserRefund `json:"refund"`
 }
 
-// func loadGameNoAndGroupID(roomID string) (gameNo string, groupID string) {
-// 	groupRoomInfo := groupRoomInfoMap[roomID]
-// 	if groupRoomInfo != nil {
-// 		gameNo = fmt.Sprintf("%d", groupRoomInfo.GameNo)
-// 		groupID = groupRoomInfo.ClubID
-// 	}
-// 	return
-// }
-
 func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType int) (int, error) {
 	log.Printf("getPayDiamondNum, payType:%d, playerNumAcquired:%d, handNum:%d, roomType:%d", payType, playerNumAcquired, handNum, roomType)
 
@@ -106,13 +97,6 @@ func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType 
 	log.Printf("Original pay:%d, KEY:%s", pay, payKey)
 	log.Println(cfg.OriginalPriceCfg)
 	return pay, nil
-
-	// payCfg, ok := roomPriceCfg[roomType]
-	// if !ok {
-	// 	return 0
-	// }
-
-	// return payCfg[payKey]
 }
 
 // 判断用户是否支付过
@@ -151,39 +135,14 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 
 	roomConfig := lobby.ParseRoomConfigFromString(roomConfigString)
 
-	// var pay = 0
-	// if roomType != int(gconst.RoomType_GuanDang) {
-	// 	needPay, err := getPayDiamondNum(roomConfig.PayType, roomConfig.PlayerNumAcquired, roomConfig.HandNum, roomType)
-	// 	if err != nil {
-	// 		log.Println("getPayDiamondNum error:", err)
-	// 		return
-	// 	}
-	// 	pay = needPay
-	// }
-
-	// var subGameID = 0 // getSubGameIDByRoomType(roomType)
-
-	// var groupID = ""
-	// if roomConfig.IsGroup {
-	// 	_, groupID = loadGameNoAndGroupID(roomID)
-	// 	log.Printf("payAndSave2RedisWith, group pay,,groupID:%s", groupID)
-	// }
 
 	// 扣钻类型
 	var modDiamondType = ownerModDiamondCreateRoom
 	if roomConfig.PayType == AApay {
 		modDiamondType = aaModDiamondCreateRoom
-		// if roomConfig.IsGroup {
-		// 	modDiamondType = aaModDiamondCreateRoomForGroup
-		// }
 	} else if roomConfig.PayType == GroupPay {
 		modDiamondType = masterModDiamondCreateRoomForGroup
-	} else {
-		// if roomConfig.IsGroup {
-		// 	modDiamondType = ownerModDiamondCreateRoomForGroup
-		// }
 	}
-
 	log.Println("payAndSave2RedisWith modDiamondType:", modDiamondType)
 
 	var result int32
