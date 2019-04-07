@@ -2,7 +2,6 @@ package lobby
 
 import (
 	"gconst"
-	"strconv"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
@@ -19,148 +18,33 @@ func onNotifyMessage(msgBag *gconst.SSMsgBag) {
 		onReturnDiamondNotify(msgBag)
 		break
 	case int32(gconst.SSMsgReqCode_HandBeginNotify):
-		onHandBeginNotify(msgBag)
 		break
 	default:
 		log.Println("not handle for request code:", requestCode)
 	}
 }
 
-// 通知用户房间已满
-func notifyUserRoomIsFull(roomNum string, userIDs []string) {
-	log.Printf("notifyUserRoomIsFull, roomNum:%s, userIDs:%v", roomNum, userIDs)
-
-	// var msgString = fmt.Sprintf(`{"roomNumber":%s}`, roomNum)
-	// var data = []byte(msgString)
-
-	// for _, usreID := range userIDs {
-	// 	push(int32(MessageCode_OPNotifyUserRoomIsFull), data, usreID)
-	// }
-}
-
 func onRoomStateNotify(msgBag *gconst.SSMsgBag) {
-	var roomStateNotify = &gconst.SSMsgRoomStateNotify{}
-	err := proto.Unmarshal(msgBag.GetParams(), roomStateNotify)
-	if err != nil {
-		log.Println("onRoomStateNotify, error:", err)
-		return
-	}
 
-	var roomID = roomStateNotify.GetRoomID()
-	var handStartted32 = roomStateNotify.GetHandStartted()
-	var userIDs = roomStateNotify.GetUserIDs()
-	var roomState = roomStateNotify.GetState()
-
-	log.Printf("onRoomStateNotify, state:%d, roomID:%s, HandStartted:%d, LastActiveTime:%d, UserIDs:%v", roomStateNotify.GetState(),
-		roomID, handStartted32, roomStateNotify.GetLastActiveTime(), roomStateNotify.GetUserIDs())
-
-	conn := pool.Get()
-	defer conn.Close()
-
-	// 下面的代码通知俱乐部
-	strs, _ := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "groupID", "roomType", "ownerID", "roomConfigID", "roomNumber", "clubID"))
-	groupID := strs[0]
-	roomTypeStr := strs[1]
-	ownerID := strs[2]
-	roomConfigID := strs[3]
-	roomNumber := strs[4]
-	clubID := strs[5]
-
-	cfgString, ok := RoomConfigs[roomConfigID]
-	if !ok {
-		return
-	}
-
-	roomConfigJSON := ParseRoomConfigFromString(cfgString)
-	rquirePlayerNum := roomConfigJSON.PlayerNumAcquired
-
-	if len(userIDs) == rquirePlayerNum && groupID == "" && roomState == int32(gconst.RoomState_SRoomWaiting) {
-		notifyUserRoomIsFull(roomNumber, userIDs)
-	}
-
-	log.Println("onRoomStateNotify groupID ID:", groupID)
-
-	// 发通知给牌友群
-	if groupID != "" {
-		// 如果房主不在房间内，也要加上房主
-		var playerNum = len(userIDs)
-		for _, userID := range userIDs {
-			if userID == ownerID {
-				playerNum = playerNum - 1
-				break
-			}
-		}
-
-		playerNum = playerNum + 1
-
-		roomTypeInt, _ := strconv.Atoi(roomTypeStr)
-		// TODO：台安的暂时特殊处理
-		if roomTypeInt == int(gconst.RoomType_TacnMJ) || roomTypeInt == int(gconst.RoomType_TacnPok) || roomTypeInt == int(gconst.RoomType_DDZ) {
-			playerNum = len(userIDs)
-		}
-
-		// publishRoomStateChange2Group(groupID, roomID, ClubStateChange, playerNum, userIDs)
-	}
-
-	// 发通知给俱乐部
-	if clubID != "" {
-		// var hasStart = false
-		// if handStartted32 > 0 {
-		// 	hasStart = true
-		// }
-		//chost.clubRoomsListener.OnClubRoomStateChanged(clubID, roomID, roomTypeStr, hasStart)
-	}
-}
-
-func onHandBeginNotify(msgBag *gconst.SSMsgBag) {
-	// var handBeginNotify = &gconst.SSMsgHandBeginNotify{}
-	// err := proto.Unmarshal(msgBag.GetParams(), handBeginNotify)
-	// if err != nil {
-	// 	log.Println("onRoomStateNotify,  error:", err)
-	// 	return
-	// }
-
-	// var roomID = handBeginNotify.GetRoomID()
-	// var handStartted32 = handBeginNotify.GetHandStartted()
-
-	// conn := pool.Get()
-	// defer conn.Close()
-
-	// roomConfigID, err := redis.String(conn.Do("HGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID"))
-	// if err != nil {
-	// 	log.Println("onHandBeginNotify err:", err)
-	// 	return
-	// }
-
-	// cfgString, ok := RoomConfigs[roomConfigID]
-	// if !ok {
-	// 	log.Println("onHandBeginNotify cant' find room config for roomConfigID:", roomConfigID)
-	// 	return
-	// }
-
-	// roomConfigJSON := ParseRoomConfigFromString(cfgString)
-	// if roomConfigJSON.Race == 1 {
-	// 	//publishHandBegin2Arena(roomID, int(handStartted32))
-	// }
 }
 
 func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 	log.Println("onReturnDiamondNotify")
-	// var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
-	// err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
-	// if err != nil {
-	// 	log.Println("onReturnDiamondNotify, err:", err)
-	// 	return
-	// }
+	var msgUpdateBalance = &gconst.SSMsgUpdateBalance{}
+	err := proto.Unmarshal(msgBag.GetParams(), msgUpdateBalance)
+	if err != nil {
+		log.Println("onReturnDiamondNotify, err:", err)
+		return
+	}
 
-	// var roomID = msgUpdateBalance.GetRoomID()
-	// var userID = msgUpdateBalance.GetUserID()
-	// log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
+	var roomID = msgUpdateBalance.GetRoomID()
+	var userID = msgUpdateBalance.GetUserID()
+	log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
 
-	// order := refund2UserAndSave2Redis(roomID, userID, 0)
-	// if order != nil && order.Refund != nil {
-	// 	updateMoney(uint32(order.Refund.RemainDiamond), userID)
-	// }
+	remainDiamond, err := PayUtil().Refund2UserAndSave2Redis(roomID, userID, 0)
+	if err == nil {
+		updateMoney(uint32(remainDiamond), userID)
+	}
 }
 
 func updateMoney(diamond uint32, userID string) {
@@ -171,14 +55,6 @@ func updateMoney(diamond uint32, userID string) {
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		accSysExceptionCount++
-	// 		debug.PrintStack()
-	// 		log.Printf("-----Recovered in processRedisPublish:%v\n", r)
-	// 	}
-	// }()
-
 	var requestCode = msgBag.GetRequestCode()
 	log.Println("onGameServerRequest, requestCode:", requestCode)
 	switch requestCode {
@@ -216,7 +92,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "clubID", "roomConfigID", "groupID", "roomType"))
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID","roomConfigID"))
 	if err == redis.ErrNil {
 		log.Printf("onDeleteRoomRequest room %s not exit", roomID)
 		replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)
@@ -224,10 +100,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	}
 
 	var onwerID = fields[0]
-	// var clubID = fields[1]
-	var roomConfigID = fields[2]
-	var groupID = fields[3]
-	// var roomType = fields[4]
+	var roomConfigID = fields[1]
 
 	var roomConfig = GetRoomConfig(roomConfigID)
 	if roomConfig == nil {
@@ -238,37 +111,13 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 
 	var payType = roomConfig.PayType
 
-	// var orders = make([]*OrderRecord, 0)
-	// if clubID != "" && payType == ClubFundPay {
-	// 	// 返还钻石给俱乐部, 这是旧的俱乐部扣钻，已经弃用
-	// 	var order = refund2Club(roomID, int(startHand))
-	// 	if order != nil {
-	// 		if order.Refund.Refund != 0 {
-	// 			notifyClubFundAddByRoom(order.Refund.Refund, order.Refund.RemainDiamond, "", clubID)
-	// 		}
-
-	// 		orders = append(orders, order)
-	// 	}
-	// } else {
-	// 	// 群主支付， 不用管房间里面有多少人
-	// 	if groupID != "" && payType == groupPay {
-	// 		userIDs = make([]string, 0)
-	// 	}
-
-	// 	orders = refund2Users(roomID, int(startHand), userIDs)
-	// }
-
 	if !PayUtil().Refund2Users(roomID, int(startHand), userIDs) {
 		log.Println("refund diamond failed")
 	}
 
 	RoomUtil().DeleteRoomInfoFromRedis(roomID, onwerID)
 
-	// if clubID != "" {
-	// 	chost.clubRoomsListener.OnClubRoomDestroy(clubID, roomID)
-	// }
-
-	log.Printf("groupID:%s, payType:%d, startHand:%d", groupID, payType, startHand)
+	log.Printf("onDeleteRoomRequest payType:%d, startHand:%d", payType, startHand)
 
 	// 回复游戏服务器
 	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
@@ -419,20 +268,6 @@ func replySSMsg(msgBag *gconst.SSMsgBag, errCode gconst.SSMsgError, params []byt
 
 	log.Println("publish message, game server url:", msgBag.GetSourceURL())
 	conn.Do("PUBLISH", msgBag.GetSourceURL(), bytes)
-}
-
-func updateUserRoomList(userID string) {
-	// user := userMgr.getUserByID(userID)
-	// if user == nil {
-	// 	log.Println("update user roomList failed, user is nil")
-	// 	return
-	// }
-
-	// var roomInfos = loadRoomInfos(userID)
-
-	// var msgUpdateRoomList = &MsgUpdateRoomList{}
-	// msgUpdateRoomList.RoomInfos = roomInfos
-	// SessionMgr.SendProtoMsgTo(userID, msgUpdateRoomList, int32(MessageCode_OPUpdateRoomList))
 }
 
 func getRoomTypeWithServerID(gameServerID string) int {

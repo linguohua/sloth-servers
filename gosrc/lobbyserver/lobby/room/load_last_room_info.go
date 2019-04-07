@@ -98,24 +98,13 @@ func loadLastRoomInfo(userID string) *lobby.RoomInfo {
 	var roomConfigID = values[1]
 	var gameServerID = values[2]
 	var roomType = values[3]
-	var arenaID = values[4]
-	var raceTemplateID = values[5]
 	//log.Printf("loadLastRoom, roomNumber:%s, roomConfigID:%s, gameServerID:%s\n", roomNumber, roomConfigID, gameServerID)
-	var gameServerURL = getGameServerURL(gameServerID)
-
-	if gameServerURL == "" {
-		log.Printf("loadLastRoom, roomID:%s, invalid last room record, gameServerURL is nil\n", enterRoomID)
-		return nil
-	}
-
 	roomTypeInt, _ := strconv.Atoi(roomType)
 
 	var roomInfo = &lobby.RoomInfo{}
 	roomInfo.RoomID = &enterRoomID
 	roomInfo.RoomNumber = &roomNumber
-	roomInfo.GameServerURL = &gameServerURL
-	roomInfo.ArenaID = &arenaID
-	roomInfo.RaceTemplateID = &raceTemplateID
+	roomInfo.GameServerID = &gameServerID
 	var propCfg = getPropCfg(roomTypeInt)
 	roomInfo.PropCfg = &propCfg
 

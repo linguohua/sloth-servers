@@ -87,9 +87,9 @@ type IRoomUtil interface {
 type IPayUtil interface {
 	Refund2Users(roomID string, handFinish int, inGameUserIDs []string) bool
 	DoPayAndSave2RedisWith(roomType int, roomConfigID string,
-		roomID string, userID string, gameNo string) (remainDiamond int, errCode int32)
+		roomID string, userID string) (remainDiamond int, errCode int32)
 
-	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int)
+	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) (remainDiamond int, err error)
 
 	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
 }

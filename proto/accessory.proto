@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package accessory;
+package lobby;
 
 //编译：
 //cd src/accessory
@@ -131,14 +131,6 @@ enum OpenRoomType {
 message MsgCreateRoomReq
 {
 	required string config = 1; // JSON格式的规则
-	optional int32 exchangeId = 2; // 兑换Id
-	optional int32 roomType= 3; // 见RoomType
-	optional int32 openType= 4; // 见OpenRoomType
-	optional string clubID = 5; // 如果是俱乐部创建，则带上俱乐部ID
-	optional string arenaID = 6; // 比赛ID
-	repeated string userIDs = 7; // 创建比赛场的时候带所有用户ID到游戏服务器
-	optional int32 waitTime = 8; // 创建比赛场的时候带一个等待开局时间
-	optional string raceTemplateID = 9; // 比赛场模本ID
 }
 
 // 用户信息
@@ -153,7 +145,7 @@ message RoomInfo
 {
 	required string roomID = 1; // 房间唯一ID
 	required string roomNumber = 2; // 房间6位数字ID
-	required string gameServerURL=3; // 房间所在的游戏服务器url
+	required string gameServerID=3; // 房间所在的游戏服务器url
 	optional int32 state = 4; // 房间状态
 	optional string config = 5; // 房间配置,JSON格式
 	optional string timeStamp = 6; // 创建房间的时间截
@@ -161,8 +153,6 @@ message RoomInfo
 	optional int32 handStartted = 8; // 已经开始了多少轮牌局
 	optional uint32 lastActiveTime = 9; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
 	optional string propCfg = 10 ; // 道具配置
-	optional string arenaID = 11; // 比赛ID
-	optional string raceTemplateID = 12; // 比赛场模本ID
 }
 
 //玩家创建房间返回信息
@@ -170,10 +160,8 @@ message MsgCreateRoomRsp
 {
 	required int32 result = 1; //0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
 	optional RoomInfo roomInfo = 2; //房间信息
-	optional int32 openType= 3; // 见OpenRoomType
-	optional string retMsg = 4; // result对应的字符串
-	optional int32 roomType= 5; // 见RoomType
-	optional int32 diamond= 6;  // 若创建成功返回剩下的钻石
+	optional string retMsg = 3; // result对应的字符串
+	optional int32 diamond= 4;  // 若创建成功返回剩下的钻石
 }
 
 //解散玩家创建的房间
