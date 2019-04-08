@@ -16,6 +16,8 @@ var (
 
 	payUtil IPayUtil
 
+	mySqlUtil IMySqlUtil
+
 	// AccUserIDHTTPHandlers trust handlers
 	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
 
@@ -68,6 +70,11 @@ func SetRoomUtil(obj IRoomUtil) {
 	roomUtil = obj
 }
 
+// SetMySQLUtil set sql utility
+func SetMySQLUtil(obj IMySqlUtil) {
+	mySqlUtil = obj;
+}
+
 // ISessionMgr websocket mgr
 type ISessionMgr interface {
 	Broacast(msg []byte)
@@ -92,4 +99,9 @@ type IPayUtil interface {
 	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) (remainDiamond int, err error)
 
 	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
+}
+
+// IMySqlUtil sql utility
+type IMySqlUtil interface {
+	StartMySQL(ip string, port int, user string, password string, gameDB string)
 }
