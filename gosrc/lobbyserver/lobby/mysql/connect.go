@@ -8,7 +8,7 @@ import (
 )
 
 func newDbConnect(ip string, port int, user string, password string, database string) (*sql.DB, error) {
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?tls=skip-verify&autocommit=true", user, password, ip, port, database)
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, ip, port, database)
 
 	fmt.Printf("mysql connString:%s\n", connString)
 	dbCon, err := sql.Open("mysql", connString)
@@ -28,10 +28,7 @@ func newDbConnect(ip string, port int, user string, password string, database st
 
 // StartMssql 启动mssql,只能调用一次
 func startMySQL(ip string, port int, user string, password string, gameDB string) (*sql.DB, error) {
-	// moneyDBCon = newDbConnect(ip, port, user, password, moneyDB)
-
 	gameDBCon, err := newDbConnect(ip, port, user, password, gameDB)
 
 	return gameDBCon, err
-	// tableRecordDBConn = newDbConnect(ip, port, user, password, tableRecordDB)
 }
