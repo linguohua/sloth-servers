@@ -8,7 +8,7 @@ import (
 )
 
 func newDbConnect(ip string, port int, user string, password string, database string) (*sql.DB, error) {
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, ip, port, database)
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?", user, password, ip, port, database)
 
 	fmt.Printf("mysql connString:%s\n", connString)
 	dbCon, err := sql.Open("mysql", connString)

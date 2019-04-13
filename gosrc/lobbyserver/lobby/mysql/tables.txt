@@ -1,37 +1,55 @@
-1.创建表
-先分后合
-用户表与钻石表分开
-a. 用户表
+1. 用户表
 ----------------------------------------------------
 userId | nick        | name         | wx_head    |
-bigint | varchar(128)| varchar(128) |varchar(128)|
+int(11) | varchar(128)| varchar(128) |varchar(128)|
 ----------------------------------------------------
 
-b. 钻石表(diamond)
+2. 钻石表(diamond)
 -----------------------------------------
 userId | num
-bigint | bitint
+int(11) | int(11)
 -----------------------------------------
 
-c. 钻石消费记录表（diamond_log）
+3. 钻石消费记录表（diamond_log）
 -------------------------------------------------------------------
-userId | change_num | has_num | change_descript | change_time
-bigint | bitint     | bitint  | varchar(128)    | datetime
+userId | change_num | last_num | room_type |   change_descript | change_time
+bigint | bitint     | bitint      | bitint    |   varchar(128)    | datetime
 --------------------------------------------------------------------
 
-d. 道具表 (props)
+4. 道具表 (props)
 -------------------------------------------------------------
    userId | propId | num
    bigint | int    | bitint
 -------------------------------------------------------------
 
-e. 道具消费记录表 （props_log）
+5. 道具消费记录表 （props_log）
 ------------------------------------------------------------------------
-userId | propId | change_num | has_num | change_descript | change_time
+userId | propId | change_num | last_num | change_descript | change_time
 bigint | int    | bitint     | bitint  |  varchar(128)   | datetime
 ------------------------------------------------------------------------
 
-f. 牌局回放记录表 (replay)
+6. 牌局回放记录表 (replay)
 -----------------------------------------------------------------------------
 rid   | replay_id | room_id | room_config| replay_data | share_id, write_time
 ------------------------------------------------------------------------------
+
+7. 账号表 (register)
+-----------------------------------------------------------------------------
+account | password | register_time
+-----------------------------------------------------------------------------
+
+8. 用户表 （user）
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+user_id | open_id | phone | name | nick_name | sex | provice | city | country | head_img_url | mod_name | mod_version | core_version | lobby_version | system_family | device_id | device_name | device_mode | network_type | register_type
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+9. 微信账号表（wx_account)
+-----------------------------------------------------------------------------
+open_id | user_id | register_time
+-----------------------------------------------------------------------------
+
+
+10. 手机号账号表（phone_num_account)
+-----------------------------------------------------------------------------
+phone_num | user_id | password | register_time
+-----------------------------------------------------------------------------

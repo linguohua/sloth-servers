@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"lobbyserver/lobby"
+	"lobbyserver/config"
 	"database/sql"
 	"log"
 )
@@ -16,22 +17,25 @@ type mySQLUtil struct {
 
 }
 
-func (*mySQLUtil) StartMySQL(ip string, port int, user string, password string, gameDB string) {
-	conn, err := startMySQL(ip, port, user, password, gameDB)
-	if err != nil {
-		log.Println("StartMssql error ", err)
-	}
-	dbConn = conn
+func (*mySQLUtil) UpdateWxUserInfo(wxUserInfo *lobby.WxUserInfo, clientInfo *lobby.ClientInfo) error {
+	return updateWxUserInfo(wxUserInfo, clientInfo)
+}
+
+func (*mySQLUtil) UpdateAccountUserInfo(account string, clientInfo *lobby.ClientInfo) error {
+	return updateAccountUserInfo(account, clientInfo)
+}
+
+func (*mySQLUtil) CheckPhoneNumIfRegister(phoneNum string) bool {
+	return checkPhoneNumIfRegister(phoneNum)
 }
 
 // InitWith init
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)
-	ip := "127.0.0.1"
-	port := 3306
-	user := "root"
-	password := "123456"
-	gameDB := "test"
 
-	sqlUtil.StartMySQL(ip, port, user, password, gameDB)
+	conn, err := startMySQL(config.DbIP, config.DbPort, config.DbUser, config.DbPassword, config.DbName)
+	if err != nil {
+		log.Println("StartMssql error ", err)
+	}
+	dbConn = conn
 }

@@ -16,10 +16,13 @@ var (
 
 	payUtil IPayUtil
 
-	mySqlUtil IMySqlUtil
+	mySQLUtil IMySQLUtil
 
-	// AccUserIDHTTPHandlers trust handlers
+	// AccUserIDHTTPHandlers untrust handlers
 	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
+
+	// AccRawHTTPHandlers trust handler
+	AccRawHTTPHandlers = make(map[string]accRawHTTPHandler)
 
 	// MainRouter main-router
 	MainRouter *mux.Router
@@ -70,9 +73,18 @@ func SetRoomUtil(obj IRoomUtil) {
 	roomUtil = obj
 }
 
+// MySQLUtil mysql utility
+func MySQLUtil() IMySQLUtil {
+	if mySQLUtil == nil {
+		log.Panic("mySQLUtil is null, maybe not mount room package yet")
+	}
+
+	return mySQLUtil
+}
+
 // SetMySQLUtil set sql utility
-func SetMySQLUtil(obj IMySqlUtil) {
-	mySqlUtil = obj;
+func SetMySQLUtil(obj IMySQLUtil) {
+	mySQLUtil = obj;
 }
 
 // ISessionMgr websocket mgr
@@ -101,7 +113,10 @@ type IPayUtil interface {
 	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
 }
 
-// IMySqlUtil sql utility
-type IMySqlUtil interface {
-	StartMySQL(ip string, port int, user string, password string, gameDB string)
+// IMySQLUtil sql utility
+type IMySQLUtil interface {
+	// StartMySQL(ip string, port int, user string, password string, gameDB string)
+	UpdateWxUserInfo(wxUserInfo *WxUserInfo, clientInfo *ClientInfo) error
+	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
+	CheckPhoneNumIfRegister(phoneNum string) bool
 }
