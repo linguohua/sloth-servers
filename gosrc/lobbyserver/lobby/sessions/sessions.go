@@ -61,7 +61,7 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 	userID, ok := lobby.VerifyToken(r)
 	if !ok {
 		log.Println("verifyUser failed")
-		lobby.ReplyLoginError(ws, int32(lobby.LoginState_ParseTokenError))
+		// lobby.ReplyLoginError(ws, int32(lobby.LoginState_ParseTokenError))
 		return
 	}
 
@@ -75,7 +75,7 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 
 	userMgr.addUser(user)
 
-	lobby.LoginReply(ws, userID)
+	// lobby.LoginReply(ws, userID)
 
 	defer func() {
 		userMgr.removeUser(user)

@@ -7,6 +7,7 @@ import (
 	"lobbyserver/lobby/replay"
 	"lobbyserver/lobby/room"
 	"lobbyserver/lobby/mysql"
+	"lobbyserver/lobby/auth"
 
 	//"accwebserver"
 	"flag"
@@ -94,6 +95,7 @@ func main() {
 	replay.InitWith()
 	pay.InitWith()
 	mysql.InitWith()
+	auth.InitWith()
 
 
 	if config.Daemon == "yes" {

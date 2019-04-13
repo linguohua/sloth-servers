@@ -4,7 +4,7 @@ package lobby;
 
 //编译：
 //cd src/accessory
-//protoc --proto_path=./proto  --go_out=./src/accessory ./proto/accessory.proto
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby ./proto/accessory.proto
 
 
 enum MsgError {
@@ -377,4 +377,46 @@ message MsgReplayRoom
 	required string roomNumber = 4; // 房间号，仅用于客户端显示
 	optional string roomConfigID = 8; // 房间配置ID
 	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+}
+
+// 微信用户信息
+message WxUserInfo
+{
+	required string openID = 1;
+	optional string nickName = 2;
+	optional uint32 sex = 3;
+	optional string province = 4;
+	optional string city = 5;
+	optional string country = 6;
+	optional string headImgUrl = 7;
+}
+
+// 微信登录返回结果
+message MsgWxLoginReply
+{
+	required uint32 result = 1; // 微信登录返回结果，0 表示成功
+	optional string token = 2;  // token
+	optional WxUserInfo userInfo = 3; //微信用户信息
+}
+
+// 客户端登录信息
+message ClientInfo
+{
+	optional string qMod = 1;
+	optional string modV = 2;
+	optional string csVer = 3;
+	optional string lobbyVer = 4;
+	optional string operatingSystem = 5;
+	optional string operatingSystemFamily = 6;
+	optional string deviceUniqueIdentifier = 7;
+	optional string deviceName = 8;
+	optional string deviceModel = 9;
+	optional string network = 10;
+}
+
+// 账号注册返回
+message MsgRegisterReply
+{
+	required uint32 result = 1; // 微信登录返回结果，0 表示成功
+	optional string token = 2;  // token
 }

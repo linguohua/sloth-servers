@@ -43,24 +43,13 @@ var (
 
 	RoomPayCfgFile = ""
 
-	// 游戏大厅ID
-	LobbyID = 10088
-
 	DbIP       = "localhost"
-	DbPort     = 1433
-	DbUser     = "abc"
-	DbPassword = "ab"
-	DbName     = "gamedb"
+	DbPort     = 3306
+	DbUser     = "root"
+	DbPassword = "123456"
+	DbName     = "game"
 
 	EtcdServer = ""
-
-	SubGameIDs = map[string]int{
-		"1": 10043, // 大丰麻将
-		"6": 10044, // 宁安麻将
-		"7": 10046, // 新疆麻将
-		"8": 10045, // 关张
-		"9": 10047, // 七王
-	}
 )
 
 var (
@@ -135,8 +124,6 @@ func ParseConfigFile(filepath string) bool {
 		DbPassword string `json:"dbPassword"`
 		DbUser     string `json:"dbUser"`
 		DbName     string `json:"dbName"`
-
-		SubGameIDs map[string]int `json:"sub_game_ids"`
 	}
 
 	loadedCfgFilePath = filepath
@@ -234,9 +221,9 @@ func ParseConfigFile(filepath string) bool {
 		RoomPayCfgFile = params.RoomPayCfgFile
 	}
 
-	if params.LobbyID != 0 {
-		LobbyID = params.LobbyID
-	}
+	// if params.LobbyID != 0 {
+	// 	LobbyID = params.LobbyID
+	// }
 
 	if params.EtcdServer != "" {
 		EtcdServer = params.EtcdServer
@@ -277,12 +264,6 @@ func ParseConfigFile(filepath string) bool {
 		log.Println("redis server id  must not be empty!")
 		return false
 	}
-
-	if params.SubGameIDs != nil && len(params.SubGameIDs) > 0 {
-		SubGameIDs = params.SubGameIDs
-	}
-
-	log.Println("SubGameIDs", SubGameIDs)
 
 	return true
 }
