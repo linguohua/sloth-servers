@@ -40,8 +40,8 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	// TODO: 检查手机号是否已经注册过, 如果已经注册过，返回错误
 	// 如果没注册过，则生成个新用户
 	mySQLUtil := lobby.MySQLUtil()
-	isRegister := mySQLUtil.CheckPhoneNumIfRegister(phoneNum)
-	if isRegister {
+	userID, isNew := mySQLUtil.GetOrGenerateUserID(phoneNum)
+	if !isNew {
 		// TODO: 返回错误码给客户端
 		reply := &lobby.MsgRegisterReply{}
 		replyRegister(w,reply)
@@ -62,8 +62,11 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 
 	mySQLUtil.UpdateAccountUserInfo(phoneNum, clientInfo)
 
-	// TODO: 返回token给客户端
+	tk := lobby.GenTK(userID)
 	reply := &lobby.MsgRegisterReply{}
+	reply.Token = &tk
+	errCode := uint32(0)
+	reply.Result = &errCode
 	replyRegister(w,reply)
 
 }

@@ -113,12 +113,14 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
 	clientInfo.DeviceModel = &deviceModel
 	clientInfo.Network = &network
 
+	mySQLUtil := lobby.MySQLUtil()
+	userID, _ := mySQLUtil.GetOrGenerateUserID(userInfo.GetOpenID())
 	// 保存用户信息
 	saveUserInfo(userInfo, clientInfo)
 
 	// TODO: 需要用userId生成token
 	// 生成token给客户端
-	tk := lobby.GenTK(userInfo.GetOpenID())
+	tk := lobby.GenTK(userID)
 
 	var result = uint32(0);
 

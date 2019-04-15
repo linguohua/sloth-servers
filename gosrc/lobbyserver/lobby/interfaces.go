@@ -118,5 +118,6 @@ type IMySQLUtil interface {
 	// StartMySQL(ip string, port int, user string, password string, gameDB string)
 	UpdateWxUserInfo(wxUserInfo *WxUserInfo, clientInfo *ClientInfo) error
 	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
-	CheckPhoneNumIfRegister(phoneNum string) bool
+	GetUserIDBy(account string)int
+	GetOrGenerateUserID(account string) (userID string, isNew bool)
 }

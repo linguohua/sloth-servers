@@ -25,8 +25,12 @@ func (*mySQLUtil) UpdateAccountUserInfo(account string, clientInfo *lobby.Client
 	return updateAccountUserInfo(account, clientInfo)
 }
 
-func (*mySQLUtil) CheckPhoneNumIfRegister(phoneNum string) bool {
-	return checkPhoneNumIfRegister(phoneNum)
+func (*mySQLUtil) GetUserIDBy(account string) int {
+	return getUserIDBy(account)
+}
+
+func (*mySQLUtil) GetOrGenerateUserID(account string) (userID string, isNew bool) {
+	return getOrGenerateUserID(account)
 }
 
 // InitWith init

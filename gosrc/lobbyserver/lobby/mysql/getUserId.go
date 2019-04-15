@@ -7,8 +7,8 @@ import (
 )
 
 // 检查手机号是否已经注册过
-func checkPhoneNumIfRegister(phoneNum string) bool {
-	query := fmt.Sprintf("select exists(select * from phone_account where phone_num = %s)", phoneNum)
+func getUserIDBy(accout string) int {
+	query := fmt.Sprintf("select user_id from account where account = %s", accout)
 
 	log.Println("query:", query)
 
@@ -19,16 +19,12 @@ func checkPhoneNumIfRegister(phoneNum string) bool {
 	}
 	defer stmt.Close()
 
-	var result int
+	var userID int
 	row := stmt.QueryRow()
-	err = row.Scan(&result)
+	err = row.Scan(&userID)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	if result == 1 {
-		return true
-	}
-
-	return false
+	return userID;
 }
