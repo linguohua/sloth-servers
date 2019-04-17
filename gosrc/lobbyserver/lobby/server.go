@@ -46,50 +46,6 @@ func echoVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
-// func (mux *myHTTPServerMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-// 	var requestPath = r.URL.Path
-// 	log.Println(requestPath)
-// 	// log.Println("requestPath:", requestPath)
-// 	requestPath = "/" + path.Base(requestPath)
-// 	if requestPath == "/version" {
-// 		w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
-// 		return
-// 	}
-
-// 	h, ok := accRawHTTPHandlers[requestPath]
-// 	if ok {
-// 		h(w, r)
-// 		return
-// 	}
-
-// 	h2, ok := accUserIDHTTPHandlers[requestPath]
-// 	if ok {
-// 		userID, rt := verifyTokenByQuery(r)
-// 		if rt {
-// 			h2(w, r, userID)
-// 		} else {
-// 			w.WriteHeader(404)
-// 			w.Write([]byte("oh, no valid token"))
-// 		}
-
-// 		return
-// 	}
-
-// 	h3, ok := accSupportHandlers[requestPath]
-// 	if ok {
-// 		if accSupportVerify(w, r) {
-// 			h3(w, r)
-// 		} else {
-// 			w.WriteHeader(404)
-// 			w.Write([]byte("oh, no auth"))
-// 		}
-// 	} else {
-// 		w.WriteHeader(404)
-// 		w.Write([]byte("oh, no acc support handler"))
-// 	}
-// }
-
 func authorizedHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestPath := "/" + path.Base(r.URL.Path)
@@ -129,6 +85,8 @@ func CreateHTTPServer() {
 	log.Println("For cub test:" + genTK("10024063"))
 
 	startRedisClient()
+
+	initFileServer();
 
 	//loadAllRoomConfigFromRedis()
 
@@ -172,4 +130,10 @@ func acceptHTTPRequest() {
 		log.Fatalf("Http server ListenAndServe %d failed:%v", config.AccessoryServerPort, err)
 	}
 
+}
+
+func initFileServer() {
+		// 文件服务器
+		var gameServerHandler = http.StripPrefix("/lobby/upgrade/download", http.FileServer(http.Dir(config.FileServerPath)))
+		rootRouter.PathPrefix("/lobby/upgrade/download").Handler(gameServerHandler)
 }

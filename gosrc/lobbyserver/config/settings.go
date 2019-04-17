@@ -25,12 +25,6 @@ var (
 	SensitiveWordFilePath = "./sensitiveWord.txt"
 	GameServerURL         = ""
 
-	MonkeyAccount  = ""
-	MonkeyPassword = ""
-
-	LinuxVuePath = ""
-	LinuxWebPort = ""
-
 	WebDataCfgFile = "webdata.json"
 	SyncdataTime   = 1
 
@@ -39,7 +33,6 @@ var (
 	PayURL        = "http://pay.wechat.qianz.com/release/WebPage/OAuthPay/MoreH5PayOrderNew"
 	SignKey       = "EE7a1c5bc548e542GBFc340c531657F4"
 	PayAPPID      = "10009"
-	MailServer    = "http://127.0.0.1:3005"
 
 	RoomPayCfgFile = ""
 
@@ -50,6 +43,8 @@ var (
 	DbName     = "game"
 
 	EtcdServer = ""
+
+	FileServerPath = "./fileServer"
 )
 
 var (
@@ -96,13 +91,7 @@ func ParseConfigFile(filepath string) bool {
 		ServerID              string `json:"guid"`
 		GameServerURL         string `json:"game_server_url"`
 		SensitiveWordFilePath string `json:"sensitive_word_file_path"`
-
-		LinuxVuePath   string `json:"linux_vue_path"`
-		MonkeyAccount  string `json:"account"`
-		MonkeyPassword string `json:"password"`
-
-		LinuxWebPort   string `json:"linuxWebPort"`
-		WindowsWebPort string `json:"windowsWebPort"`
+		FileServerPath    string `json:"file_server_path"`
 
 		WebDataURL   string `json:"web_data_url"`
 		SyncdataTime int    `json:"syncdata_time"`
@@ -172,23 +161,6 @@ func ParseConfigFile(filepath string) bool {
 	}
 	/*----------------------------------webserver----------------------------*/
 
-	if params.LinuxVuePath != "" {
-		LinuxVuePath = params.LinuxVuePath
-	}
-
-	if params.MonkeyAccount != "" {
-		MonkeyAccount = params.MonkeyAccount
-	}
-
-	if params.MonkeyPassword != "" {
-		MonkeyPassword = params.MonkeyPassword
-	}
-
-	if params.LinuxWebPort != "" {
-
-		LinuxWebPort = params.LinuxWebPort
-	}
-
 	if params.WebDataURL != "" {
 		WebDataCfgFile = params.WebDataURL
 	}
@@ -247,6 +219,10 @@ func ParseConfigFile(filepath string) bool {
 
 	if params.DbPort != 0 {
 		DbPort = params.DbPort
+	}
+
+	if params.FileServerPath != "" {
+		FileServerPath = params.FileServerPath
 	}
 
 	if ServerID == "" {

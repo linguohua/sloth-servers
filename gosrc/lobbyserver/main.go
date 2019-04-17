@@ -8,6 +8,7 @@ import (
 	"lobbyserver/lobby/room"
 	"lobbyserver/lobby/mysql"
 	"lobbyserver/lobby/auth"
+	"lobbyserver/lobby/update"
 
 	//"accwebserver"
 	"flag"
@@ -96,6 +97,7 @@ func main() {
 	pay.InitWith()
 	mysql.InitWith()
 	auth.InitWith()
+	update.InitWith()
 
 
 	if config.Daemon == "yes" {
