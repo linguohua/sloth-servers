@@ -6,23 +6,41 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
-	"fmt"
+	// "fmt"
+	"github.com/Masterminds/semver"
 )
 
 var (
 	queryErrorParamQModIsNull = 1
 	queryErrorParamModVIsNull = 2
 	queryErrorModuleNotExist = 3
+	queryErrorUnmarshalCfg = 4
 
 )
+
+// Dep 依赖
+type Dep struct {
+
+}
+
+// Bundle AssetBundle
+type Bundle struct {
+	Name string `json:"name"`
+	MD5 string `json:"md5"`
+	Size int64 `json:"size"`
+	Deps []Dep `json:"deps"`
+}
 
 // UpgradeQueryReply 更新查询回复
 type UpgradeQueryReply struct {
 	Code int `json:"code"`
 	ABValid bool `json:"abValid"`
+	Name string `json:"name"`
+	Version string `json:"version"`
+	ABList []Bundle `json:"abList"`
 }
 
-func replyUpgradeQuery(w http.ResponseWriter, reply UpgradeQueryReply) {
+func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
 	buf, err := json.Marshal(reply)
 	if err != nil {
 		log.Println("replyWxLogin, Marshal err:", err)
@@ -46,22 +64,18 @@ func isFileExist(path string) (bool, error) {
 }
 
 func findMatchMaxVersionString(currentVersionStr string, versions []string) string {
-	maxVersion := parseVersionString(currentVersionStr)
+	maxVersion := semver.MustParse(currentVersionStr)
+	incMajorVersion := maxVersion.IncMajor()
+	// log.Printf("maxVersion:%v, incMajorVersion:%v", maxVersion, incMajorVersion)
 	for _, ver := range versions {
-		version := parseVersionString(ver)
+		version := semver.MustParse(ver)
 		// 最大版本相同，才可以通过热更更新
-		if version.bigVer == maxVersion.bigVer {
-			if (version.middleVer > maxVersion.middleVer) {
-				maxVersion = version
-			} else {
-				if version.middleVer == maxVersion.middleVer && version.smallVer > maxVersion.smallVer{
-					maxVersion = version
-				}
-			}
+		if version.LessThan(&incMajorVersion) && version.GreaterThan(maxVersion) {
+			maxVersion = version
 		}
 	}
 
-	return fmt.Sprintf("%d.%d.%d", maxVersion.bigVer, maxVersion.middleVer, maxVersion.smallVer)
+	return maxVersion.Original()
 }
 
 	//
@@ -78,7 +92,7 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")
 
-	reply := UpgradeQueryReply{}
+	reply := &UpgradeQueryReply{}
 
 	if (qMod == "") {
 		reply.Code = queryErrorParamQModIsNull
@@ -122,12 +136,14 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("maxVersion:", maxVersion)
 	cfgFilePath := dirPath + "/" + maxVersion + "/cfg.json"
 	isCfgFileExist, _ := isFileExist(cfgFilePath)
 	if !isCfgFileExist {
 		reply.Code = 0
 		reply.ABValid = false
 		replyUpgradeQuery(w, reply)
+		return
 	}
 
  	b, err := ioutil.ReadFile(cfgFilePath) // just pass the file name
@@ -135,5 +151,15 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
         log.Println(err)
     }
 
-    w.Write(b)
+	err = json.Unmarshal(b, reply)
+	if err != nil {
+		reply.Code = queryErrorUnmarshalCfg
+		replyUpgradeQuery(w, reply)
+		return
+	}
+
+	reply.Code = 0;
+	reply.ABValid = true
+
+    replyUpgradeQuery(w, reply)
 }

@@ -5,6 +5,7 @@ go 1.12
 require (
 	gconst v0.0.0
 	github.com/DisposaBoy/JsonConfigReader v0.0.0-20171218180944-5ea4d0ddac55
+	github.com/Masterminds/semver v1.4.2
 	github.com/coreos/etcd v3.3.12+incompatible
 	github.com/garyburd/redigo v1.6.0
 	github.com/go-sql-driver/mysql v1.4.1

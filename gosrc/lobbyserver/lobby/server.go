@@ -134,6 +134,6 @@ func acceptHTTPRequest() {
 
 func initFileServer() {
 		// 文件服务器
-		var gameServerHandler = http.StripPrefix("/lobby/upgrade/download", http.FileServer(http.Dir(config.FileServerPath)))
-		rootRouter.PathPrefix("/lobby/upgrade/download").Handler(gameServerHandler)
+		var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
+		rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
 }
