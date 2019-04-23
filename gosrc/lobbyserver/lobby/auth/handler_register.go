@@ -4,6 +4,8 @@ import (
 	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
+	"fmt"
+	"crypto/md5"
 )
 
 func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply) {
@@ -28,11 +30,19 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	deviceModel := r.URL.Query().Get("deviceModel")
 	network := r.URL.Query().Get("network")
 
-	phoneNum := r.URL.Query().Get("phoneNum")
+	account := r.URL.Query().Get("account")
+	password := r.URL.Query().Get("password")
 
-	if phoneNum == "" {
+	reply := &lobby.MsgRegisterReply{}
+
+	if account == "" {
 		// TODO: 返回参数错误给客户端
-		reply := &lobby.MsgRegisterReply{}
+		replyRegister(w,reply)
+		return
+	}
+
+	if password == "" {
+		// TODO: 返回参数错误给客户端
 		replyRegister(w,reply)
 		return
 	}
@@ -40,10 +50,9 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	// TODO: 检查手机号是否已经注册过, 如果已经注册过，返回错误
 	// 如果没注册过，则生成个新用户
 	mySQLUtil := lobby.MySQLUtil()
-	userID, isNew := mySQLUtil.GetOrGenerateUserID(phoneNum)
+	userID, isNew := mySQLUtil.GetOrGenerateUserID(account)
 	if !isNew {
 		// TODO: 返回错误码给客户端
-		reply := &lobby.MsgRegisterReply{}
 		replyRegister(w,reply)
 		return
 	}
@@ -60,10 +69,19 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	clientInfo.DeviceModel = &deviceModel
 	clientInfo.Network = &network
 
-	mySQLUtil.UpdateAccountUserInfo(phoneNum, clientInfo)
+	data := []byte(password)
+	passwdMD5 := fmt.Sprintf("%x", md5.Sum(data))
 
-	tk := lobby.GenTK(userID)
-	reply := &lobby.MsgRegisterReply{}
+	err := mySQLUtil.RegisterAccount(userID, account, passwdMD5, clientInfo)
+	if err != nil {
+		// TODO: 返回错误码给客户端
+		replyRegister(w,reply)
+		return
+	}
+
+	// TODO: 需要保存到redis
+
+	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
 	reply.Token = &tk
 	errCode := uint32(0)
 	reply.Result = &errCode

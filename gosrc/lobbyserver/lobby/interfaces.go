@@ -2,7 +2,6 @@ package lobby
 
 import (
 	"math/rand"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -116,8 +115,10 @@ type IPayUtil interface {
 // IMySQLUtil sql utility
 type IMySQLUtil interface {
 	// StartMySQL(ip string, port int, user string, password string, gameDB string)
-	UpdateWxUserInfo(wxUserInfo *WxUserInfo, clientInfo *ClientInfo) error
+	UpdateWxUserInfo(UserInfo *UserInfo, clientInfo *ClientInfo) error
 	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
 	GetUserIDBy(account string)int
-	GetOrGenerateUserID(account string) (userID string, isNew bool)
+	GetPasswordBy(account string) string
+	GetOrGenerateUserID(account string) (userID uint64, isNew bool)
+	RegisterAccount(userID uint64, phoneNum string,passwd string, clientInfo *ClientInfo) error
 }

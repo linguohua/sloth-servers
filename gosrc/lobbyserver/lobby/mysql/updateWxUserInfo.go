@@ -8,9 +8,10 @@ import (
 )
 
 // SaveGRCRecord2SqlServer 保存牌局记录到数据库
-func updateWxUserInfo(wxUserInfo *lobby.WxUserInfo, clientInfo *lobby.ClientInfo) error {
+func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
 	/* Description:	更新微信用户信息
 	`update_wx_user`(
+		in userId int(11),
 		in openId varchar(32),
 		in userName varchar(64) ,
 		in nickName varchar(32),
@@ -30,15 +31,16 @@ func updateWxUserInfo(wxUserInfo *lobby.WxUserInfo, clientInfo *lobby.ClientInfo
 		in deviceMode varchar(32),
 		in networkType varchar(32))
 	*/
-	query := fmt.Sprintf("Call update_wx_user('%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
-		wxUserInfo.GetOpenID(),
-		wxUserInfo.GetNickName(),
-		wxUserInfo.GetNickName(),
-		wxUserInfo.GetSex(),
-		wxUserInfo.GetProvince(),
-		wxUserInfo.GetCity(),
-		wxUserInfo.GetCountry(),
-		wxUserInfo.GetHeadImgUrl(),
+	query := fmt.Sprintf("Call update_wx_user('%d', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+		userInfo.GetUserID(),
+		userInfo.GetOpenID(),
+		userInfo.GetNickName(),
+		userInfo.GetNickName(),
+		userInfo.GetSex(),
+		userInfo.GetProvince(),
+		userInfo.GetCity(),
+		userInfo.GetCountry(),
+		userInfo.GetHeadImgUrl(),
 
 		clientInfo.GetQMod(),
 		clientInfo.GetModV(),

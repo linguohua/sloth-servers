@@ -7,7 +7,7 @@ import (
 )
 
 // 检查手机号是否已经注册过
-func getOrGenerateUserID(account string) (userID string, isNew bool) {
+func getOrGenerateUserID(account string) (userID uint64, isNew bool) {
 	/* 储存过程
 	get_or_generate_user_id`(in account varchar(32), out userId int(11), out isNew boolean)
 	*/

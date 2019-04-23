@@ -78,16 +78,6 @@ func findMatchMaxVersionString(currentVersionStr string, versions []string) stri
 	return maxVersion.Original()
 }
 
-	//
-	// csVer := r.URL.Query().Get("csVer")
-	// lobbyVer := r.URL.Query().Get("lobbyVer")
-	// operatingSystem := r.URL.Query().Get("operatingSystem")
-	// operatingSystemFamily := r.URL.Query().Get("operatingSystemFamily")
-	// deviceUniqueIdentifier := r.URL.Query().Get("deviceUniqueIdentifier")
-	// deviceName := r.URL.Query().Get("deviceName")
-	// deviceModel := r.URL.Query().Get("deviceModel")
-	// network := r.URL.Query().Get("network")
-
 func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")

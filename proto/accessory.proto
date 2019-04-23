@@ -238,6 +238,7 @@ message RoomCost {
 	required uint32 pay = 2; // 局数对应所需要的钻石
 }
 
+/*
 message MsgLoginReply {
 	required int32 result = 1; // 见LoginState
 	optional string token = 2; // 用userID生成的token
@@ -247,6 +248,7 @@ message MsgLoginReply {
 	optional string roomDiscount = 6; // 折扣表
 
 }
+*/
 
 message MsgRequestRoomInfo {
 	required string roomNumber = 1; // 房间6位数ID
@@ -380,23 +382,36 @@ message MsgReplayRoom
 }
 
 // 微信用户信息
-message WxUserInfo
+message UserInfo
 {
-	required string openID = 1;
-	optional string nickName = 2;
-	optional uint32 sex = 3;
-	optional string province = 4;
-	optional string city = 5;
-	optional string country = 6;
-	optional string headImgUrl = 7;
+	required uint64 userID = 1;
+	optional string openID = 2;
+	optional string nickName = 3;
+	optional uint32 sex = 4;
+	optional string province = 5;
+	optional string city = 6;
+	optional string country = 7;
+	optional string headImgUrl = 8;
+}
+
+enum LoginError
+{
+	ErrLoginSuccess = 0; // 成功
+	ErrParamWechatCodeIsEmpty = 1;   // 微信登录，参数微信code为空
+	ErrLoadWechatUserInfoFailed = 2; // 微信登录，拉取微信用户信息失败
+	ErrParamAccountIsEmpty = 3;      // 账号登录，参数手机号为空
+	ErrParamPasswordIsEmpty = 4;     // 账号登录，参数密码为空
+	ErrAccountNotExist = 5;          // 账号登录，手机号不存在
+	ErrAccountNotSetPassword = 6;    // 账号登录，密码没设置
+	ErrPasswordNotMatch = 7;         // 账号登录，密码不匹配
 }
 
 // 微信登录返回结果
-message MsgWxLoginReply
+message MsgLoginReply
 {
-	required uint32 result = 1; // 微信登录返回结果，0 表示成功
+	required int32 result = 1; // 微信登录返回结果，参见LoginError
 	optional string token = 2;  // token
-	optional WxUserInfo userInfo = 3; //微信用户信息
+	optional UserInfo userInfo = 3; //微信用户信息
 }
 
 // 客户端登录信息

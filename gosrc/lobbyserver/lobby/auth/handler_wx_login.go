@@ -6,30 +6,20 @@ import (
 	log "github.com/sirupsen/logrus"
 	"fmt"
 	"lobbyserver/lobby"
-	"github.com/golang/protobuf/proto"
 )
 
-var (
-	errCodeWechatCodeIsEmpty = uint32(1)
-	errCodeLoadUserInfoFailed = uint32(2)
-)
-
-func replyWxLogin(w http.ResponseWriter, loginReply *lobby.MsgWxLoginReply) {
-	buf, err := proto.Marshal(loginReply)
-	if err != nil {
-		log.Println("replyWxLogin, Marshal err:", err)
-		return
-	}
-
-	w.Write(buf)
+func replyWxLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
+	replyLogin(w, loginReply)
 }
 
-func saveUserInfo(userInfoReply *lobby.WxUserInfo, clientInfo *lobby.ClientInfo) {
+func updateWxUserInfo(userInfoReply *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
 	mySQLUtil := lobby.MySQLUtil()
 	mySQLUtil.UpdateWxUserInfo(userInfoReply, clientInfo)
+
+	// TODO: 需要保存到redis
 }
 
-func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.WxUserInfo, error) {
+func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.UserInfo, error) {
 	// 根据code去微信服务器拉取access_token和openID
 	accessTokenReply, err := wechat.LoadAccessTokenFromWeChatServer(wechatCode)
 	if err != nil {
@@ -58,7 +48,7 @@ func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.WxUserInfo, error) 
 		return nil, fmt.Errorf("load userInfo from wechat server failed, error code:%d", accessTokenReply.ErrorCode)
 	}
 
-	userInfo := &lobby.WxUserInfo{}
+	userInfo := &lobby.UserInfo{}
 	userInfo.OpenID = &userInfoReply.OpenID
 	userInfo.NickName = &userInfoReply.NickName
 	sexUint32 := uint32(userInfoReply.Sex)
@@ -72,10 +62,12 @@ func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.WxUserInfo, error) 
 }
 
 func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
+	loginReply := &lobby.MsgLoginReply{}
+
 	wechatCode := r.URL.Query().Get("code")
 	if wechatCode == "" {
-		loginReply := &lobby.MsgWxLoginReply{}
-		loginReply.Result = &errCodeWechatCodeIsEmpty
+		errCode := int32(lobby.LoginError_ErrParamWechatCodeIsEmpty)
+		loginReply.Result = &errCode
 		replyWxLogin(w, loginReply)
 
 		return;
@@ -83,8 +75,8 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
 
 	userInfo, err := loadUserInfoFromWeChatServer(wechatCode)
 	if err != nil {
-		loginReply := &lobby.MsgWxLoginReply{}
-		loginReply.Result = &errCodeLoadUserInfoFailed
+		errCode := int32(lobby.LoginError_ErrLoadWechatUserInfoFailed)
+		loginReply.Result = &errCode
 		replyWxLogin(w, loginReply)
 
 		return
@@ -115,17 +107,17 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
 
 	mySQLUtil := lobby.MySQLUtil()
 	userID, _ := mySQLUtil.GetOrGenerateUserID(userInfo.GetOpenID())
+	userInfo.UserID = &userID
 	// 保存用户信息
-	saveUserInfo(userInfo, clientInfo)
+	updateWxUserInfo(userInfo, clientInfo)
 
-	// TODO: 需要用userId生成token
 	// 生成token给客户端
-	tk := lobby.GenTK(userID)
+	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
 
-	var result = uint32(0);
+	errCode := int32(lobby.LoginError_ErrLoginSuccess)
 
-	loginReply := &lobby.MsgWxLoginReply{}
-	loginReply.Result = &result
+	loginReply.Result = &errCode
 	loginReply.Token = &tk
+	loginReply.UserInfo = userInfo
 	replyWxLogin(w, loginReply)
 }
