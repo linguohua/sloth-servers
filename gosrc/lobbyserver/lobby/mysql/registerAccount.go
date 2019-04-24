@@ -8,12 +8,14 @@ import (
 )
 
 // SaveGRCRecord2SqlServer 保存牌局记录到数据库
-func registerAccount(userID uint64,phoneNum string,passwd string, clientInfo *lobby.ClientInfo) error {
+func registerAccount(userID uint64, account string, passwd string, phone string, clientInfo *lobby.ClientInfo) error {
+	log.Println("password:", passwd)
 	/* Description:	更新微信用户信息
 	`register_account`(
 	in userId int(11),
-	in acc varchar(32),
+	in acc varchar(64),
     in passwd varchar(64),
+    in phone varchar(11),
 	in modName varchar(32),
 	in modVersion varchar(32),
 	in coreVersion varchar(32),
@@ -25,10 +27,11 @@ func registerAccount(userID uint64,phoneNum string,passwd string, clientInfo *lo
 	in deviceMode varchar(32),
 	in networkType varchar(32))
 	*/
-	query := fmt.Sprintf("Call register_account('%d', '%s', '%s', %s, '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s')",
+	query := fmt.Sprintf("Call register_account('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s')",
 		userID,
-		phoneNum,
+		account,
 		passwd,
+		phone,
 		clientInfo.GetQMod(),
 		clientInfo.GetModV(),
 		clientInfo.GetCsVer(),

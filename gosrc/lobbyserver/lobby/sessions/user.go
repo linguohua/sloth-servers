@@ -141,13 +141,13 @@ func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
 		// onMessageDeleteRoom(u, accessoryMessage)
 		break
 	case lobby.MessageCode_OPChat:
-		onMessageChat(u, accessoryMessage)
+		// onMessageChat(u, accessoryMessage)
 		break
 	case lobby.MessageCode_OPUpdateUserInfo:
 		onMessageUpdateUserInfo(u, accessoryMessage)
 		break
 	case lobby.MessageCode_OPVoiceData:
-		onMessageVoiceChat(u, message)
+		// onMessageVoiceChat(u, message)
 		break
 	default:
 		log.Println("onMessage unsupported msgCode:", msgCode)

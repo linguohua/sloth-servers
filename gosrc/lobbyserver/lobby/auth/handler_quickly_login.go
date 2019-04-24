@@ -4,15 +4,27 @@ import (
 	"net/http"
 	"lobbyserver/lobby"
 	"fmt"
-	"crypto/md5"
+	// "crypto/md5"
 	uuid "github.com/satori/go.uuid"
+	"github.com/golang/protobuf/proto"
+	"log"
 )
 
-func replyQuicklyLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
-	replyLogin(w, loginReply)
+func replyQuicklyLogin(w http.ResponseWriter, loginReply *lobby.MsgQuicklyLoginReply) {
+	buf, err := proto.Marshal(loginReply)
+	if err != nil {
+		log.Println("replyQuicklyLogin, Marshal err:", err)
+		return
+	}
+
+	w.Write(buf)
 }
 
+// 客户端发用户ID上来
+// 如果用户不发用户ID上来，则生成一个新的账号
+// 如果用户存在，则下发用户信息回去给用户
 func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
+	log.Println("handlerQuicklyLogin")
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")
 	csVer := r.URL.Query().Get("csVer")
@@ -25,20 +37,20 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
 	network := r.URL.Query().Get("network")
 
 	account := r.URL.Query().Get("account")
-	password := r.URL.Query().Get("password")
-
-	if account == "" {
-		// TODO: 生成新账号，新密码
-		uid, _ := uuid.NewV4()
-		account = fmt.Sprintf("%v", uid)
-
-		uid, _ = uuid.NewV4()
-		password = fmt.Sprintf("%v", uid)
-	}
-
-	loginReply := &lobby.MsgLoginReply{}
 
 	mySQLUtil := lobby.MySQLUtil()
+
+	// var uint64UserID uint64
+	// isNew := false
+	// account := ""
+	if account == "" {
+		// 生成新账号
+		uid, _ := uuid.NewV4()
+		account = fmt.Sprintf("%v", uid)
+	}
+
+	loginReply := &lobby.MsgQuicklyLoginReply{}
+
 	userID, isNew := mySQLUtil.GetOrGenerateUserID(account)
 	if isNew {
 		clientInfo := &lobby.ClientInfo{}
@@ -53,34 +65,28 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
 		clientInfo.DeviceModel = &deviceModel
 		clientInfo.Network = &network
 
-		data := []byte(password)
-		passwdMD5 := fmt.Sprintf("%x", md5.Sum(data))
-
-		mySQLUtil.RegisterAccount(userID, account, passwdMD5, clientInfo)
+		mySQLUtil.RegisterAccount(userID, account, "", "", clientInfo)
 	} else {
-		// 旧的一定要做密码校检
-		// myPassword := mySQLUtil.GetPasswordBy(account)
-		// if myPassword == "" {
-		// 	errCode := int32(lobby.LoginError_ErrAccountNotSetPassword)
-		// 	loginReply.Result = &errCode
-		// 	replyQuicklyLogin(w, loginReply)
+		// 要校检是否是快速登录账号，快速登录没有密码
+		myPassword := mySQLUtil.GetPasswordBy(account)
+		if myPassword != "" {
+			errCode := int32(lobby.LoginError_ErrPasswordNotMatch)
+			loginReply.Result = &errCode
+			replyQuicklyLogin(w, loginReply)
 
-		// 	return
-		// }
-
-		// if password != myPassword {
-		// 	errCode := int32(lobby.LoginError_ErrPasswordNotMatch)
-		// 	loginReply.Result = &errCode
-		// 	replyQuicklyLogin(w, loginReply)
-
-		// 	return
-		// }
-
+			return
+		}
 	}
 
-	uint64UserID := uint64(userID)
-	userInfo := &lobby.UserInfo{}
-	userInfo.UserID = &uint64UserID
+
+
+	userInfo := loadUserInfoFromRedis(userID)
+	if userInfo == nil {
+		userInfo = &lobby.UserInfo{}
+		userInfo.UserID = &userID
+	}
+
+	log.Println("userInfo:", userInfo)
 
 	// 生成token给客户端
 	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
@@ -90,6 +96,7 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
 	loginReply.Result = &errCode
 	loginReply.Token = &tk
 	loginReply.UserInfo = userInfo
+	loginReply.Account = &account
 	replyQuicklyLogin(w, loginReply)
 
 }

@@ -1,7 +1,6 @@
 package sessions
 
 import (
-	"lobbyserver/config"
 	"lobbyserver/lobby"
 	"net/http"
 	"time"
@@ -112,6 +111,4 @@ func InitWith() {
 
 	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
 	sessions.HandleFunc("/", acceptWebsocket)
-
-	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
 }

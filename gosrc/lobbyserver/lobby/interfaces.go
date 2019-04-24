@@ -117,8 +117,9 @@ type IMySQLUtil interface {
 	// StartMySQL(ip string, port int, user string, password string, gameDB string)
 	UpdateWxUserInfo(UserInfo *UserInfo, clientInfo *ClientInfo) error
 	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
-	GetUserIDBy(account string)int
+	GetUserIDBy(account string)uint64
 	GetPasswordBy(account string) string
 	GetOrGenerateUserID(account string) (userID uint64, isNew bool)
-	RegisterAccount(userID uint64, phoneNum string,passwd string, clientInfo *ClientInfo) error
+	RegisterAccount(userID uint64, account string,passwd string, phone string, clientInfo *ClientInfo) error
+	LoadUserInfo(userID uint64,) *UserInfo
 }

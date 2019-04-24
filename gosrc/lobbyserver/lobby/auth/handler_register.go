@@ -36,23 +36,26 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	reply := &lobby.MsgRegisterReply{}
 
 	if account == "" {
-		// TODO: 返回参数错误给客户端
+		errCode := int32(lobby.RegisterError_ErrAccountIsEmpty)
+		reply.Result = &errCode
 		replyRegister(w,reply)
 		return
 	}
 
 	if password == "" {
-		// TODO: 返回参数错误给客户端
+		errCode := int32(lobby.RegisterError_ErrPasswordIsEmpty)
+		reply.Result = &errCode
 		replyRegister(w,reply)
 		return
 	}
 
-	// TODO: 检查手机号是否已经注册过, 如果已经注册过，返回错误
+	// 检查手机号是否已经注册过, 如果已经注册过，返回错误
 	// 如果没注册过，则生成个新用户
 	mySQLUtil := lobby.MySQLUtil()
 	userID, isNew := mySQLUtil.GetOrGenerateUserID(account)
 	if !isNew {
-		// TODO: 返回错误码给客户端
+		errCode := int32(lobby.RegisterError_ErrAccountExist)
+		reply.Result = &errCode
 		replyRegister(w,reply)
 		return
 	}
@@ -72,9 +75,10 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	data := []byte(password)
 	passwdMD5 := fmt.Sprintf("%x", md5.Sum(data))
 
-	err := mySQLUtil.RegisterAccount(userID, account, passwdMD5, clientInfo)
+	err := mySQLUtil.RegisterAccount(userID, account, passwdMD5, "", clientInfo)
 	if err != nil {
-		// TODO: 返回错误码给客户端
+		errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
+		reply.Result = &errCode
 		replyRegister(w,reply)
 		return
 	}
@@ -83,7 +87,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 
 	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
 	reply.Token = &tk
-	errCode := uint32(0)
+	errCode := int32(0)
 	reply.Result = &errCode
 	replyRegister(w,reply)
 

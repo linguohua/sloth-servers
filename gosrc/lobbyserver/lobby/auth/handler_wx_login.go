@@ -6,17 +6,39 @@ import (
 	log "github.com/sirupsen/logrus"
 	"fmt"
 	"lobbyserver/lobby"
+	"gconst"
 )
 
 func replyWxLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
 	replyLogin(w, loginReply)
 }
 
-func updateWxUserInfo(userInfoReply *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
-	mySQLUtil := lobby.MySQLUtil()
-	mySQLUtil.UpdateWxUserInfo(userInfoReply, clientInfo)
+func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
+	// 获取redis链接，并退出函数时释放
+	conn := lobby.Pool().Get()
+	defer conn.Close()
 
-	// TODO: 需要保存到redis
+	key := fmt.Sprintf("%s%d", gconst.LobbyUserTablePrefix, userInfo.GetUserID())
+
+	userID := userInfo.GetUserID()
+	openID := userInfo.GetOpenID()
+	nickName := userInfo.GetNickName()
+	sex := userInfo.GetSex()
+	provice := userInfo.GetProvince()
+	city := userInfo.GetCity()
+	country := userInfo.GetCountry()
+	headImgURL := userInfo.GetHeadImgUrl()
+
+	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "sex", sex,
+	 "provice",provice, "city", city, "country", country, "headImgURL", headImgURL)
+}
+
+func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
+	mySQLUtil := lobby.MySQLUtil()
+	mySQLUtil.UpdateWxUserInfo(userInfo, clientInfo)
+
+	// 保存到redis
+	saveUserInfo2Redis(userInfo)
 }
 
 func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.UserInfo, error) {

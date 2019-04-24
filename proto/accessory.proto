@@ -392,6 +392,7 @@ message UserInfo
 	optional string city = 6;
 	optional string country = 7;
 	optional string headImgUrl = 8;
+	optional string phone = 9;
 }
 
 enum LoginError
@@ -411,7 +412,7 @@ message MsgLoginReply
 {
 	required int32 result = 1; // 微信登录返回结果，参见LoginError
 	optional string token = 2;  // token
-	optional UserInfo userInfo = 3; //微信用户信息
+	optional UserInfo userInfo = 3; //用户信息
 }
 
 // 客户端登录信息
@@ -429,9 +430,26 @@ message ClientInfo
 	optional string network = 10;
 }
 
+enum RegisterError
+{
+	ErrRegisterSuccess = 0; // 成功
+	ErrAccountIsEmpty = 1;   // 注册,参数账号为空
+	ErrPasswordIsEmpty = 2;    //  注册，密码为空
+	ErrAccountExist = 3; // 注册，账号已经存在
+	ErrWriteDatabaseFailed = 4; // 注册，写数据库失败
+}
+
 // 账号注册返回
 message MsgRegisterReply
 {
-	required uint32 result = 1; // 微信登录返回结果，0 表示成功
+	required int32 result = 1; // 微信登录返回结果，0 表示成功
 	optional string token = 2;  // token
+}
+
+message MsgQuicklyLoginReply
+{
+	required int32 result = 1; // 微信登录返回结果，参见LoginError
+	optional string token = 2;  // token
+	optional string account = 3; // 账号
+	optional UserInfo userInfo = 4; //用户信息
 }

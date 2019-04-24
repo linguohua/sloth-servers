@@ -8,7 +8,7 @@ import (
 
 // 检查手机号是否已经注册过
 func getPasswordBy(accout string) string {
-	query := fmt.Sprintf("select password from account where account = %s", accout)
+	query := fmt.Sprintf("select password from account where account = '%s'", accout)
 
 	log.Println("query:", query)
 

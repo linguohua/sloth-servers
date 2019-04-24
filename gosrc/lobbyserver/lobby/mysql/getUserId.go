@@ -7,8 +7,8 @@ import (
 )
 
 // 检查手机号是否已经注册过
-func getUserIDBy(accout string) int {
-	query := fmt.Sprintf("select user_id from account where account = %s", accout)
+func getUserIDBy(accout string) uint64 {
+	query := fmt.Sprintf("select user_id from account where account = '%s'", accout)
 
 	log.Println("query:", query)
 
@@ -19,7 +19,7 @@ func getUserIDBy(accout string) int {
 	}
 	defer stmt.Close()
 
-	var userID int
+	var userID uint64
 	row := stmt.QueryRow()
 	err = row.Scan(&userID)
 	if err != nil {

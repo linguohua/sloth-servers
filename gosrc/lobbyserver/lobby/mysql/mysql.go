@@ -25,7 +25,7 @@ func (*mySQLUtil) UpdateAccountUserInfo(account string, clientInfo *lobby.Client
 	return updateAccountUserInfo(account, clientInfo)
 }
 
-func (*mySQLUtil) GetUserIDBy(account string) int {
+func (*mySQLUtil) GetUserIDBy(account string) uint64 {
 	return getUserIDBy(account)
 }
 
@@ -37,8 +37,12 @@ func (*mySQLUtil) GetOrGenerateUserID(account string) (userID uint64, isNew bool
 	return getOrGenerateUserID(account)
 }
 
-func (*mySQLUtil) RegisterAccount(userID uint64, phoneNum string,passwd string, clientInfo *lobby.ClientInfo) error{
-	return registerAccount(userID ,phoneNum , passwd , clientInfo)
+func (*mySQLUtil) RegisterAccount(userID uint64, account string, passwd string, phone string, clientInfo *lobby.ClientInfo) error{
+	return registerAccount(userID, account , passwd , phone, clientInfo)
+}
+
+func (*mySQLUtil) LoadUserInfo(userID uint64,) *lobby.UserInfo{
+	return loadUserInfo(userID)
 }
 
 // InitWith init

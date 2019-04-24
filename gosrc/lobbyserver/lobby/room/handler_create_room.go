@@ -222,9 +222,8 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		return
 	}
 
-	// bytes := accessoryMessage.GetData()
 	body, err := ioutil.ReadAll(r.Body)
-	if (err != nil) {
+	if err != nil {
 		log.Println("handlerCreateRoom error:", err)
 		return
 	}
