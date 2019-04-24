@@ -54,4 +54,6 @@ func InitWith() {
 		log.Println("StartMssql error ", err)
 	}
 	dbConn = conn
+
+	// initDatabase()
 }

@@ -92,8 +92,8 @@ func (u *User) send(bytes []byte) {
 }
 
 func (u *User) sendMsg(pb proto.Message, ops int32) {
-	accessoryMessage := &lobby.AccessoryMessage{}
-	accessoryMessage.Ops = &ops
+	lobbyMessage := &lobby.LobbyMessage{}
+	lobbyMessage.Ops = &ops
 
 	if pb != nil {
 		bytes, err := proto.Marshal(pb)
@@ -102,10 +102,10 @@ func (u *User) sendMsg(pb proto.Message, ops int32) {
 			log.Panic("sendMsg, marshal msg failed")
 			return
 		}
-		accessoryMessage.Data = bytes
+		lobbyMessage.Data = bytes
 	}
 
-	bytes, err := proto.Marshal(accessoryMessage)
+	bytes, err := proto.Marshal(lobbyMessage)
 	if err != nil {
 		log.Panic("sendMsg, marshal msg failed")
 		return
@@ -121,34 +121,19 @@ func (u *User) onWebsocketClosed(ws *websocket.Conn) {
 }
 
 func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
-	accessoryMessage := &lobby.AccessoryMessage{}
-	err := proto.Unmarshal(message, accessoryMessage)
+	lobbyMessage := &lobby.LobbyMessage{}
+	err := proto.Unmarshal(message, lobbyMessage)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	var msgCode = lobby.MessageCode(accessoryMessage.GetOps())
+	var msgCode = lobby.MessageCode(lobbyMessage.GetOps())
 
 	switch msgCode {
-	// case MessageCode_OPCreateRoom:
-	// 	onMessageCreateRoom(u, accessoryMessage)
+	// case lobby.MessageCode_OPUpdateUserInfo:
+	// 	onMessageUpdateUserInfo(u, accessoryMessage)
 	// 	break
-	// case MessageCode_OPRequestRoomInfo:
-	// 	onMessageRequestRoomInfo(u, accessoryMessage)
-	// 	break
-	case lobby.MessageCode_OPDeleteRoom:
-		// onMessageDeleteRoom(u, accessoryMessage)
-		break
-	case lobby.MessageCode_OPChat:
-		// onMessageChat(u, accessoryMessage)
-		break
-	case lobby.MessageCode_OPUpdateUserInfo:
-		onMessageUpdateUserInfo(u, accessoryMessage)
-		break
-	case lobby.MessageCode_OPVoiceData:
-		// onMessageVoiceChat(u, message)
-		break
 	default:
 		log.Println("onMessage unsupported msgCode:", msgCode)
 		break
@@ -194,9 +179,9 @@ func (u *User) detach() {
 	}
 }
 
-func onMessageUpdateUserInfo(user *User, accessoryMessage *lobby.AccessoryMessage) {
+func onMessageUpdateUserInfo(user *User, lobbyMessage *lobby.LobbyMessage) {
 	log.Println("onMessageUpdateUserInfo")
-	var buf = accessoryMessage.GetData()
+	var buf = lobbyMessage.GetData()
 	var updateUserInfo = &lobby.MsgUpdateUserInfo{}
 	err := proto.Unmarshal(buf, updateUserInfo)
 	if err != nil {
