@@ -73,8 +73,12 @@ func (mgr *MonkeyMgr) destroyMonkeyRoom(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	delete(roomMgr.rooms, monkeyRoomName)
-	mgr.room.destroy()
+	_, ok := roomMgr.rooms[monkeyRoomName]
+	if ok {
+		delete(roomMgr.rooms, monkeyRoomName)
+		mgr.room.destroy()
+	}
+
 	mgr.room = nil
 
 	w.Write([]byte("delete OK"))

@@ -169,7 +169,7 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("accept websocket:", r.URL)
 	switch requestPath {
-	case "pok":
+	case "play":
 		var token = r.URL.Query().Get("tk")
 		userID, ok := parseTK(token)
 		if !ok {
@@ -242,8 +242,8 @@ func CreateHTTPServer() {
 	startAliveKeeper()
 
 	// 所有模块看到的mainRouter
-	// 外部访问需要形如/prunfast/uuid/pok
-	var mainRouter = rootRouter.PathPrefix("/prunfast/{uuid}/").Subrouter()
+	// 外部访问需要形如/game/uuid/play
+	var mainRouter = rootRouter.PathPrefix("/game/{uuid}/").Subrouter()
 	mainRouter.HandleFunc("/ws/{wtype}", acceptWebsocket)
 	mainRouter.HandleFunc("/version", echoVersion)
 
