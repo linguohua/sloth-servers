@@ -77,13 +77,11 @@ message SRMsgHandRecorder
 
     optional int32 handNum = 11; // 第几轮
 
-    optional string shareAbleID = 12; // 用于分享的8位ID
+    optional bool isContinuousBanker = 12; // 是否连庄
 
-    optional bool isContinuousBanker = 13; // 是否连庄
+    optional string roomNumber = 13; // 房间号，仅用于客户端显示用
 
-    optional string roomNumber = 14; // 房间号，仅用于客户端显示用
+    optional int32 roomType = 14; // 房间类型
 
-    optional int32 roomType = 15; // 房间类型
-
-    optional SRMsgHandRecorderExtra extra = 16; // 额外参数
+    optional SRMsgHandRecorderExtra extra = 15; // 额外参数
 }
