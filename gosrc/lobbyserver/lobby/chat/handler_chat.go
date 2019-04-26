@@ -118,6 +118,8 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		log.Println("not support chat scope:", scope)
 		break
 	}
+
+	w.Write([]byte("ok"))
 }
 
 func readUserIDListInRoom(who string) []string {

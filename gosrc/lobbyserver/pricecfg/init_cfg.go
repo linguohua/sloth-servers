@@ -63,7 +63,7 @@ func LoadAllPriceCfg(p *redis.Pool) {
 		}
 	}
 
-	println("Pricecfg len :", len(cfgs))
+	log.Println("Pricecfg len :", len(cfgs))
 	// log.Println(originalPriceCfgs)
 }
 
@@ -72,7 +72,7 @@ func loadOriginalPriceCfgFromFile(filePath string) map[int]string {
 
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Println("failed to open config file:", filePath)
+		log.Println("failed to open price config file:", filePath)
 		return priceCfgMap
 	}
 
