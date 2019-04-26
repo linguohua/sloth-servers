@@ -3,14 +3,22 @@
 
 package pokerface
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // 记录的动作的标志
 type SRFlags int32
@@ -32,6 +40,7 @@ var SRFlags_name = map[int32]string{
 	2: "SRRichi",
 	4: "SRFlyRichi",
 }
+
 var SRFlags_value = map[string]int32{
 	"SRNone":          0,
 	"SRUserReplyOnly": 1,
@@ -44,9 +53,11 @@ func (x SRFlags) Enum() *SRFlags {
 	*p = x
 	return p
 }
+
 func (x SRFlags) String() string {
 	return proto.EnumName(SRFlags_name, int32(x))
 }
+
 func (x *SRFlags) UnmarshalJSON(data []byte) error {
 	value, err := proto.UnmarshalJSONEnum(SRFlags_value, data, "SRFlags")
 	if err != nil {
@@ -55,23 +66,47 @@ func (x *SRFlags) UnmarshalJSON(data []byte) error {
 	*x = SRFlags(value)
 	return nil
 }
-func (SRFlags) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+
+func (SRFlags) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{0}
+}
 
 // 手牌记录中的用户对象
 type SRMsgPlayerInfo struct {
-	UserID           *string `protobuf:"bytes,1,req,name=userID" json:"userID,omitempty"`
-	ChairID          *int32  `protobuf:"varint,2,req,name=chairID" json:"chairID,omitempty"`
-	Nick             *string `protobuf:"bytes,3,opt,name=nick" json:"nick,omitempty"`
-	Sex              *uint32 `protobuf:"varint,4,opt,name=sex" json:"sex,omitempty"`
-	HeadIconURI      *string `protobuf:"bytes,5,opt,name=headIconURI" json:"headIconURI,omitempty"`
-	AvatarID         *int32  `protobuf:"varint,6,opt,name=avatarID" json:"avatarID,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	UserID               *string  `protobuf:"bytes,1,req,name=userID" json:"userID,omitempty"`
+	ChairID              *int32   `protobuf:"varint,2,req,name=chairID" json:"chairID,omitempty"`
+	Nick                 *string  `protobuf:"bytes,3,opt,name=nick" json:"nick,omitempty"`
+	Sex                  *uint32  `protobuf:"varint,4,opt,name=sex" json:"sex,omitempty"`
+	HeadIconURI          *string  `protobuf:"bytes,5,opt,name=headIconURI" json:"headIconURI,omitempty"`
+	AvatarID             *int32   `protobuf:"varint,6,opt,name=avatarID" json:"avatarID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SRMsgPlayerInfo) Reset()                    { *m = SRMsgPlayerInfo{} }
-func (m *SRMsgPlayerInfo) String() string            { return proto.CompactTextString(m) }
-func (*SRMsgPlayerInfo) ProtoMessage()               {}
-func (*SRMsgPlayerInfo) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (m *SRMsgPlayerInfo) Reset()         { *m = SRMsgPlayerInfo{} }
+func (m *SRMsgPlayerInfo) String() string { return proto.CompactTextString(m) }
+func (*SRMsgPlayerInfo) ProtoMessage()    {}
+func (*SRMsgPlayerInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{0}
+}
+func (m *SRMsgPlayerInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRMsgPlayerInfo.Unmarshal(m, b)
+}
+func (m *SRMsgPlayerInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRMsgPlayerInfo.Marshal(b, m, deterministic)
+}
+func (m *SRMsgPlayerInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRMsgPlayerInfo.Merge(m, src)
+}
+func (m *SRMsgPlayerInfo) XXX_Size() int {
+	return xxx_messageInfo_SRMsgPlayerInfo.Size(m)
+}
+func (m *SRMsgPlayerInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRMsgPlayerInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SRMsgPlayerInfo proto.InternalMessageInfo
 
 func (m *SRMsgPlayerInfo) GetUserID() string {
 	if m != nil && m.UserID != nil {
@@ -117,16 +152,37 @@ func (m *SRMsgPlayerInfo) GetAvatarID() int32 {
 
 // 发牌记录
 type SRDealDetail struct {
-	ChairID          *int32  `protobuf:"varint,1,req,name=chairID" json:"chairID,omitempty"`
-	CardsHand        []int32 `protobuf:"varint,2,rep,name=cardsHand" json:"cardsHand,omitempty"`
-	CardsFlower      []int32 `protobuf:"varint,3,rep,name=cardsFlower" json:"cardsFlower,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	ChairID              *int32   `protobuf:"varint,1,req,name=chairID" json:"chairID,omitempty"`
+	CardsHand            []int32  `protobuf:"varint,2,rep,name=cardsHand" json:"cardsHand,omitempty"`
+	CardsFlower          []int32  `protobuf:"varint,3,rep,name=cardsFlower" json:"cardsFlower,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SRDealDetail) Reset()                    { *m = SRDealDetail{} }
-func (m *SRDealDetail) String() string            { return proto.CompactTextString(m) }
-func (*SRDealDetail) ProtoMessage()               {}
-func (*SRDealDetail) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
+func (m *SRDealDetail) Reset()         { *m = SRDealDetail{} }
+func (m *SRDealDetail) String() string { return proto.CompactTextString(m) }
+func (*SRDealDetail) ProtoMessage()    {}
+func (*SRDealDetail) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{1}
+}
+func (m *SRDealDetail) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRDealDetail.Unmarshal(m, b)
+}
+func (m *SRDealDetail) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRDealDetail.Marshal(b, m, deterministic)
+}
+func (m *SRDealDetail) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRDealDetail.Merge(m, src)
+}
+func (m *SRDealDetail) XXX_Size() int {
+	return xxx_messageInfo_SRDealDetail.Size(m)
+}
+func (m *SRDealDetail) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRDealDetail.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SRDealDetail proto.InternalMessageInfo
 
 func (m *SRDealDetail) GetChairID() int32 {
 	if m != nil && m.ChairID != nil {
@@ -157,17 +213,38 @@ type SRAction struct {
 	// 动作涉及到的牌列表，如果动作是发牌，列表包含花牌和非花牌；
 	// 如果动作是出牌，则列表只有一个张牌；如果动作是吃椪杠、列表也只有一张牌，表示面子牌组的第一张牌
 	// 对于吃牌，有两个card，一个是面子牌组的第一张牌，另一个是表示吃的哪张牌
-	Cards            []int32 `protobuf:"varint,4,rep,name=cards" json:"cards,omitempty"`
-	Flags            *int32  `protobuf:"varint,5,req,name=flags" json:"flags,omitempty"`
-	CardHandType     *int32  `protobuf:"varint,6,opt,name=cardHandType" json:"cardHandType,omitempty"`
-	AllowActions     *int32  `protobuf:"varint,7,opt,name=allowActions" json:"allowActions,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Cards                []int32  `protobuf:"varint,4,rep,name=cards" json:"cards,omitempty"`
+	Flags                *int32   `protobuf:"varint,5,req,name=flags" json:"flags,omitempty"`
+	CardHandType         *int32   `protobuf:"varint,6,opt,name=cardHandType" json:"cardHandType,omitempty"`
+	AllowActions         *int32   `protobuf:"varint,7,opt,name=allowActions" json:"allowActions,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SRAction) Reset()                    { *m = SRAction{} }
-func (m *SRAction) String() string            { return proto.CompactTextString(m) }
-func (*SRAction) ProtoMessage()               {}
-func (*SRAction) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
+func (m *SRAction) Reset()         { *m = SRAction{} }
+func (m *SRAction) String() string { return proto.CompactTextString(m) }
+func (*SRAction) ProtoMessage()    {}
+func (*SRAction) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{2}
+}
+func (m *SRAction) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRAction.Unmarshal(m, b)
+}
+func (m *SRAction) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRAction.Marshal(b, m, deterministic)
+}
+func (m *SRAction) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRAction.Merge(m, src)
+}
+func (m *SRAction) XXX_Size() int {
+	return xxx_messageInfo_SRAction.Size(m)
+}
+func (m *SRAction) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRAction.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SRAction proto.InternalMessageInfo
 
 func (m *SRAction) GetAction() int32 {
 	if m != nil && m.Action != nil {
@@ -219,15 +296,36 @@ func (m *SRAction) GetAllowActions() int32 {
 }
 
 type SRMsgHandRecorderExtra struct {
-	Markup           *int32  `protobuf:"varint,1,opt,name=markup" json:"markup,omitempty"`
-	OwnerUserID      *string `protobuf:"bytes,2,opt,name=ownerUserID" json:"ownerUserID,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Markup               *int32   `protobuf:"varint,1,opt,name=markup" json:"markup,omitempty"`
+	OwnerUserID          *string  `protobuf:"bytes,2,opt,name=ownerUserID" json:"ownerUserID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SRMsgHandRecorderExtra) Reset()                    { *m = SRMsgHandRecorderExtra{} }
-func (m *SRMsgHandRecorderExtra) String() string            { return proto.CompactTextString(m) }
-func (*SRMsgHandRecorderExtra) ProtoMessage()               {}
-func (*SRMsgHandRecorderExtra) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
+func (m *SRMsgHandRecorderExtra) Reset()         { *m = SRMsgHandRecorderExtra{} }
+func (m *SRMsgHandRecorderExtra) String() string { return proto.CompactTextString(m) }
+func (*SRMsgHandRecorderExtra) ProtoMessage()    {}
+func (*SRMsgHandRecorderExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{3}
+}
+func (m *SRMsgHandRecorderExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRMsgHandRecorderExtra.Unmarshal(m, b)
+}
+func (m *SRMsgHandRecorderExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRMsgHandRecorderExtra.Marshal(b, m, deterministic)
+}
+func (m *SRMsgHandRecorderExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRMsgHandRecorderExtra.Merge(m, src)
+}
+func (m *SRMsgHandRecorderExtra) XXX_Size() int {
+	return xxx_messageInfo_SRMsgHandRecorderExtra.Size(m)
+}
+func (m *SRMsgHandRecorderExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRMsgHandRecorderExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SRMsgHandRecorderExtra proto.InternalMessageInfo
 
 func (m *SRMsgHandRecorderExtra) GetMarkup() int32 {
 	if m != nil && m.Markup != nil {
@@ -247,29 +345,50 @@ func (m *SRMsgHandRecorderExtra) GetOwnerUserID() string {
 // 消息用于客户端回播，以及bug定位等
 // 用于记录发牌数据，以及听吃椪杠胡等动作
 type SRMsgHandRecorder struct {
-	BankerChairID      *int32                  `protobuf:"varint,1,req,name=bankerChairID" json:"bankerChairID,omitempty"`
-	WindFlowerID       *int32                  `protobuf:"varint,2,req,name=windFlowerID" json:"windFlowerID,omitempty"`
-	Players            []*SRMsgPlayerInfo      `protobuf:"bytes,3,rep,name=players" json:"players,omitempty"`
-	IsHandOver         *bool                   `protobuf:"varint,4,req,name=isHandOver" json:"isHandOver,omitempty"`
-	Deals              []*SRDealDetail         `protobuf:"bytes,5,rep,name=deals" json:"deals,omitempty"`
-	Actions            []*SRAction             `protobuf:"bytes,6,rep,name=actions" json:"actions,omitempty"`
-	HandScore          []byte                  `protobuf:"bytes,7,opt,name=handScore" json:"handScore,omitempty"`
-	RoomConfigID       *string                 `protobuf:"bytes,8,opt,name=roomConfigID" json:"roomConfigID,omitempty"`
-	StartTime          *uint32                 `protobuf:"varint,9,opt,name=startTime" json:"startTime,omitempty"`
-	EndTime            *uint32                 `protobuf:"varint,10,opt,name=endTime" json:"endTime,omitempty"`
-	HandNum            *int32                  `protobuf:"varint,11,opt,name=handNum" json:"handNum,omitempty"`
-	ShareAbleID        *string                 `protobuf:"bytes,12,opt,name=shareAbleID" json:"shareAbleID,omitempty"`
-	IsContinuousBanker *bool                   `protobuf:"varint,13,opt,name=isContinuousBanker" json:"isContinuousBanker,omitempty"`
-	RoomNumber         *string                 `protobuf:"bytes,14,opt,name=roomNumber" json:"roomNumber,omitempty"`
-	RoomType           *int32                  `protobuf:"varint,15,opt,name=roomType" json:"roomType,omitempty"`
-	Extra              *SRMsgHandRecorderExtra `protobuf:"bytes,16,opt,name=extra" json:"extra,omitempty"`
-	XXX_unrecognized   []byte                  `json:"-"`
+	BankerChairID        *int32                  `protobuf:"varint,1,req,name=bankerChairID" json:"bankerChairID,omitempty"`
+	WindFlowerID         *int32                  `protobuf:"varint,2,req,name=windFlowerID" json:"windFlowerID,omitempty"`
+	Players              []*SRMsgPlayerInfo      `protobuf:"bytes,3,rep,name=players" json:"players,omitempty"`
+	IsHandOver           *bool                   `protobuf:"varint,4,req,name=isHandOver" json:"isHandOver,omitempty"`
+	Deals                []*SRDealDetail         `protobuf:"bytes,5,rep,name=deals" json:"deals,omitempty"`
+	Actions              []*SRAction             `protobuf:"bytes,6,rep,name=actions" json:"actions,omitempty"`
+	HandScore            []byte                  `protobuf:"bytes,7,opt,name=handScore" json:"handScore,omitempty"`
+	RoomConfigID         *string                 `protobuf:"bytes,8,opt,name=roomConfigID" json:"roomConfigID,omitempty"`
+	StartTime            *uint32                 `protobuf:"varint,9,opt,name=startTime" json:"startTime,omitempty"`
+	EndTime              *uint32                 `protobuf:"varint,10,opt,name=endTime" json:"endTime,omitempty"`
+	HandNum              *int32                  `protobuf:"varint,11,opt,name=handNum" json:"handNum,omitempty"`
+	ShareAbleID          *string                 `protobuf:"bytes,12,opt,name=shareAbleID" json:"shareAbleID,omitempty"`
+	IsContinuousBanker   *bool                   `protobuf:"varint,13,opt,name=isContinuousBanker" json:"isContinuousBanker,omitempty"`
+	RoomNumber           *string                 `protobuf:"bytes,14,opt,name=roomNumber" json:"roomNumber,omitempty"`
+	RoomType             *int32                  `protobuf:"varint,15,opt,name=roomType" json:"roomType,omitempty"`
+	Extra                *SRMsgHandRecorderExtra `protobuf:"bytes,16,opt,name=extra" json:"extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
 }
 
-func (m *SRMsgHandRecorder) Reset()                    { *m = SRMsgHandRecorder{} }
-func (m *SRMsgHandRecorder) String() string            { return proto.CompactTextString(m) }
-func (*SRMsgHandRecorder) ProtoMessage()               {}
-func (*SRMsgHandRecorder) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
+func (m *SRMsgHandRecorder) Reset()         { *m = SRMsgHandRecorder{} }
+func (m *SRMsgHandRecorder) String() string { return proto.CompactTextString(m) }
+func (*SRMsgHandRecorder) ProtoMessage()    {}
+func (*SRMsgHandRecorder) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0786ddba798afdac, []int{4}
+}
+func (m *SRMsgHandRecorder) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SRMsgHandRecorder.Unmarshal(m, b)
+}
+func (m *SRMsgHandRecorder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SRMsgHandRecorder.Marshal(b, m, deterministic)
+}
+func (m *SRMsgHandRecorder) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SRMsgHandRecorder.Merge(m, src)
+}
+func (m *SRMsgHandRecorder) XXX_Size() int {
+	return xxx_messageInfo_SRMsgHandRecorder.Size(m)
+}
+func (m *SRMsgHandRecorder) XXX_DiscardUnknown() {
+	xxx_messageInfo_SRMsgHandRecorder.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SRMsgHandRecorder proto.InternalMessageInfo
 
 func (m *SRMsgHandRecorder) GetBankerChairID() int32 {
 	if m != nil && m.BankerChairID != nil {
@@ -392,9 +511,9 @@ func init() {
 	proto.RegisterEnum("pokerface.SRFlags", SRFlags_name, SRFlags_value)
 }
 
-func init() { proto.RegisterFile("game_pokerface_s2s.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("game_pokerface_s2s.proto", fileDescriptor_0786ddba798afdac) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor_0786ddba798afdac = []byte{
 	// 579 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x53, 0x4d, 0x6f, 0xda, 0x40,
 	0x10, 0xad, 0x0d, 0xc6, 0x78, 0x0c, 0x01, 0x96, 0xb4, 0x5d, 0xe5, 0xe4, 0xa2, 0xaa, 0xb2, 0x5a,

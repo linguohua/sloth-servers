@@ -1,8 +1,9 @@
 package prunfast
 
 import (
-	log "github.com/sirupsen/logrus"
 	"gconst"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -54,7 +55,7 @@ func newRoomConfig() *RoomConfig {
 
 	rc.playerNumAcquired = 3
 	rc.payNum = 0
-	rc.handNum = 100
+	rc.handNum = 2
 	rc.payType = 0
 
 	rc.roomScoreConfig = defaultScoreConfig

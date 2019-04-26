@@ -3,31 +3,60 @@
 
 package pokerface
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 // 回放房间中的玩家信息
 type MsgReplayPlayerInfo struct {
-	UserID           *string `protobuf:"bytes,1,req,name=userID" json:"userID,omitempty"`
-	Nick             *string `protobuf:"bytes,2,opt,name=nick" json:"nick,omitempty"`
-	ChairID          *int32  `protobuf:"varint,3,req,name=chairID" json:"chairID,omitempty"`
-	TotalScore       *int32  `protobuf:"varint,4,opt,name=totalScore" json:"totalScore,omitempty"`
-	Sex              *uint32 `protobuf:"varint,5,opt,name=sex" json:"sex,omitempty"`
-	HeadIconURI      *string `protobuf:"bytes,6,opt,name=headIconURI" json:"headIconURI,omitempty"`
-	AvatarID         *int32  `protobuf:"varint,7,opt,name=avatarID" json:"avatarID,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	UserID               *string  `protobuf:"bytes,1,req,name=userID" json:"userID,omitempty"`
+	Nick                 *string  `protobuf:"bytes,2,opt,name=nick" json:"nick,omitempty"`
+	ChairID              *int32   `protobuf:"varint,3,req,name=chairID" json:"chairID,omitempty"`
+	TotalScore           *int32   `protobuf:"varint,4,opt,name=totalScore" json:"totalScore,omitempty"`
+	Sex                  *uint32  `protobuf:"varint,5,opt,name=sex" json:"sex,omitempty"`
+	HeadIconURI          *string  `protobuf:"bytes,6,opt,name=headIconURI" json:"headIconURI,omitempty"`
+	AvatarID             *int32   `protobuf:"varint,7,opt,name=avatarID" json:"avatarID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *MsgReplayPlayerInfo) Reset()                    { *m = MsgReplayPlayerInfo{} }
-func (m *MsgReplayPlayerInfo) String() string            { return proto.CompactTextString(m) }
-func (*MsgReplayPlayerInfo) ProtoMessage()               {}
-func (*MsgReplayPlayerInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (m *MsgReplayPlayerInfo) Reset()         { *m = MsgReplayPlayerInfo{} }
+func (m *MsgReplayPlayerInfo) String() string { return proto.CompactTextString(m) }
+func (*MsgReplayPlayerInfo) ProtoMessage()    {}
+func (*MsgReplayPlayerInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9975814582a53f74, []int{0}
+}
+func (m *MsgReplayPlayerInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgReplayPlayerInfo.Unmarshal(m, b)
+}
+func (m *MsgReplayPlayerInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgReplayPlayerInfo.Marshal(b, m, deterministic)
+}
+func (m *MsgReplayPlayerInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReplayPlayerInfo.Merge(m, src)
+}
+func (m *MsgReplayPlayerInfo) XXX_Size() int {
+	return xxx_messageInfo_MsgReplayPlayerInfo.Size(m)
+}
+func (m *MsgReplayPlayerInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReplayPlayerInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReplayPlayerInfo proto.InternalMessageInfo
 
 func (m *MsgReplayPlayerInfo) GetUserID() string {
 	if m != nil && m.UserID != nil {
@@ -80,16 +109,37 @@ func (m *MsgReplayPlayerInfo) GetAvatarID() int32 {
 
 // 回放记录中玩家的得分信息
 type MsgReplayPlayerScoreSummary struct {
-	ChairID          *int32 `protobuf:"varint,1,req,name=chairID" json:"chairID,omitempty"`
-	Score            *int32 `protobuf:"varint,2,req,name=score" json:"score,omitempty"`
-	WinType          *int32 `protobuf:"varint,3,req,name=winType" json:"winType,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ChairID              *int32   `protobuf:"varint,1,req,name=chairID" json:"chairID,omitempty"`
+	Score                *int32   `protobuf:"varint,2,req,name=score" json:"score,omitempty"`
+	WinType              *int32   `protobuf:"varint,3,req,name=winType" json:"winType,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *MsgReplayPlayerScoreSummary) Reset()                    { *m = MsgReplayPlayerScoreSummary{} }
-func (m *MsgReplayPlayerScoreSummary) String() string            { return proto.CompactTextString(m) }
-func (*MsgReplayPlayerScoreSummary) ProtoMessage()               {}
-func (*MsgReplayPlayerScoreSummary) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
+func (m *MsgReplayPlayerScoreSummary) Reset()         { *m = MsgReplayPlayerScoreSummary{} }
+func (m *MsgReplayPlayerScoreSummary) String() string { return proto.CompactTextString(m) }
+func (*MsgReplayPlayerScoreSummary) ProtoMessage()    {}
+func (*MsgReplayPlayerScoreSummary) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9975814582a53f74, []int{1}
+}
+func (m *MsgReplayPlayerScoreSummary) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgReplayPlayerScoreSummary.Unmarshal(m, b)
+}
+func (m *MsgReplayPlayerScoreSummary) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgReplayPlayerScoreSummary.Marshal(b, m, deterministic)
+}
+func (m *MsgReplayPlayerScoreSummary) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReplayPlayerScoreSummary.Merge(m, src)
+}
+func (m *MsgReplayPlayerScoreSummary) XXX_Size() int {
+	return xxx_messageInfo_MsgReplayPlayerScoreSummary.Size(m)
+}
+func (m *MsgReplayPlayerScoreSummary) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReplayPlayerScoreSummary.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReplayPlayerScoreSummary proto.InternalMessageInfo
 
 func (m *MsgReplayPlayerScoreSummary) GetChairID() int32 {
 	if m != nil && m.ChairID != nil {
@@ -114,18 +164,39 @@ func (m *MsgReplayPlayerScoreSummary) GetWinType() int32 {
 
 // 手牌回放记录概要
 type MsgReplayRecordSummary struct {
-	RecordUUID       *string                        `protobuf:"bytes,1,req,name=recordUUID" json:"recordUUID,omitempty"`
-	PlayerScores     []*MsgReplayPlayerScoreSummary `protobuf:"bytes,2,rep,name=playerScores" json:"playerScores,omitempty"`
-	EndTime          *uint32                        `protobuf:"varint,3,req,name=endTime" json:"endTime,omitempty"`
-	ShareAbleID      *string                        `protobuf:"bytes,4,opt,name=shareAbleID" json:"shareAbleID,omitempty"`
-	StartTime        *uint32                        `protobuf:"varint,5,opt,name=startTime" json:"startTime,omitempty"`
-	XXX_unrecognized []byte                         `json:"-"`
+	RecordUUID           *string                        `protobuf:"bytes,1,req,name=recordUUID" json:"recordUUID,omitempty"`
+	PlayerScores         []*MsgReplayPlayerScoreSummary `protobuf:"bytes,2,rep,name=playerScores" json:"playerScores,omitempty"`
+	EndTime              *uint32                        `protobuf:"varint,3,req,name=endTime" json:"endTime,omitempty"`
+	ShareAbleID          *string                        `protobuf:"bytes,4,opt,name=shareAbleID" json:"shareAbleID,omitempty"`
+	StartTime            *uint32                        `protobuf:"varint,5,opt,name=startTime" json:"startTime,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                       `json:"-"`
+	XXX_unrecognized     []byte                         `json:"-"`
+	XXX_sizecache        int32                          `json:"-"`
 }
 
-func (m *MsgReplayRecordSummary) Reset()                    { *m = MsgReplayRecordSummary{} }
-func (m *MsgReplayRecordSummary) String() string            { return proto.CompactTextString(m) }
-func (*MsgReplayRecordSummary) ProtoMessage()               {}
-func (*MsgReplayRecordSummary) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
+func (m *MsgReplayRecordSummary) Reset()         { *m = MsgReplayRecordSummary{} }
+func (m *MsgReplayRecordSummary) String() string { return proto.CompactTextString(m) }
+func (*MsgReplayRecordSummary) ProtoMessage()    {}
+func (*MsgReplayRecordSummary) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9975814582a53f74, []int{2}
+}
+func (m *MsgReplayRecordSummary) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgReplayRecordSummary.Unmarshal(m, b)
+}
+func (m *MsgReplayRecordSummary) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgReplayRecordSummary.Marshal(b, m, deterministic)
+}
+func (m *MsgReplayRecordSummary) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReplayRecordSummary.Merge(m, src)
+}
+func (m *MsgReplayRecordSummary) XXX_Size() int {
+	return xxx_messageInfo_MsgReplayRecordSummary.Size(m)
+}
+func (m *MsgReplayRecordSummary) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReplayRecordSummary.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReplayRecordSummary proto.InternalMessageInfo
 
 func (m *MsgReplayRecordSummary) GetRecordUUID() string {
 	if m != nil && m.RecordUUID != nil {
@@ -164,20 +235,41 @@ func (m *MsgReplayRecordSummary) GetStartTime() uint32 {
 
 // 回播房间记录
 type MsgReplayRoom struct {
-	RecordRoomType   *int32                    `protobuf:"varint,1,req,name=recordRoomType" json:"recordRoomType,omitempty"`
-	StartTime        *uint32                   `protobuf:"varint,2,req,name=startTime" json:"startTime,omitempty"`
-	EndTime          *uint32                   `protobuf:"varint,3,req,name=endTime" json:"endTime,omitempty"`
-	RoomNumber       *string                   `protobuf:"bytes,4,req,name=roomNumber" json:"roomNumber,omitempty"`
-	Players          []*MsgReplayPlayerInfo    `protobuf:"bytes,5,rep,name=players" json:"players,omitempty"`
-	Records          []*MsgReplayRecordSummary `protobuf:"bytes,6,rep,name=records" json:"records,omitempty"`
-	OwnerUserID      *string                   `protobuf:"bytes,7,opt,name=ownerUserID" json:"ownerUserID,omitempty"`
-	XXX_unrecognized []byte                    `json:"-"`
+	RecordRoomType       *int32                    `protobuf:"varint,1,req,name=recordRoomType" json:"recordRoomType,omitempty"`
+	StartTime            *uint32                   `protobuf:"varint,2,req,name=startTime" json:"startTime,omitempty"`
+	EndTime              *uint32                   `protobuf:"varint,3,req,name=endTime" json:"endTime,omitempty"`
+	RoomNumber           *string                   `protobuf:"bytes,4,req,name=roomNumber" json:"roomNumber,omitempty"`
+	Players              []*MsgReplayPlayerInfo    `protobuf:"bytes,5,rep,name=players" json:"players,omitempty"`
+	Records              []*MsgReplayRecordSummary `protobuf:"bytes,6,rep,name=records" json:"records,omitempty"`
+	OwnerUserID          *string                   `protobuf:"bytes,7,opt,name=ownerUserID" json:"ownerUserID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *MsgReplayRoom) Reset()                    { *m = MsgReplayRoom{} }
-func (m *MsgReplayRoom) String() string            { return proto.CompactTextString(m) }
-func (*MsgReplayRoom) ProtoMessage()               {}
-func (*MsgReplayRoom) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
+func (m *MsgReplayRoom) Reset()         { *m = MsgReplayRoom{} }
+func (m *MsgReplayRoom) String() string { return proto.CompactTextString(m) }
+func (*MsgReplayRoom) ProtoMessage()    {}
+func (*MsgReplayRoom) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9975814582a53f74, []int{3}
+}
+func (m *MsgReplayRoom) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MsgReplayRoom.Unmarshal(m, b)
+}
+func (m *MsgReplayRoom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MsgReplayRoom.Marshal(b, m, deterministic)
+}
+func (m *MsgReplayRoom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReplayRoom.Merge(m, src)
+}
+func (m *MsgReplayRoom) XXX_Size() int {
+	return xxx_messageInfo_MsgReplayRoom.Size(m)
+}
+func (m *MsgReplayRoom) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReplayRoom.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReplayRoom proto.InternalMessageInfo
 
 func (m *MsgReplayRoom) GetRecordRoomType() int32 {
 	if m != nil && m.RecordRoomType != nil {
@@ -235,9 +327,9 @@ func init() {
 	proto.RegisterType((*MsgReplayRoom)(nil), "pokerface.MsgReplayRoom")
 }
 
-func init() { proto.RegisterFile("game_pokerface_replay.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("game_pokerface_replay.proto", fileDescriptor_9975814582a53f74) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor_9975814582a53f74 = []byte{
 	// 378 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0xcd, 0x0e, 0x9a, 0x40,
 	0x14, 0x85, 0x33, 0x28, 0x52, 0x2e, 0xfe, 0xb4, 0x63, 0x62, 0x26, 0x31, 0x69, 0x28, 0x8b, 0x86,

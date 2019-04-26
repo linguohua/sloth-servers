@@ -1,7 +1,6 @@
 package prunfast
 
 import (
-	"bytes"
 	"container/list"
 	fmt "fmt"
 	"gconst"
@@ -19,11 +18,6 @@ import (
 )
 
 const (
-	// MaxShareAbleID 最小分享ID
-	MaxShareAbleID = 99999999
-	// MinShareAbleID 最大分享ID
-	MinShareAbleID = 10000000
-
 	maxReplayRoomNumber = 50
 )
 
@@ -272,11 +266,6 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 
 	recordID := fmt.Sprintf("%s", newUUID)
 
-	var shareAbleID = lc.randomRecordShareAbleID(recordID)
-	log.Printf("dump2Redis, new shareID:%s for Record:%s\n", shareAbleID, recordID)
-
-	lc.recorder.ShareAbleID = &shareAbleID
-
 	buf, err := proto.Marshal(lc.recorder)
 	if err != nil {
 		log.Panicln(err)
@@ -292,7 +281,7 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 		return
 	}
 
-	lc.updateReplayRoom(conn, s.room.ID, recordID, shareAbleID)
+	lc.updateReplayRoom(conn, s.room.ID, recordID)
 
 	// 为每一个玩家添加回播房间记录
 	for _, p := range lc.msgReplayRoom.Players {
@@ -409,7 +398,7 @@ func (lc *LoopContext) snapshootReplayRecordSummary(room *Room) {
 }
 
 // updateReplayRoom 更新回播房间记录
-func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID string, shareAbleID string) {
+func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID string) {
 
 	// 加载房间回播记录列表
 	recordsStr := ""
@@ -449,7 +438,6 @@ func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID
 
 	var replayRecordSummary = lc.replayRecordSummary
 	replayRecordSummary.RecordUUID = &recordID
-	replayRecordSummary.ShareAbleID = &shareAbleID
 
 	msgReplayRoom.Records = append(msgReplayRoom.Records, replayRecordSummary)
 
@@ -629,24 +617,6 @@ func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
 	}
 	conn.Do("EXEC")
 
-	conn.Send("MULTI")
-	for _, r := range records {
-		conn.Send("HGET", gconst.GameServerMJRecorderTablePrefix+r, "sid")
-	}
-	sids, _ := redis.Strings(conn.Do("EXEC"))
-
-	// 删除shared id，但是如果record不存在于redis中，则无法获得shared id
-	conn.Send("MULTI")
-	for _, sid := range sids {
-		if sid != "" {
-			conn.Send("DEL", gconst.GameServerMJRecorderTablePrefix+sid)
-			// 新的sid存在于MJRecorderShareIDTable哈希表中
-			conn.Send("HDEL", gconst.GameServerMJRecorderShareIDTable, sid)
-			lc.cl.Println("delete hand record sid:", sid)
-		}
-	}
-	conn.Do("EXEC")
-
 	// 先从redis中删除，回播记录可能已经不存在于redis，已经被腾挪到持久化数据库
 	conn.Send("MULTI")
 	for _, r := range records {
@@ -728,87 +698,4 @@ func loadMJLastRecordForUser(userID string) []byte {
 	replayRoom := replayRooms[len(replayRooms)-1]
 
 	return loadMJLastRecordForRoom(conn, replayRoom)
-}
-
-// loadMJRoomRecardShareIDs 加载房间所有的分享码ID,MJTestTool会使用一个shareID
-// 来加载其所在的房间的所有shareID，然后再逐个回播记录加载，并保存到文件夹中
-func loadMJRoomRecardShareIDs(conn redis.Conn, recordID string) ([]byte, error) {
-
-	roomID, err := redis.String(conn.Do("HGET", gconst.GameServerMJRecorderTablePrefix+recordID, "r"))
-	if err != nil {
-		log.Println("loadMJRoomRecardShareIDs, roomID failed:", err)
-		return nil, err
-	}
-
-	ridsWithComma, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
-	if err != nil {
-		log.Println("loadMJRoomRecardShareIDs, hr failed:", err)
-		return nil, err
-	}
-
-	records := strings.Split(ridsWithComma, ",")
-	conn.Send("MULTI")
-	for _, r := range records {
-		conn.Send("HGET", gconst.GameServerMJRecorderTablePrefix+r, "sid")
-	}
-
-	sids, err := redis.Strings(conn.Do("EXEC"))
-	if err != nil {
-		log.Println("loadMJRoomRecardShareIDs, sids failed:", err)
-		return nil, err
-	}
-
-	strBytes := bytes.NewBufferString("")
-	for _, sid := range sids {
-		strBytes.WriteString(sid)
-		strBytes.WriteString("\n")
-	}
-
-	return strBytes.Bytes(), nil
-}
-
-func (lc *LoopContext) randomRecordShareAbleID(recordID string) string {
-	maxRetry := 3
-	for i := 0; i < maxRetry; i++ {
-		shareAbleID := lc.randomRecordShareAbleIDImpl(recordID)
-		if shareAbleID != "" {
-			return shareAbleID
-		}
-	}
-
-	log.Println("ERROR, randomRecordShareAbleID failed to alloc shareAble ID")
-
-	return "0000"
-}
-
-func (lc *LoopContext) randomRecordShareAbleIDImpl(recordID string) string {
-	const maxTry = 20
-	rand := lc.s.room.rand
-	shareAbleIDArray := make([]string, maxTry)
-	for i := 0; i < maxTry; i++ {
-		shareAbleID := rand.Intn(MaxShareAbleID-MinShareAbleID) + MinShareAbleID
-		shareAbleIDStr := fmt.Sprintf("%d", shareAbleID)
-		shareAbleIDArray[i] = shareAbleIDStr
-	}
-
-	shareAbleIDStrs := strArray2Comma(shareAbleIDArray)
-	return validRedisRandNumber(shareAbleIDStrs, recordID)
-}
-
-// 1.检查数据库是否已经存在随机数
-// 2.若不存在，则保存到数据库，然后返回这个随机数
-func validRedisRandNumber(shareAbleIDStrs string, recordID string) string {
-	conn := pool.Get()
-	defer conn.Close()
-
-	// luaScript 在startRedis中创建
-	randNumber, err := redis.String(luaScript.Do(conn, gconst.GameServerMJRecorderTablePrefix, recordID,
-		shareAbleIDStrs, gconst.GameServerMJRecorderShareIDTable))
-	if err != nil {
-		logrus.Printf("randromNumber error, roomNumbers %s, roomID %s, error:%v \n", shareAbleIDStrs, recordID, err)
-	}
-
-	// TODO: 由于是随机测试可用分享号码，因此如果所有测试失败，则会返回空的分享号码，后面可以通过加大测试样本数量，或者
-	// 重放尝试N次，或者索性用逐次递增检查的方式来获得可用的分享号码
-	return randNumber
 }

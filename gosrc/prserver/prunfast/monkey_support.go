@@ -83,14 +83,8 @@ func onExportRoomReplayRecordsSIDs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	buf, err := loadMJRoomRecardShareIDs(conn, recordID)
-	if err != nil {
-		w.WriteHeader(404)
-		w.Write([]byte("no mj record found for record:" + err.Error()))
-		return
-	}
-
-	w.Write(buf)
+	w.WriteHeader(404)
+	w.Write([]byte("onExportRoomReplayRecordsSIDs has removed"))
 }
 
 func exportRoomOperationsByRecordSID(w http.ResponseWriter, r *http.Request, recordSID string) {
@@ -162,6 +156,7 @@ func exportRoomOperationsByUserID(w http.ResponseWriter, r *http.Request, userID
 
 	w.Write(buf)
 }
+
 func onExportRoomCfg(w http.ResponseWriter, r *http.Request) {
 	var roomConfigID = r.URL.Query().Get("roomConfigID")
 	if roomConfigID == "" {

@@ -19,10 +19,10 @@ import (
 var (
 	pool *redis.Pool
 	//redisServer = flag.String("redisServer", gscfg.RedisServer, "")
-	pubSubSequnce           = uint32(0)
-	luaScript               *redis.Script
-	luaScriptForHandScore   *redis.Script
-	luaScriptClubReplayRoom *redis.Script
+	pubSubSequnce = uint32(0)
+	// luaScript               *redis.Script
+	luaScriptForHandScore *redis.Script
+	// luaScriptClubReplayRoom *redis.Script
 )
 
 // RoomMgr 房间管理
@@ -545,17 +545,17 @@ func createLuaScript() {
 	// KEYS[2] 回播记录GUID
 	// KEYS[3] 用于测试的回放码列表
 	// KYES[4] 回播分享码HASHTABLE
-	script := `for rndNumber in string.gmatch(KEYS[3], '%d+') do
-					local value = redis.call('EXISTS', KEYS[1]..rndNumber)
-					local value2 = redis.call('HEXISTS', KEYS[4], rndNumber)
-					if value == 0 and value2 == 0 then
-						redis.call('HSET', KEYS[4], rndNumber, KEYS[2])
-						redis.call('HSET', KEYS[1]..KEYS[2], 'sid', rndNumber)
-						return rndNumber
-					end
-				end`
+	// script := `for rndNumber in string.gmatch(KEYS[3], '%d+') do
+	// 				local value = redis.call('EXISTS', KEYS[1]..rndNumber)
+	// 				local value2 = redis.call('HEXISTS', KEYS[4], rndNumber)
+	// 				if value == 0 and value2 == 0 then
+	// 					redis.call('HSET', KEYS[4], rndNumber, KEYS[2])
+	// 					redis.call('HSET', KEYS[1]..KEYS[2], 'sid', rndNumber)
+	// 					return rndNumber
+	// 				end
+	// 			end`
 
-	luaScript = redis.NewScript(4, script)
+	// luaScript = redis.NewScript(4, script)
 
 	script2 := `local value = redis.call('hget', KEYS[1], 'dfHMW')
 		if type(value) ~= 'string' then

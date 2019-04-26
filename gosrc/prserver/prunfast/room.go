@@ -168,7 +168,7 @@ func newRoomForMonkey(ownerID string, ID string, roomConfig *RoomConfig) *Room {
 	r := newBaseRoom(ownerID, "", ID, ID)
 	r.isForMonkey = true
 	// 测试用
-	r.isUlimitRound = true
+	r.isUlimitRound = false
 	r.config = roomConfig
 	r.initChair()
 	r.configID = ""
@@ -566,9 +566,9 @@ func (r *Room) requireRoomServer2Delete() bool {
 func (r *Room) destroy() {
 	reasonStr, ok := pokerface.RoomDeleteReason_name[int32(r.deleteReason)]
 	if ok {
-		r.cl.Printf("room now destroy, room number, reason:%s\n", reasonStr)
+		r.cl.Printf("room now destroy, room number:%s, reason:%s\n", r.roomNumber, reasonStr)
 	} else {
-		r.cl.Printf("room now destroy, room number, reason:%d\n", r.deleteReason)
+		r.cl.Printf("room now destroy, room number:%s, reason:%d\n", r.roomNumber, r.deleteReason)
 	}
 
 	// 通知所有人房间已经被删除
