@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"lobbyserver/lobby"
-	"lobbyserver/config"
 	"database/sql"
 	"log"
 )
@@ -49,11 +48,10 @@ func (*mySQLUtil) LoadUserInfo(userID uint64,) *lobby.UserInfo{
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)
 
-	conn, err := startMySQL(config.DbIP, config.DbPort, config.DbUser, config.DbPassword, config.DbName)
+	conn, err := startMySQL()
 	if err != nil {
 		log.Println("StartMssql error ", err)
 	}
 	dbConn = conn
 
-	// initDatabase()
 }

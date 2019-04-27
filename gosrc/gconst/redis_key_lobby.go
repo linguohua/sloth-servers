@@ -40,4 +40,13 @@ const (
 	// LobbyUserCreatRoomLockPrefix 用redis来实现创建房间锁，
 	// 若这个用户已经在创建房间，那么这个用户就不能继续创建房间,只有等前一个创建完才可以继续创建
 	LobbyUserCreatRoomLockPrefix = "l:lockcr:"
+
+	// LobbyChatMessagePrefix 用户聊天消息
+	LobbyChatMessagePrefix = "l:chat:"
+
+	// LobbyChatMessageID 用来生成消息ID
+	LobbyChatMessageID = "l:chat:id"
+
+	// LobbyDatabaseConfig 数据库配置
+	LobbyDatabaseConfig = "l:db:cfg"
 )

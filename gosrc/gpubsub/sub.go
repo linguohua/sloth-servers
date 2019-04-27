@@ -107,7 +107,7 @@ func loadMsgsAndDispatch() {
 		}
 
 		if valuesCount > 0 {
-			_, err = conn.Do("LTRIM", myMsgListID, 0, valuesCount-1)
+			_, err = conn.Do("LTRIM", myMsgListID, valuesCount, -1)
 			if err != nil {
 				log.Panic("loadMsgsAndDispatch, LTRIM error:", err)
 			}

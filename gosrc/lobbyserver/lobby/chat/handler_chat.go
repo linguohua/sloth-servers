@@ -5,11 +5,37 @@ import (
 	gconst "gconst"
 	"lobbyserver/lobby"
 	log "github.com/sirupsen/logrus"
+	uuid "github.com/satori/go.uuid"
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 	"net/http"
 	"io/ioutil"
+	"fmt"
 )
+
+func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
+	// 获取redis链接，并退出函数时释放
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	uid, _ := uuid.NewV4()
+	msgID := fmt.Sprintf("%v",uid)
+
+	buf, err := proto.Marshal(chatMsg)
+	if err != nil {
+		return
+	}
+
+	conn.Send("MULTI")
+	for _, userID := range userIds {
+		conn.Send("HSET", gconst.LobbyChatMessagePrefix+userID, msgID, buf)
+	}
+
+	_, err = conn.Do("EXEC")
+	if err != nil {
+		log.Println("saveChatMsg err: ", err)
+	}
+}
 
 func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 	// 从消息体中取出文本聊天消息
@@ -94,25 +120,26 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		userIDList := readUserIDListInRoom(userID)
 		chatMsg.From = &userID
 
-		var selfSent = false
+		var isIncludeSelf = false
+		for _, uID := range userIDList {
+			if uID == userID {
+				isIncludeSelf = true
+				break
+			}
+		}
+
+		if !isIncludeSelf {
+			userIDList = append(userIDList, userID)
+		}
+
 		for _, uID := range userIDList {
 			ok := sessionMgr.SendProtoMsgTo(uID, chatMsg, int32(lobby.MessageCode_OPChat))
 			if !ok {
 				log.Printf("handlerChat, send msg to %s failed, target user not exists or is offline", uID)
 			}
-
-			if uID == userID {
-				selfSent = true
-			}
 		}
 
-		// 如果碰巧列表中没有自己，那就给自己发一份
-		if !selfSent {
-			ok := sessionMgr.SendProtoMsgTo(userID, chatMsg, int32(lobby.MessageCode_OPChat))
-			if !ok {
-				log.Printf("handlerChat, send msg to %s failed, target user not exists or is offline", userID)
-			}
-		}
+		saveChatMsg(chatMsg, userIDList)
 		break
 	default:
 		log.Println("not support chat scope:", scope)

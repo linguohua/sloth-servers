@@ -186,6 +186,7 @@ message MsgChat {
 	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
 	required int32 dataType = 4; // 聊天的数据类型
 	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
+	optional int id = 6; // 消息id
 }
 
 // 房间列表，主要用于把用户的房间列表保存到redis上
