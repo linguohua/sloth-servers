@@ -51,7 +51,7 @@ func updateMoney(diamond uint32, userID string) {
 	var updateUserMoney = &MsgUpdateUserMoney{}
 	var userDiamond = diamond
 	updateUserMoney.Diamond = &userDiamond
-	SessionMgr().SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateUserMoney))
+	SessionMgr().SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateDiamond))
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {

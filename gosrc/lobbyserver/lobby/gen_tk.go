@@ -30,7 +30,7 @@ func timeNow() int {
 
 // VerifyToken verify token
 func VerifyToken(r *http.Request) (string, bool) {
-	var tk = r.URL.Query().Get("token")
+	var tk = r.URL.Query().Get("tk")
 	if tk == "" {
 		return "", false
 	}

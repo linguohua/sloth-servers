@@ -16,22 +16,8 @@
 
         "account":"linux",
         "password":"MMzz----88~bbabcdefgqqb",
-        "linuxWebPort":":8088",
+        "linuxWebPort":":8088"
         // 计划执行数据同步的时间
-        "syncdata_time":1,
-        "room_pay_cfg_file":"",
-        "sub_game_ids":{
-                "1": 10043, // 大丰麻将
-		"6": 10044, // 宁安麻将
-		"7": 10046, // 新疆麻将
-		"8": 10045, // 关张
-		"9": 10047, // 七王
-		"11": 10052,// 斗地主
-		"12": 10053,// 血流
-                "13": 10013, // 兰州
-                "14": 10055, // 兰州
-                "15": 10056 // 兰州
-        }
-
-
+        // "syncdata_time":1,
+        // "room_pay_cfg_file":""
 }

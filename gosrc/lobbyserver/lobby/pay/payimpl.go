@@ -102,7 +102,6 @@ func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType 
 // 判断用户是否支付过
 // 用户对于同个房间只能有一个正在处理的订单
 func isUserHavePay(roomID string, userID string) bool {
-	log.Printf("isUserHavePay, roomID:%s, userID:%s", roomID, userID)
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
@@ -134,7 +133,13 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 	}
 
 	roomConfig := lobby.ParseRoomConfigFromString(roomConfigString)
-
+	pay, err := getPayDiamondNum(roomConfig.PayType, roomConfig.PlayerNumAcquired, roomConfig.HandNum, roomConfig.RoomType)
+	if err != nil {
+		log.Println("doPayAndSave2RedisWith, getPayDiamondNum error:", err)
+		remainDiamond = 0
+		errCode = 0
+		return
+	}
 
 	// 扣钻类型
 	var modDiamondType = ownerModDiamondCreateRoom
@@ -144,6 +149,7 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 		modDiamondType = masterModDiamondCreateRoomForGroup
 	}
 	log.Println("payAndSave2RedisWith modDiamondType:", modDiamondType)
+
 
 	var result int32
 	// money, err := webdata.ModifyDiamond(userID, modDiamondType, int64(-pay), "创建房间扣钱", subGameID, gameNo, groupID)
@@ -158,10 +164,10 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 	// 	result = int32(gconst.SSMsgError_ErrSuccess)
 	// }
 
-	// savePay2Redis(roomConfig, roomID, userID, pay, int(money), result)
-
 	remainDiamond = int(0)
 	errCode = result
+
+	savePay2Redis(roomConfig, roomID, userID, pay, int(remainDiamond), result)
 
 	return
 }

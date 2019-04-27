@@ -4,83 +4,63 @@ package lobby;
 
 //编译：
 //cd src/accessory
-//protoc --proto_path=./proto  --go_out=./src/accessory ./proto/accessory.proto
-
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby ./proto/accessory.proto
 
 enum MsgError {
     ErrSuccess = 0; // 成功
     ErrDecode = 1;  // 解码错误
     ErrEncode = 2;  // 编码错误
-	ErrRoomExist = 3; // 房间已经存在，游戏服务返回
+    ErrRoomExist = 3; // 房间已经存在，游戏服务返回
     ErrNoRoomConfig = 4;  // 没有房间配置，游戏服务器返回
     ErrServerIsFull = 5;  // 解码房间配置错误，游戏服务器返回
-	ErrDecodeRoomConfig = 6; // 解码房间配置错误
-	ErrRoomNotExist = 7;     // 服务器已经满
-	ErrDatabase = 8;     // 数据库错误
-	ErrRequestGameServerTimeOut = 9;  // 请求游戏服务器错误
-	ErrWaitGameServerSN = 10;     // 等待游戏服务器的序列出错
-	ErrRoomIDIsEmpty = 11;     // 房间ID为空
-	ErrNotRoomCreater = 12;  // 不是房间创建者
-	ErrGameIsPlaying = 13;  // 正在游戏中
-	ErrTokenIsEmpty = 14;     // token为空
-	ErrUserIdIsEmpty = 15;     // userID为空
-	ErrRoomNumberIsEmpty = 16;     // 房间6位数ID为空
-	ErrRoomNumberNotExist = 17;     // 房间6位数字ID不存在
-	ErrGameServerIDNotExist = 18;     // 游戏服务器ID不存在
-	ErrRoomCountIsOutOfLimit = 19;     // 用户房间数量已经满
-	ErrRequestInvalidParam = 20;     // 请求的参数无效
-	ErrTakeoffDiamondFailedNotEnough = 21;     // 剩余钻石不足
-	ErrTakeoffDiamondFailedIO = 22;     // IO数据库出错
-	ErrTakeoffDiamondFailedRepeat = 23;     // 已经扣取钻石
-	ErrGameServerUnsupportRoomType = 24;  // 游戏服务器不支持房间类型
-	ErrGameServerRoomExist = 25;		  // 游戏服务器已经存在这个房间
-    ErrGameServerNoRoomConfig = 26;		  // 游戏服务器没有房间配置
-    ErrGameServerDecodeRoomConfig = 27;	  // 游戏服务器解码房间配置错误
-    ErrGameServerRoomNotExist = 28;		  // 游戏服务器不存在这个房间
-	ErrUserInOtherRoom = 29; 		// 用户正在别的房间
-	ErrRoomIsFull = 30; 		// 房间里用户已满
-	ErrUserInBlacklist = 31;  // 用户在黑名单中
-	ErrUserCanNotCreateCLubRoom = 32;  // 用户不能创建俱乐部房间
-	ErrUserCanNotJoinCLubRoom = 33;   // 仅俱乐部使用的房间，请加入xxx(俱乐部ID)
-	ErrClubIDIsEmtpy = 34;   // 选择基金支付，必须是俱乐部成员
-	ErrRoomPriceCfgNotExist = 35;   // 服务器房间价格配置不存在
-	ErrUserCreateRoomLock = 36;   // 防止用户不断的点击创建房间
-	ErrGenerateRoomNumber= 37;    // 生成房间号失败
-	ErrGroupPayMasterDiamondNotEnough= 38;    // 生成房间号失败
-	ErrNotSupportGroupMasterPay = 39;    // 不支持群主支付
-	ErrOutOfMaxClubCreateRoomNum = 40;    // 超过了茶馆可以创建房最大数量
-	ErrOutOfMaxClubMemberCreateRoomNum = 41;    // 超过了茶馆成员可以创建房最大数量
+    ErrDecodeRoomConfig = 6; // 解码房间配置错误
+    ErrRoomNotExist = 7;     // 服务器已经满
+    ErrDatabase = 8;     // 数据库错误
+    ErrRequestGameServerTimeOut = 9;  // 请求游戏服务器错误
+    ErrWaitGameServerSN = 10;     // 等待游戏服务器的序列出错
+    ErrRoomIDIsEmpty = 11;     // 房间ID为空
+    ErrNotRoomCreater = 12;  // 不是房间创建者
+    ErrGameIsPlaying = 13;  // 正在游戏中
+    ErrTokenIsEmpty = 14;     // token为空
+    ErrUserIdIsEmpty = 15;     // userID为空
+    ErrRoomNumberIsEmpty = 16;     // 房间6位数ID为空
+    ErrRoomNumberNotExist = 17;     // 房间6位数字ID不存在
+    ErrGameServerIDNotExist = 18;     // 游戏服务器ID不存在
+    ErrRoomCountIsOutOfLimit = 19;     // 用户房间数量已经满
+    ErrRequestInvalidParam = 20;     // 请求的参数无效
+    ErrTakeoffDiamondFailedNotEnough = 21;     // 剩余钻石不足
+    ErrTakeoffDiamondFailedIO = 22;     // IO数据库出错
+    ErrTakeoffDiamondFailedRepeat = 23;     // 已经扣取钻石
+    ErrGameServerUnsupportRoomType = 24;  // 游戏服务器不支持房间类型
+    ErrGameServerRoomExist = 25;          // 游戏服务器已经存在这个房间
+    ErrGameServerNoRoomConfig = 26;          // 游戏服务器没有房间配置
+    ErrGameServerDecodeRoomConfig = 27;      // 游戏服务器解码房间配置错误
+    ErrGameServerRoomNotExist = 28;          // 游戏服务器不存在这个房间
+    ErrUserInOtherRoom = 29;         // 用户正在别的房间
+    ErrRoomIsFull = 30;         // 房间里用户已满
+    ErrUserInBlacklist = 31;  // 用户在黑名单中
+    ErrUserCanNotCreateCLubRoom = 32;  // 用户不能创建俱乐部房间
+    ErrUserCanNotJoinCLubRoom = 33;   // 仅俱乐部使用的房间，请加入xxx(俱乐部ID)
+    ErrClubIDIsEmtpy = 34;   // 选择基金支付，必须是俱乐部成员
+    ErrRoomPriceCfgNotExist = 35;   // 服务器房间价格配置不存在
+    ErrUserCreateRoomLock = 36;   // 防止用户不断的点击创建房间
+    ErrGenerateRoomNumber= 37;    // 生成房间号失败
+    ErrGroupPayMasterDiamondNotEnough= 38;    // 生成房间号失败
+    ErrNotSupportGroupMasterPay = 39;    // 不支持群主支付
+    ErrOutOfMaxClubCreateRoomNum = 40;    // 超过了茶馆可以创建房最大数量
+    ErrOutOfMaxClubMemberCreateRoomNum = 41;    // 超过了茶馆成员可以创建房最大数量
 }
 
-
 enum MessageCode{
-    OPInvalid = 0; // 无效消息码
-    OPCreateRoom = 1; // 创建房间
-	OPDeleteRoom = 2; // 删除房间
-	OPChat = 3; // 聊天
-	OPGetRooms = 4;  // 获取房间列表
-	OPLoginReply = 5;  // 登录返回
-	OPRequestRoomInfo = 6; // 进入房间请求
-	OPLoadRooms = 7; // 拉取房间列表
-	OPUpdateUserInfo = 8; // 客户端更新用户信息到服务器
-	OPUpdateRoomState = 9; // 服务器向客户端更新房间状态信息
-	OPUpdateRoomList = 10; // 服务器向客户端更新房间列表
-	OPVoiceData = 11; // 语音消息
-	OPRequestUserScoreInfo = 12; // 服务器向客户端更新得分局数信息
-	OPUpdateUserMoney= 13; // 更新用户的钱
-	OPBroadcast = 14; // 广播给所有的客户端
-	OPSendUserInfo = 15; // 登陆后下发个人信息
-	OPUnicast = 16; // 发送消息给指定用户
-	OPUpdateMail = 17; //通知客户端有新邮件
-	OPLoginGifts = 18; //登录礼包
-	OPUpdateClubFun = 19; // 刷新俱乐部基金,内容是json
-	OPUpdateRoomPriceCfg = 20; // 刷新房间价格
-	OPNotifyUserRoomIsFull = 21; //通知用户，房间已满
+    OPInvalid = 0;  		// 无效消息码
+	OPConnectReply = 1; 	// 连接回复
+	OPChat = 2; 			// 聊天
+	OPUpdateDiamond = 3;    // 更新钻石
 }
 
 // 消息包装，把其他消息体格式化为byte array，
 // 加上消息码构成一个AccessoryMessage，便于解析
-message AccessoryMessage {
+message LobbyMessage {
     required int32 Ops = 1;
     optional bytes Data = 2;
 }
@@ -206,6 +186,7 @@ message MsgChat {
 	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
 	required int32 dataType = 4; // 聊天的数据类型
 	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
+	optional int id = 6; // 消息id
 }
 
 // 房间列表，主要用于把用户的房间列表保存到redis上
@@ -236,16 +217,6 @@ message MsgUpdateUserInfo {
 message RoomCost {
 	required uint32 handNum = 1; // 局数
 	required uint32 pay = 2; // 局数对应所需要的钻石
-}
-
-message MsgLoginReply {
-	required int32 result = 1; // 见LoginState
-	optional string token = 2; // 用userID生成的token
-	repeated RoomInfo roomInfos = 3; // 房间列表
-	optional string retMsg = 4; // result对应的字符串
-	optional RoomInfo lastRoomInfo = 5; // 玩家最后进入那间房间的信息 ，只有玩家3小时没退出来才有效
-	optional string roomDiscount = 6; // 折扣表
-
 }
 
 message MsgRequestRoomInfo {
@@ -377,4 +348,87 @@ message MsgReplayRoom
 	required string roomNumber = 4; // 房间号，仅用于客户端显示
 	optional string roomConfigID = 8; // 房间配置ID
 	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+}
+
+// 微信用户信息
+message UserInfo
+{
+	required uint64 userID = 1;
+	optional string openID = 2;
+	optional string nickName = 3;
+	optional uint32 sex = 4;
+	optional string province = 5;
+	optional string city = 6;
+	optional string country = 7;
+	optional string headImgUrl = 8;
+	optional string phone = 9;
+}
+
+enum LoginError
+{
+	ErrLoginSuccess = 0; // 成功
+	ErrParamWechatCodeIsEmpty = 1;   // 微信登录，参数微信code为空
+	ErrLoadWechatUserInfoFailed = 2; // 微信登录，拉取微信用户信息失败
+	ErrParamAccountIsEmpty = 3;      // 账号登录，参数手机号为空
+	ErrParamPasswordIsEmpty = 4;     // 账号登录，参数密码为空
+	ErrAccountNotExist = 5;          // 账号登录，手机号不存在
+	ErrAccountNotSetPassword = 6;    // 账号登录，密码没设置
+	ErrPasswordNotMatch = 7;         // 账号登录，密码不匹配
+}
+
+// 微信登录返回结果
+message MsgLoginReply
+{
+	required int32 result = 1; // 微信登录返回结果，参见LoginError
+	optional string token = 2;  // token
+	optional UserInfo userInfo = 3; //用户信息
+}
+
+// 客户端登录信息
+message ClientInfo
+{
+	optional string qMod = 1;
+	optional string modV = 2;
+	optional string csVer = 3;
+	optional string lobbyVer = 4;
+	optional string operatingSystem = 5;
+	optional string operatingSystemFamily = 6;
+	optional string deviceUniqueIdentifier = 7;
+	optional string deviceName = 8;
+	optional string deviceModel = 9;
+	optional string network = 10;
+}
+
+enum RegisterError
+{
+	ErrRegisterSuccess = 0; // 成功
+	ErrAccountIsEmpty = 1;   // 注册,参数账号为空
+	ErrPasswordIsEmpty = 2;    //  注册，密码为空
+	ErrAccountExist = 3; // 注册，账号已经存在
+	ErrWriteDatabaseFailed = 4; // 注册，写数据库失败
+}
+
+// 账号注册返回
+message MsgRegisterReply
+{
+	required int32 result = 1; // 微信登录返回结果，0 表示成功
+	optional string token = 2;  // token
+}
+
+message MsgQuicklyLoginReply
+{
+	required int32 result = 1; // 微信登录返回结果，参见LoginError
+	optional string token = 2;  // token
+	optional string account = 3; // 账号
+	optional UserInfo userInfo = 4; //用户信息
+}
+
+enum WebsocketConnectError{
+	ConnectSuccess = 0;   // 成功
+	ParseTokenFailed = 1; // 解析token失败
+}
+
+message MsgWebsocketConnectReply
+{
+	required int32 result = 1; // 微信登录返回结果，参见WebsocketConnectError
 }
