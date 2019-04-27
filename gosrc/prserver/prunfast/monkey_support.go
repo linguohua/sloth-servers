@@ -2,11 +2,14 @@ package prunfast
 
 // 用于支持monkey账户修改、查询服务器
 import (
+	"bytes"
+	"compress/gzip"
 	fmt "fmt"
 	"gconst"
 	"net/http"
 	"pokerface"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -85,6 +88,54 @@ func onExportRoomReplayRecordsSIDs(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(404)
 	w.Write([]byte("onExportRoomReplayRecordsSIDs has removed"))
+}
+
+func onExportRoomReplayRecord(w http.ResponseWriter, r *http.Request) {
+	recordID := r.URL.Query().Get("recordID")
+
+	conn := pool.Get()
+	defer conn.Close()
+	buf := loadMJRecord(conn, recordID)
+
+	if buf == nil {
+		w.WriteHeader(404)
+		w.Write([]byte("no mj record found for record:" + recordID))
+		return
+	}
+
+	writeHTTPBodyWithGzip(w, r, buf)
+}
+
+func writeHTTPBodyWithGzip(w http.ResponseWriter, r *http.Request, bytesArray []byte) {
+	gzipSupport := false
+
+	acceptContentEncodeStr := r.Header.Get("Accept-Encoding")
+	if strings.Contains(acceptContentEncodeStr, "gzip") {
+		log.Println("client support gzip")
+		gzipSupport = true
+	}
+
+	if gzipSupport {
+		var buf bytes.Buffer
+		g := gzip.NewWriter(&buf)
+		if _, err := g.Write(bytesArray); err != nil {
+			log.Println("writeHTTPBodyWithGzip, write gzip err:", err)
+			return
+		}
+		if err := g.Close(); err != nil {
+			log.Println("writeHTTPBodyWithGzip, close gzip err:", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Add("Vary", "Accept-Encoding")
+		bytesCompressed := buf.Bytes()
+		log.Printf("COMPRESS, before:%d, after:%d\n", len(bytesArray), len(bytesCompressed))
+		w.Write(bytesCompressed)
+	} else {
+		w.Write(bytesArray)
+	}
 }
 
 func exportRoomOperationsByRecordSID(w http.ResponseWriter, r *http.Request, recordSID string) {
@@ -378,4 +429,5 @@ func init() {
 	monkeySupportHandlers["/clearRoomException"] = onClearRoomExceptionCount
 	monkeySupportHandlers["/ulimitRound"] = onULimitRound
 	monkeySupportHandlers["/exportRoomSIDs"] = onExportRoomReplayRecordsSIDs
+	monkeySupportHandlers["/exportRR"] = onExportRoomReplayRecord
 }

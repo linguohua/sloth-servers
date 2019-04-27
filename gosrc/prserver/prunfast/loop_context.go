@@ -280,6 +280,7 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 		log.Println(err)
 		return
 	}
+	log.Println("dump2Redis, new record id:", recordID)
 
 	lc.updateReplayRoom(conn, s.room.ID, recordID)
 
@@ -324,19 +325,11 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 			log.Println(err)
 		}
 	}
-
-	// 如果房间是俱乐部房间，则需要把回播记录写到俱乐部的回播列表中
-	// if lc.s.room.clubID != "" {
-	// 	lc.appendCurrentReplayRoom2Club(conn)
-	// }
 }
 
 func (lc *LoopContext) snapshootReplayRecordSummary(room *Room) {
-	// debug.PrintStack()
 	// 附加本手牌结果概要
 	var replayRecordSummary = &pokerface.MsgReplayRecordSummary{}
-	// replayRecordSummary.RecordUUID = &recordID
-	// replayRecordSummary.ShareAbleID = &shareAbleID
 	replayRecordSummary.StartTime = lc.recorder.StartTime
 	var endTime32 = uint32(unixTimeInMinutes())
 	replayRecordSummary.EndTime = &endTime32
@@ -461,56 +454,6 @@ func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID
 	}
 	conn.Do("EXEC")
 }
-
-/*
-func (lc *LoopContext) appendCurrentReplayRoom2Club(conn redis.Conn) {
-	clubID := lc.s.room.clubID
-	roomID := lc.s.room.ID
-
-	conn.Send("MULTI")
-	conn.Send("SISMEMBER", gconst.ClubReplayRoomsSetPrefix+clubID, roomID)
-	conn.Send("LLEN", gconst.ClubReplayRoomsListPrefix+clubID)
-	valus, err := redis.Values(conn.Do("EXEC"))
-
-	if err != nil {
-		log.Println("appendCurrentReplayRoom2Club, redis err:", err)
-		return
-	}
-
-	isMember, err := redis.Int(valus[0], nil)
-	if err != nil && err != redis.ErrNil {
-		log.Println("appendCurrentReplayRoom2Club, isMember redis err:", err)
-		return
-	}
-
-	if isMember == 0 {
-		// 使用LUA脚本来修改俱乐部回播记录，以防止俱乐部被删除后，还会添加记录
-		luaScriptClubReplayRoom.Do(conn, clubID, roomID)
-	}
-
-	llen, err := redis.Int(valus[1], nil)
-	if err != nil && err != redis.ErrNil {
-		log.Println("appendCurrentReplayRoom2Club, isMember redis err:", err)
-		return
-	}
-
-	// 尽量保持俱乐部的回播房间列表长度不要过长
-	if llen > gconst.MaxClubReplayRoomsNum {
-		// 过长则裁剪列表和解除引用
-		removedRoomID, err := redis.String(conn.Do("RPOP", gconst.ClubReplayRoomsListPrefix+clubID))
-		if err == nil {
-			conn.Send("MULTI")
-			conn.Send("SREM", gconst.ClubReplayRoomsSetPrefix+clubID, removedRoomID)
-			conn.Send("SREM", gconst.GameServerReplayRoomsReferenceSetPrefix+removedRoomID, clubID)
-			conn.Do("EXEC")
-
-			lc.unbindMJReplayRoomIfUseless(conn, removedRoomID, clubID)
-		} else {
-			log.Println("appendCurrentReplayRoom2Club, RPOP redis err:", err)
-		}
-	}
-}
-*/
 
 // strArray2Comma 字符串数据转为逗号分隔字符串
 func strArray2Comma(ss []string) string {
