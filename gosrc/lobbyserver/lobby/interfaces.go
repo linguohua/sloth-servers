@@ -2,7 +2,6 @@ package lobby
 
 import (
 	"math/rand"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -16,8 +15,13 @@ var (
 
 	payUtil IPayUtil
 
-	// AccUserIDHTTPHandlers trust handlers
+	mySQLUtil IMySQLUtil
+
+	// AccUserIDHTTPHandlers untrust handlers
 	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
+
+	// AccRawHTTPHandlers trust handler
+	AccRawHTTPHandlers = make(map[string]accRawHTTPHandler)
 
 	// MainRouter main-router
 	MainRouter *mux.Router
@@ -68,6 +72,20 @@ func SetRoomUtil(obj IRoomUtil) {
 	roomUtil = obj
 }
 
+// MySQLUtil mysql utility
+func MySQLUtil() IMySQLUtil {
+	if mySQLUtil == nil {
+		log.Panic("mySQLUtil is null, maybe not mount room package yet")
+	}
+
+	return mySQLUtil
+}
+
+// SetMySQLUtil set sql utility
+func SetMySQLUtil(obj IMySQLUtil) {
+	mySQLUtil = obj;
+}
+
 // ISessionMgr websocket mgr
 type ISessionMgr interface {
 	Broacast(msg []byte)
@@ -92,4 +110,16 @@ type IPayUtil interface {
 	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) (remainDiamond int, err error)
 
 	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
+}
+
+// IMySQLUtil sql utility
+type IMySQLUtil interface {
+	// StartMySQL(ip string, port int, user string, password string, gameDB string)
+	UpdateWxUserInfo(UserInfo *UserInfo, clientInfo *ClientInfo) error
+	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
+	GetUserIDBy(account string)uint64
+	GetPasswordBy(account string) string
+	GetOrGenerateUserID(account string) (userID uint64, isNew bool)
+	RegisterAccount(userID uint64, account string,passwd string, phone string, clientInfo *ClientInfo) error
+	LoadUserInfo(userID uint64,) *UserInfo
 }

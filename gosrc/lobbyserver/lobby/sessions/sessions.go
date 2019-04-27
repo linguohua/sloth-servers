@@ -1,7 +1,6 @@
 package sessions
 
 import (
-	"lobbyserver/config"
 	"lobbyserver/lobby"
 	"net/http"
 	"time"
@@ -9,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -22,6 +22,31 @@ var (
 
 	userMgr *UserMgr
 )
+
+func replyConnectMsg(ws *websocket.Conn, errCode int32) {
+	reply := &lobby.MsgWebsocketConnectReply{}
+	reply.Result = &errCode
+
+	ops := int32(lobby.MessageCode_OPConnectReply)
+
+	lobbyMessage := &lobby.LobbyMessage{}
+	lobbyMessage.Ops = &ops
+
+	bytes, err := proto.Marshal(reply)
+	if err != nil {
+		log.Panic("replyConnectMsg, marshal msg failed")
+		return
+	}
+	lobbyMessage.Data = bytes
+
+	bytes, err = proto.Marshal(lobbyMessage)
+	if err != nil {
+		log.Panic("sendMsg, marshal msg failed")
+		return
+	}
+
+	ws.WriteMessage(websocket.BinaryMessage, bytes)
+}
 
 func waitWebsocketMessage(ws *websocket.Conn, user *User, r *http.Request) {
 	log.Printf("wait ws msg, userId: %s, peer: %s", user.userID(), r.RemoteAddr)
@@ -61,9 +86,11 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 	userID, ok := lobby.VerifyToken(r)
 	if !ok {
 		log.Println("verifyUser failed")
-		lobby.ReplyLoginError(ws, int32(lobby.LoginState_ParseTokenError))
+		replyConnectMsg(ws, int32(lobby.WebsocketConnectError_ParseTokenFailed))
 		return
 	}
+
+	replyConnectMsg(ws, int32(lobby.WebsocketConnectError_ConnectSuccess))
 
 	var user = newUser(ws, userID)
 
@@ -75,7 +102,7 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 
 	userMgr.addUser(user)
 
-	lobby.LoginReply(ws, userID)
+	// lobby.LoginReply(ws, userID)
 
 	defer func() {
 		userMgr.removeUser(user)
@@ -112,6 +139,4 @@ func InitWith() {
 
 	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
 	sessions.HandleFunc("/", acceptWebsocket)
-
-	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
 }

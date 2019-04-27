@@ -25,12 +25,6 @@ var (
 	SensitiveWordFilePath = "./sensitiveWord.txt"
 	GameServerURL         = ""
 
-	MonkeyAccount  = ""
-	MonkeyPassword = ""
-
-	LinuxVuePath = ""
-	LinuxWebPort = ""
-
 	WebDataCfgFile = "webdata.json"
 	SyncdataTime   = 1
 
@@ -39,28 +33,18 @@ var (
 	PayURL        = "http://pay.wechat.qianz.com/release/WebPage/OAuthPay/MoreH5PayOrderNew"
 	SignKey       = "EE7a1c5bc548e542GBFc340c531657F4"
 	PayAPPID      = "10009"
-	MailServer    = "http://127.0.0.1:3005"
 
 	RoomPayCfgFile = ""
 
-	// 游戏大厅ID
-	LobbyID = 10088
-
 	DbIP       = "localhost"
-	DbPort     = 1433
-	DbUser     = "abc"
-	DbPassword = "ab"
-	DbName     = "gamedb"
+	DbPort     = 3306
+	DbUser     = "root"
+	DbPassword = "123456"
+	DbName     = "game"
 
 	EtcdServer = ""
 
-	SubGameIDs = map[string]int{
-		"1": 10043, // 大丰麻将
-		"6": 10044, // 宁安麻将
-		"7": 10046, // 新疆麻将
-		"8": 10045, // 关张
-		"9": 10047, // 七王
-	}
+	FileServerPath = "./fileServer"
 )
 
 var (
@@ -107,13 +91,7 @@ func ParseConfigFile(filepath string) bool {
 		ServerID              string `json:"guid"`
 		GameServerURL         string `json:"game_server_url"`
 		SensitiveWordFilePath string `json:"sensitive_word_file_path"`
-
-		LinuxVuePath   string `json:"linux_vue_path"`
-		MonkeyAccount  string `json:"account"`
-		MonkeyPassword string `json:"password"`
-
-		LinuxWebPort   string `json:"linuxWebPort"`
-		WindowsWebPort string `json:"windowsWebPort"`
+		FileServerPath    string `json:"file_server_path"`
 
 		WebDataURL   string `json:"web_data_url"`
 		SyncdataTime int    `json:"syncdata_time"`
@@ -135,8 +113,6 @@ func ParseConfigFile(filepath string) bool {
 		DbPassword string `json:"dbPassword"`
 		DbUser     string `json:"dbUser"`
 		DbName     string `json:"dbName"`
-
-		SubGameIDs map[string]int `json:"sub_game_ids"`
 	}
 
 	loadedCfgFilePath = filepath
@@ -185,23 +161,6 @@ func ParseConfigFile(filepath string) bool {
 	}
 	/*----------------------------------webserver----------------------------*/
 
-	if params.LinuxVuePath != "" {
-		LinuxVuePath = params.LinuxVuePath
-	}
-
-	if params.MonkeyAccount != "" {
-		MonkeyAccount = params.MonkeyAccount
-	}
-
-	if params.MonkeyPassword != "" {
-		MonkeyPassword = params.MonkeyPassword
-	}
-
-	if params.LinuxWebPort != "" {
-
-		LinuxWebPort = params.LinuxWebPort
-	}
-
 	if params.WebDataURL != "" {
 		WebDataCfgFile = params.WebDataURL
 	}
@@ -234,9 +193,9 @@ func ParseConfigFile(filepath string) bool {
 		RoomPayCfgFile = params.RoomPayCfgFile
 	}
 
-	if params.LobbyID != 0 {
-		LobbyID = params.LobbyID
-	}
+	// if params.LobbyID != 0 {
+	// 	LobbyID = params.LobbyID
+	// }
 
 	if params.EtcdServer != "" {
 		EtcdServer = params.EtcdServer
@@ -262,6 +221,10 @@ func ParseConfigFile(filepath string) bool {
 		DbPort = params.DbPort
 	}
 
+	if params.FileServerPath != "" {
+		FileServerPath = params.FileServerPath
+	}
+
 	if ServerID == "" {
 		log.Println("Server id 'guid' must not be empty!")
 		return false
@@ -277,12 +240,6 @@ func ParseConfigFile(filepath string) bool {
 		log.Println("redis server id  must not be empty!")
 		return false
 	}
-
-	if params.SubGameIDs != nil && len(params.SubGameIDs) > 0 {
-		SubGameIDs = params.SubGameIDs
-	}
-
-	log.Println("SubGameIDs", SubGameIDs)
 
 	return true
 }
