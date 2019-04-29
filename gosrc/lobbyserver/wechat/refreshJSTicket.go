@@ -2,7 +2,7 @@ package wechat
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // LoadJSSDKTicket 从微信服务器拉取js ticket

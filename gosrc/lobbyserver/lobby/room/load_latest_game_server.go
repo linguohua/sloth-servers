@@ -5,7 +5,7 @@ import (
 	"gconst"
 	"github.com/garyburd/redigo/redis"
 	"lobbyserver/lobby"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sort"
 )
 

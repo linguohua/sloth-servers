@@ -7,7 +7,7 @@ import (
 	// "crypto/md5"
 	"github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func replyQuicklyLogin(w http.ResponseWriter, loginReply *lobby.MsgQuicklyLoginReply) {

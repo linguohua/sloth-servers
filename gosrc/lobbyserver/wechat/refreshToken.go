@@ -2,7 +2,7 @@ package wechat
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // RefreshToken 从微信服务器刷新token
