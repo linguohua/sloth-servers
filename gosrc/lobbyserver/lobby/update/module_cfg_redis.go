@@ -63,6 +63,7 @@ func loadModuleCfgFromRedis(conn redis.Conn, name string) {
 }
 
 func initModulesMgr() {
+	log.Trace("Update initModulesMgr")
 	// 初始化模块管理器
 	mmgr = &ModulesMgr{}
 	mmgr.moduels = make(map[string]*Module)
@@ -70,12 +71,13 @@ func initModulesMgr() {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	moduleNames, err := redis.Strings(conn.Do("members", gconst.LobbyUpgradeModuleSet))
+	moduleNames, err := redis.Strings(conn.Do("smembers", gconst.LobbyUpgradeModuleSet))
 	if err != nil {
 		log.Error("initModulesMgr, redis error:", err)
 		return
 	}
 
+	log.Trace("initModulesMgr, now begin to load module, total:", len(moduleNames))
 	for _, mName := range moduleNames {
 		loadModuleCfgFromRedis(conn, mName)
 	}

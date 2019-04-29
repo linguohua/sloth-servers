@@ -84,6 +84,7 @@ func conditionVariableCfgIsInt(name string) bool {
 
 // initConditionVariableCfg 初始化条件变量配置
 func initConditionVariableCfg() {
+	log.Trace("update initConditionVariableCfg")
 	c := &ConditionVariableCfg{}
 	err := json.Unmarshal([]byte(conditonVarJSON), c)
 	if err != nil {
