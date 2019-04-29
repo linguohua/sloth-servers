@@ -49,8 +49,7 @@ func InitWith() {
 
 	conn, err := startMySQL()
 	if err != nil {
-		log.Println("StartMssql error ", err)
+		log.Panic("StartMssql error ", err)
 	}
 	dbConn = conn
-
 }
