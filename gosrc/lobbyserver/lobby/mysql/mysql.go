@@ -3,7 +3,8 @@ package mysql
 import (
 	"database/sql"
 	"lobbyserver/lobby"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -49,7 +50,8 @@ func InitWith() {
 
 	conn, err := startMySQL()
 	if err != nil {
-		log.Panic("StartMssql error ", err)
+		// log.Panic("StartMssql error ", err)
+		log.Warn("StartMssql error ", err)
 	}
 	dbConn = conn
 }
