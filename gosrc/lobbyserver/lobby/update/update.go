@@ -10,4 +10,6 @@ func InitWith() {
 	lobby.AccRawHTTPHandlers["/upload"] = handlerUpload
 
 	initConditionVariableCfg()
+
+	initModulesMgr()
 }

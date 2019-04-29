@@ -22,7 +22,7 @@ var (
 
 // ModulesMgr 模块管理
 type ModulesMgr struct {
-	moduels map[string]Module
+	moduels map[string]*Module
 }
 
 // Module 模块
@@ -51,7 +51,7 @@ func (mm *ModulesMgr) findModuleCfg(ctx *findContext) *ModuleCfg {
 		}
 
 		// 比较csharp版本
-		if mcfg.CSVersionInteger > csVInt {
+		if mcfg.csVersionInteger > csVInt {
 			// 更新配置要求的CSHARP模块版本较高，因此不适用
 			continue
 		}
@@ -60,7 +60,7 @@ func (mm *ModulesMgr) findModuleCfg(ctx *findContext) *ModuleCfg {
 		if qMod != "lobby" {
 			// 只要非大厅版本，才检查依赖的大厅版本
 			lobbyInt := ctx.getInt("lobbyVer")
-			if mcfg.LobbyVersionInteger > lobbyInt {
+			if mcfg.lobbyVersionInteger > lobbyInt {
 				// 更新配置要求的大厅模块版本较高，因此不适用
 				continue
 			}
@@ -99,7 +99,7 @@ func (mm *ModulesMgr) getDefaultCfg(ctx *findContext) (*ModuleCfg, int) {
 	}
 
 	// 比较csharp版本
-	if defaultCfg.CSVersionInteger > csVInt {
+	if defaultCfg.csVersionInteger > csVInt {
 		// 更新配置要求的CSHARP模块版本较高，因此不适用
 		return nil, queryErrorNeedUpgradeCS
 	}
@@ -108,7 +108,7 @@ func (mm *ModulesMgr) getDefaultCfg(ctx *findContext) (*ModuleCfg, int) {
 	if qMod != "lobby" {
 		// 只要非大厅版本，才检查依赖的大厅版本
 		lobbyInt := ctx.getInt("lobbyVer")
-		if defaultCfg.LobbyVersionInteger > lobbyInt {
+		if defaultCfg.lobbyVersionInteger > lobbyInt {
 			// 更新配置要求的大厅模块版本较高，因此不适用
 			return nil, queryErrorNeedUpgradeLobby
 		}

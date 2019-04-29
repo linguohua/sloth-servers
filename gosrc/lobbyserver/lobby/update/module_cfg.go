@@ -1,8 +1,10 @@
 package update
 
 import (
-	"log"
+	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // AssetsBundleCfg 模块内的assets bundle配置
@@ -20,10 +22,10 @@ type ModuleCfg struct {
 	versionInteger int    // 模块的版本号转换为整数方便比较
 
 	CSVersion        string `json:"csVer"` // 模块依赖的CSHARP库版本号
-	CSVersionInteger int    // 模块的版本号转换为整数方便比较
+	csVersionInteger int    // 模块的版本号转换为整数方便比较
 
 	LobbyVersion        string `json:"lobbyVer"` // 模块依赖的大厅库版本号
-	LobbyVersionInteger int    // 模块的版本号转换为整数方便比较
+	lobbyVersionInteger int    // 模块的版本号转换为整数方便比较
 
 	IsDefault bool              `json:"default"` // 是否是默认模块配置，每一个模块只能有一个默认模块配置
 	AbList    []AssetsBundleCfg `json:"abList"`  // 模块的assets bundle列表
@@ -39,6 +41,17 @@ type ConditionCfg struct {
 	Operator     string `json:"operator"` // 操作符，大于，小于，等于，含有
 	Value        string `json:"value"`    // 值
 	valueInt     int    // Value 转换为整数
+}
+
+func (cfg *ConditionCfg) value2Int() {
+	if conditionVariableCfgIsInt(cfg.CondVariable) {
+		var valueInt, err = strconv.Atoi(cfg.Value)
+		if err != nil {
+			log.Error("ConditionCfg.value2Int Atoi error:", err)
+		} else {
+			cfg.valueInt = valueInt
+		}
+	}
 }
 
 // verify 检查单个条件
@@ -103,4 +116,27 @@ func (cfg *ModuleCfg) verifyConditions(ctx *findContext) bool {
 
 	// 所有的OR条件测试都失败
 	return false
+}
+
+// strings2Int 把一些字符串转换为int，方便后续的比较
+func (cfg *ModuleCfg) strings2Int() {
+	// 版本号
+	cfg.versionInteger = version2Int(cfg.Version)
+	// csharp库版本号
+	cfg.csVersionInteger = version2Int(cfg.CSVersion)
+
+	// 如果不是大厅模块，则还需要转换其依赖的大厅模块版本号
+	if cfg.Name != "lobby" {
+		cfg.lobbyVersionInteger = version2Int(cfg.LobbyVersion)
+	}
+
+	// 把条件中的value转换为int，如果可以转换的话
+	for _, c := range cfg.andConditions {
+		c.value2Int()
+	}
+
+	// 把条件中的value转换为int，如果可以转换的话
+	for _, c := range cfg.orConditions {
+		c.value2Int()
+	}
 }
