@@ -43,8 +43,16 @@ type ConditionCfg struct {
 	valueInt     int    // Value 转换为整数
 }
 
+// value2Int 把条件中的Value字符串转换为int，方便后续比较
 func (cfg *ConditionCfg) value2Int() {
-	if conditionVariableCfgIsInt(cfg.CondVariable) {
+	vc, ok := conditionVarCfg.VariableCfgMap[cfg.CondVariable]
+	if !ok {
+		log.Panicln("conditionVariableCfgIsInt, unknown variable:", cfg.CondVariable)
+	}
+
+	if vc.VType == "version" {
+		cfg.valueInt = version2Int(cfg.Value)
+	} else if vc.VType == "int" {
 		var valueInt, err = strconv.Atoi(cfg.Value)
 		if err != nil {
 			log.Error("ConditionCfg.value2Int Atoi error:", err)
