@@ -3,13 +3,13 @@ package main
 import (
 	"lobbyserver/config"
 	"lobbyserver/lobby"
+	"lobbyserver/lobby/auth"
+	"lobbyserver/lobby/chat"
+	"lobbyserver/lobby/mysql"
 	"lobbyserver/lobby/pay"
 	"lobbyserver/lobby/replay"
 	"lobbyserver/lobby/room"
-	"lobbyserver/lobby/mysql"
-	"lobbyserver/lobby/auth"
 	"lobbyserver/lobby/update"
-	"lobbyserver/lobby/chat"
 
 	//"accwebserver"
 	"flag"
@@ -100,7 +100,6 @@ func main() {
 	auth.InitWith()
 	update.InitWith()
 	chat.InitWith()
-
 
 	if config.Daemon == "yes" {
 		waitForSignal()

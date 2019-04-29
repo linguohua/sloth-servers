@@ -1,4 +1,5 @@
 package room
+
 import (
 	"crypto/md5"
 	"fmt"
@@ -218,7 +219,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		log.Printf("handlerCreateRoom, User %s in other room, roomNumber: %s, roomId:%s",
 			userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
 		// reply(w, msgCreateRoomRsp, int32(lobby.MessageCode_OPCreateRoom))
-		replayCreateRoom(w, lastRoomInfo,  int32(lobby.MsgError_ErrUserInOtherRoom), 0)
+		replayCreateRoom(w, lastRoomInfo, int32(lobby.MsgError_ErrUserInOtherRoom), 0)
 		return
 	}
 
@@ -282,7 +283,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
 		log.Println("handlerCreateRoom faile err:", err)
 		// TODO: llwant mysql
 		var currentDiamond = 0 // webdata.QueryDiamond(userID)
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough),  int32(currentDiamond))
+		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough), int32(currentDiamond))
 		return
 	}
 

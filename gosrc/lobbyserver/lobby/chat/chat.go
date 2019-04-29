@@ -1,10 +1,9 @@
 package chat
 
 import (
-	"lobbyserver/lobby"
 	"lobbyserver/config"
+	"lobbyserver/lobby"
 )
-
 
 // InitWith init
 func InitWith() {

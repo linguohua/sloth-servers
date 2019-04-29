@@ -38,5 +38,4 @@ const (
 	masterModDiamondCreateRoomForGroupReturn = 10000039
 
 	diamondNotEnoughMsg = "更新数量不足"
-
 )

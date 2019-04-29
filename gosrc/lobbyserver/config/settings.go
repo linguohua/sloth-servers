@@ -3,9 +3,9 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"gconst"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"gconst"
 	"strconv"
 	"strings"
 	"time"
@@ -91,7 +91,7 @@ func ParseConfigFile(filepath string) bool {
 		ServerID              string `json:"guid"`
 		GameServerURL         string `json:"game_server_url"`
 		SensitiveWordFilePath string `json:"sensitive_word_file_path"`
-		FileServerPath    string `json:"file_server_path"`
+		FileServerPath        string `json:"file_server_path"`
 
 		WebDataURL   string `json:"web_data_url"`
 		SyncdataTime int    `json:"syncdata_time"`

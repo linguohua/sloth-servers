@@ -26,5 +26,5 @@ func getPasswordBy(accout string) string {
 		panic(err.Error())
 	}
 
-	return password;
+	return password
 }

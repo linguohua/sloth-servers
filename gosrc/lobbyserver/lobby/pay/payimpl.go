@@ -150,7 +150,6 @@ func doPayAndSave2RedisWith(roomType int, roomConfigID string, roomID string, us
 	}
 	log.Println("payAndSave2RedisWith modDiamondType:", modDiamondType)
 
-
 	var result int32
 	// money, err := webdata.ModifyDiamond(userID, modDiamondType, int64(-pay), "创建房间扣钱", subGameID, gameNo, groupID)
 	// if err != nil {
@@ -504,4 +503,3 @@ func refund2Users(roomID string, handFinish int, inGameUserIDs []string) []*Orde
 
 	return orderRecords
 }
-

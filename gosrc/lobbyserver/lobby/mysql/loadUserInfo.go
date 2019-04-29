@@ -53,5 +53,5 @@ func loadUserInfo(userID uint64) *lobby.UserInfo {
 	userInfo.Country = &country
 	userInfo.HeadImgUrl = &headImgURL
 
-	return userInfo;
+	return userInfo
 }

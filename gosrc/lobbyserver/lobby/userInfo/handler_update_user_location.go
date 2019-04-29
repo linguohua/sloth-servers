@@ -3,11 +3,11 @@ package userinfo
 import (
 	"fmt"
 	"gconst"
-	"lobbyserver/lobby"
-	"net/http"
-	"io/ioutil"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"lobbyserver/lobby"
+	"net/http"
 )
 
 func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID string) {
@@ -15,7 +15,7 @@ func handleUpdateUserLocation(w http.ResponseWriter, r *http.Request, userID str
 
 	// bytes := accessoryMessage.GetData()
 	body, err := ioutil.ReadAll(r.Body)
-	if (err != nil) {
+	if err != nil {
 		log.Println("handlerCreateRoom error:", err)
 		return
 	}

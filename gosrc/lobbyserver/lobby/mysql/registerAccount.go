@@ -11,21 +11,21 @@ import (
 func registerAccount(userID uint64, account string, passwd string, phone string, clientInfo *lobby.ClientInfo) error {
 	log.Println("password:", passwd)
 	/* Description:	更新微信用户信息
-	`register_account`(
-	in userId int(11),
-	in acc varchar(64),
-    in passwd varchar(64),
-    in phone varchar(11),
-	in modName varchar(32),
-	in modVersion varchar(32),
-	in coreVersion varchar(32),
-	in lobbyVersion varchar(32),
-    in operatingSystem varchar(32),
-	in systemFamily varchar(32),
-	in deviceId varchar(32),
-	in deviceName varchar(32),
-	in deviceMode varchar(32),
-	in networkType varchar(32))
+		`register_account`(
+		in userId int(11),
+		in acc varchar(64),
+	    in passwd varchar(64),
+	    in phone varchar(11),
+		in modName varchar(32),
+		in modVersion varchar(32),
+		in coreVersion varchar(32),
+		in lobbyVersion varchar(32),
+	    in operatingSystem varchar(32),
+		in systemFamily varchar(32),
+		in deviceId varchar(32),
+		in deviceName varchar(32),
+		in deviceMode varchar(32),
+		in networkType varchar(32))
 	*/
 	query := fmt.Sprintf("Call register_account('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s')",
 		userID,
@@ -54,9 +54,9 @@ func registerAccount(userID uint64, account string, passwd string, phone string,
 	defer stmt.Close()
 
 	result, err := stmt.Exec()
-    if err != nil {
-        panic(err.Error())
-    }
+	if err != nil {
+		panic(err.Error())
+	}
 	fmt.Println(result)
 
 	return nil

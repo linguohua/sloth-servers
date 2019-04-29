@@ -64,9 +64,9 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) er
 	defer stmt.Close()
 
 	result, err := stmt.Exec()
-    if err != nil {
-        panic(err.Error())
-    }
+	if err != nil {
+		panic(err.Error())
+	}
 	fmt.Println(result)
 
 	return nil

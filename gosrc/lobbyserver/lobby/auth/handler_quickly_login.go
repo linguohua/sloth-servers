@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"net/http"
-	"lobbyserver/lobby"
 	"fmt"
+	"lobbyserver/lobby"
+	"net/http"
 	// "crypto/md5"
-	uuid "github.com/satori/go.uuid"
 	"github.com/golang/protobuf/proto"
+	uuid "github.com/satori/go.uuid"
 	"log"
 )
 
@@ -77,8 +77,6 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-
 
 	userInfo := loadUserInfoFromRedis(userID)
 	if userInfo == nil {

@@ -26,5 +26,5 @@ func getUserIDBy(accout string) uint64 {
 		panic(err.Error())
 	}
 
-	return userID;
+	return userID
 }

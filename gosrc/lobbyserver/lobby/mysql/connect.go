@@ -1,23 +1,23 @@
 package mysql
 
 import (
-	"fmt"
-	log "github.com/sirupsen/logrus"
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql" //不能去掉，不然连接数据库的时候提示找不到mssql
-	"github.com/garyburd/redigo/redis"
+	"fmt"
 	"gconst"
+	"github.com/garyburd/redigo/redis"
+	_ "github.com/go-sql-driver/mysql" //不能去掉，不然连接数据库的时候提示找不到mssql
+	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
 	"strconv"
 )
 
 // DBConfig 数据库配置
 type DBConfig struct {
-	IP string `json:"ip"`
-	Port int `json:"port"`
+	IP       string `json:"ip"`
+	Port     int    `json:"port"`
 	UserName string `json:"userName"`
 	Password string `json:"password"`
-	DBName string `json:"dbName"`
+	DBName   string `json:"dbName"`
 }
 
 func newDbConnect(ip string, port int, user string, password string, database string) (*sql.DB, error) {
@@ -39,7 +39,7 @@ func newDbConnect(ip string, port int, user string, password string, database st
 	return dbCon, nil
 }
 
-func loadDBConfigFromRedis()*DBConfig {
+func loadDBConfigFromRedis() *DBConfig {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 

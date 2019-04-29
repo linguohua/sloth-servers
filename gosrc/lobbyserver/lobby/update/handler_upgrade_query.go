@@ -1,10 +1,11 @@
 package update
+
 import (
-	"net/http"
 	"encoding/json"
-	"lobbyserver/config"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"lobbyserver/config"
+	"net/http"
 	"os"
 	// "fmt"
 	"github.com/Masterminds/semver"
@@ -13,31 +14,29 @@ import (
 var (
 	queryErrorParamQModIsNull = 1
 	queryErrorParamModVIsNull = 2
-	queryErrorModuleNotExist = 3
-	queryErrorUnmarshalCfg = 4
-
+	queryErrorModuleNotExist  = 3
+	queryErrorUnmarshalCfg    = 4
 )
 
 // Dep 依赖
 type Dep struct {
-
 }
 
 // Bundle AssetBundle
 type Bundle struct {
 	Name string `json:"name"`
-	MD5 string `json:"md5"`
-	Size int64 `json:"size"`
-	Deps []Dep `json:"deps"`
+	MD5  string `json:"md5"`
+	Size int64  `json:"size"`
+	Deps []Dep  `json:"deps"`
 }
 
 // UpgradeQueryReply 更新查询回复
 type UpgradeQueryReply struct {
-	Code int `json:"code"`
-	ABValid bool `json:"abValid"`
-	Name string `json:"name"`
-	Version string `json:"version"`
-	ABList []Bundle `json:"abList"`
+	Code    int      `json:"code"`
+	ABValid bool     `json:"abValid"`
+	Name    string   `json:"name"`
+	Version string   `json:"version"`
+	ABList  []Bundle `json:"abList"`
 }
 
 func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
@@ -51,16 +50,16 @@ func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
 }
 
 func isFileExist(path string) (bool, error) {
-    _, err := os.Stat(path)
-    if err == nil {
+	_, err := os.Stat(path)
+	if err == nil {
 		return true, nil
 	}
 
-    if os.IsNotExist(err) {
+	if os.IsNotExist(err) {
 		return false, nil
 	}
 
-    return true, err
+	return true, err
 }
 
 func findMatchMaxVersionString(currentVersionStr string, versions []string) string {
@@ -84,11 +83,11 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 
 	reply := &UpgradeQueryReply{}
 
-	if (qMod == "") {
+	if qMod == "" {
 		reply.Code = queryErrorParamQModIsNull
 	}
 
-	if (modV == "") {
+	if modV == "" {
 		reply.Code = queryErrorParamModVIsNull
 	}
 
@@ -106,14 +105,13 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	files, err := ioutil.ReadDir(dirPath)
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	versions := make([]string, 0)
-    for _, f := range files {
+	for _, f := range files {
 		versionString := f.Name()
 		versions = append(versions, versionString)
 	}
@@ -136,10 +134,10 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
- 	b, err := ioutil.ReadFile(cfgFilePath) // just pass the file name
-    if err != nil {
-        log.Println(err)
-    }
+	b, err := ioutil.ReadFile(cfgFilePath) // just pass the file name
+	if err != nil {
+		log.Println(err)
+	}
 
 	err = json.Unmarshal(b, reply)
 	if err != nil {
@@ -148,8 +146,8 @@ func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reply.Code = 0;
+	reply.Code = 0
 	reply.ABValid = true
 
-    replyUpgradeQuery(w, reply)
+	replyUpgradeQuery(w, reply)
 }

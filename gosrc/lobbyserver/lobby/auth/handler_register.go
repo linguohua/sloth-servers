@@ -1,11 +1,12 @@
 package auth
+
 import (
-	"net/http"
-	"lobbyserver/lobby"
+	"crypto/md5"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
-	"fmt"
-	"crypto/md5"
+	"lobbyserver/lobby"
+	"net/http"
 )
 
 func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply) {
@@ -38,14 +39,14 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	if account == "" {
 		errCode := int32(lobby.RegisterError_ErrAccountIsEmpty)
 		reply.Result = &errCode
-		replyRegister(w,reply)
+		replyRegister(w, reply)
 		return
 	}
 
 	if password == "" {
 		errCode := int32(lobby.RegisterError_ErrPasswordIsEmpty)
 		reply.Result = &errCode
-		replyRegister(w,reply)
+		replyRegister(w, reply)
 		return
 	}
 
@@ -56,7 +57,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	if !isNew {
 		errCode := int32(lobby.RegisterError_ErrAccountExist)
 		reply.Result = &errCode
-		replyRegister(w,reply)
+		replyRegister(w, reply)
 		return
 	}
 
@@ -79,7 +80,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
 		reply.Result = &errCode
-		replyRegister(w,reply)
+		replyRegister(w, reply)
 		return
 	}
 
@@ -89,6 +90,6 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	reply.Token = &tk
 	errCode := int32(0)
 	reply.Result = &errCode
-	replyRegister(w,reply)
+	replyRegister(w, reply)
 
 }

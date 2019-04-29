@@ -92,7 +92,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID","roomConfigID"))
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "roomConfigID"))
 	if err == redis.ErrNil {
 		log.Printf("onDeleteRoomRequest room %s not exit", roomID)
 		replySSMsg(msgBag, gconst.SSMsgError_ErrRoomNotExist, nil)

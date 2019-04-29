@@ -1,7 +1,7 @@
 package chat
 
 import (
-	// log "github.com/sirupsen/logrus"
+// log "github.com/sirupsen/logrus"
 )
 
 // onMessageChat 处理聊天消息

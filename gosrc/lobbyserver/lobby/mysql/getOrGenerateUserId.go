@@ -24,12 +24,11 @@ func getOrGenerateUserID(account string) (userID uint64, isNew bool) {
 	defer stmt.Close()
 
 	result, err := stmt.Exec()
-    if err != nil {
-        panic(err.Error())
+	if err != nil {
+		panic(err.Error())
 	}
 
 	fmt.Println(result)
-
 
 	query = "SELECT @out_userId, @out_isNew;"
 	stmt, err = dbConn.Prepare(query)

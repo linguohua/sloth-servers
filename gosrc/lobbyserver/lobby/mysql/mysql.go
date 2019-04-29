@@ -1,19 +1,18 @@
 package mysql
 
 import (
-	"lobbyserver/lobby"
 	"database/sql"
+	"lobbyserver/lobby"
 	"log"
 )
 
 var (
 	sqlUtil = &mySQLUtil{}
-	dbConn *sql.DB
+	dbConn  *sql.DB
 )
 
 // myRoomUtil implements IRoomUtil
 type mySQLUtil struct {
-
 }
 
 func (*mySQLUtil) UpdateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
@@ -36,11 +35,11 @@ func (*mySQLUtil) GetOrGenerateUserID(account string) (userID uint64, isNew bool
 	return getOrGenerateUserID(account)
 }
 
-func (*mySQLUtil) RegisterAccount(userID uint64, account string, passwd string, phone string, clientInfo *lobby.ClientInfo) error{
-	return registerAccount(userID, account , passwd , phone, clientInfo)
+func (*mySQLUtil) RegisterAccount(userID uint64, account string, passwd string, phone string, clientInfo *lobby.ClientInfo) error {
+	return registerAccount(userID, account, passwd, phone, clientInfo)
 }
 
-func (*mySQLUtil) LoadUserInfo(userID uint64,) *lobby.UserInfo{
+func (*mySQLUtil) LoadUserInfo(userID uint64) *lobby.UserInfo {
 	return loadUserInfo(userID)
 }
 

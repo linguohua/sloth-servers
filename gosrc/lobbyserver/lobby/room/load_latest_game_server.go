@@ -1,12 +1,12 @@
 package room
 
 import (
-	"sort"
-	"log"
 	"fmt"
-	"lobbyserver/lobby"
 	"gconst"
 	"github.com/garyburd/redigo/redis"
+	"lobbyserver/lobby"
+	"log"
+	"sort"
 )
 
 // GameServerInfo 保存游戏服务器信息

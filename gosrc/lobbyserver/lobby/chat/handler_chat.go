@@ -2,15 +2,15 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	gconst "gconst"
-	"lobbyserver/lobby"
-	log "github.com/sirupsen/logrus"
-	uuid "github.com/satori/go.uuid"
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
-	"net/http"
+	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"fmt"
+	"lobbyserver/lobby"
+	"net/http"
 )
 
 func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
@@ -19,7 +19,7 @@ func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
 	defer conn.Close()
 
 	uid, _ := uuid.NewV4()
-	msgID := fmt.Sprintf("%v",uid)
+	msgID := fmt.Sprintf("%v", uid)
 
 	buf, err := proto.Marshal(chatMsg)
 	if err != nil {
@@ -75,7 +75,6 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		log.Println("handlerChat error:", err)
 		return
 	}
-
 
 	chatMsg := &lobby.MsgChat{}
 	err = proto.Unmarshal(body, chatMsg)

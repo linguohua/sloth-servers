@@ -138,7 +138,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 
 	// bytes := accessoryMessage.GetData()
 	body, err := ioutil.ReadAll(r.Body)
-	if (err != nil) {
+	if err != nil {
 		log.Println("handlerCreateRoom error:", err)
 		return
 	}
@@ -186,7 +186,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID strin
 		return
 	}
 
-	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "gameServerID","roomType"))
+	values, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "roomConfigID", "gameServerID", "roomType"))
 	if err != nil {
 		log.Println("onMessageRequestRoomInfo get roomConfigID, gameServerID err: ", err)
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDatabase), nil)

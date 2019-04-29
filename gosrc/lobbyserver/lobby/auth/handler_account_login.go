@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"net/http"
-	"lobbyserver/lobby"
-	"github.com/golang/protobuf/proto"
-	log "github.com/sirupsen/logrus"
 	"fmt"
 	"gconst"
 	"github.com/garyburd/redigo/redis"
+	"github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
+	"lobbyserver/lobby"
+	"net/http"
 	"strconv"
 )
 
@@ -25,14 +25,13 @@ func replyAccountLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
 	replyLogin(w, loginReply)
 }
 
-
 func loadUserInfoFromRedis(userID uint64) *lobby.UserInfo {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
 	key := fmt.Sprintf("%s%d", gconst.LobbyUserTablePrefix, userID)
 
-	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName",  "sex", "provice", "city",  "country",  "headImgURL", "phone"))
+	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "sex", "provice", "city", "country", "headImgURL", "phone"))
 	if err != nil {
 		log.Println("loadUserInfoFromRedis, error", err)
 		return nil
@@ -46,7 +45,6 @@ func loadUserInfoFromRedis(userID uint64) *lobby.UserInfo {
 	country := fields[5]
 	headImgURL := fields[6]
 	phone := fields[7]
-
 
 	userInfo := &lobby.UserInfo{}
 	userInfo.UserID = &userID

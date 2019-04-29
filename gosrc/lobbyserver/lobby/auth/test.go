@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"net/http"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	// "fmt"
 	"lobbyserver/lobby"
 	// "github.com/golang/protobuf/proto"

@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/gorilla/websocket"
 	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/websocket"
 )
 
 const (

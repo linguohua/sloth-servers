@@ -1,12 +1,12 @@
 package auth
 
 import (
+	"fmt"
+	"gconst"
+	log "github.com/sirupsen/logrus"
+	"lobbyserver/lobby"
 	"lobbyserver/wechat"
 	"net/http"
-	log "github.com/sirupsen/logrus"
-	"fmt"
-	"lobbyserver/lobby"
-	"gconst"
 )
 
 func replyWxLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
@@ -30,7 +30,7 @@ func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
 	headImgURL := userInfo.GetHeadImgUrl()
 
 	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "sex", sex,
-	 "provice",provice, "city", city, "country", country, "headImgURL", headImgURL)
+		"provice", provice, "city", city, "country", country, "headImgURL", headImgURL)
 }
 
 func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
@@ -92,7 +92,7 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
 		loginReply.Result = &errCode
 		replyWxLogin(w, loginReply)
 
-		return;
+		return
 	}
 
 	userInfo, err := loadUserInfoFromWeChatServer(wechatCode)

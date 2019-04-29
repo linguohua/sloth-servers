@@ -14,17 +14,17 @@ type LoadAccessTokenReply struct {
 
 // LoadUserInfoReply 微信拉取user info回复
 type LoadUserInfoReply struct {
-	OpenID           string        `json:"openid"`
-	NickName         string        `json:"nickname"`
-	Sex              int           `json:"sex"`
-	Province         string        `json:"province"`
-	City             string        `json:"city"`
-	Country          string        `json:"country"`
-	HeadImgURL       string        `json:"headimgurl"`
-	Privilege        []string      `json:"privilege"`
-	UnionID          string        `json:"unionid"`
-	Tags             string        `json:"tags"`
-	Thumb            int           `json:"thumb"`
+	OpenID     string   `json:"openid"`
+	NickName   string   `json:"nickname"`
+	Sex        int      `json:"sex"`
+	Province   string   `json:"province"`
+	City       string   `json:"city"`
+	Country    string   `json:"country"`
+	HeadImgURL string   `json:"headimgurl"`
+	Privilege  []string `json:"privilege"`
+	UnionID    string   `json:"unionid"`
+	Tags       string   `json:"tags"`
+	Thumb      int      `json:"thumb"`
 
 	ErrorCode int    `json:"errcode"`
 	ErrorMsg  string `json:"errmsg"`

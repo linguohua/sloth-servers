@@ -1,10 +1,10 @@
 package lobby
 
 import (
-	"math/rand"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"math/rand"
 )
 
 var (
@@ -83,7 +83,7 @@ func MySQLUtil() IMySQLUtil {
 
 // SetMySQLUtil set sql utility
 func SetMySQLUtil(obj IMySQLUtil) {
-	mySQLUtil = obj;
+	mySQLUtil = obj
 }
 
 // ISessionMgr websocket mgr
@@ -117,9 +117,9 @@ type IMySQLUtil interface {
 	// StartMySQL(ip string, port int, user string, password string, gameDB string)
 	UpdateWxUserInfo(UserInfo *UserInfo, clientInfo *ClientInfo) error
 	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
-	GetUserIDBy(account string)uint64
+	GetUserIDBy(account string) uint64
 	GetPasswordBy(account string) string
 	GetOrGenerateUserID(account string) (userID uint64, isNew bool)
-	RegisterAccount(userID uint64, account string,passwd string, phone string, clientInfo *ClientInfo) error
-	LoadUserInfo(userID uint64,) *UserInfo
+	RegisterAccount(userID uint64, account string, passwd string, phone string, clientInfo *ClientInfo) error
+	LoadUserInfo(userID uint64) *UserInfo
 }

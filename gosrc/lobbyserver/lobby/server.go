@@ -86,7 +86,7 @@ func CreateHTTPServer() {
 
 	startRedisClient()
 
-	initFileServer();
+	initFileServer()
 
 	//loadAllRoomConfigFromRedis()
 
@@ -133,7 +133,7 @@ func acceptHTTPRequest() {
 }
 
 func initFileServer() {
-		// 文件服务器
-		var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
-		rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
+	// 文件服务器
+	var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
+	rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
 }
