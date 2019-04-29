@@ -81,8 +81,6 @@ func trustHandler() http.Handler {
 // CreateHTTPServer 启动服务器
 func CreateHTTPServer() {
 	RandGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
-	// TODO: just for test, please remove later
-	log.Println("For cub test:" + genTK("10024063"))
 
 	startRedisClient()
 

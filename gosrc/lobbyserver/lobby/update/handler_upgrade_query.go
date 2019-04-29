@@ -2,41 +2,28 @@ package update
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"lobbyserver/config"
 	"net/http"
-	"os"
-	// "fmt"
-	"github.com/Masterminds/semver"
+
+	log "github.com/sirupsen/logrus"
 )
 
-var (
-	queryErrorParamQModIsNull = 1
-	queryErrorParamModVIsNull = 2
-	queryErrorModuleNotExist  = 3
-	queryErrorUnmarshalCfg    = 4
+const (
+	queryErrorParamQModIsNull  = 1
+	queryErrorParamModVIsNull  = 2
+	queryErrorModuleNotExist   = 3
+	queryErrorUnmarshalCfg     = 4
+	queryErrorNeedUpgradeCS    = 5
+	queryErrorNeedUpgradeLobby = 6
 )
-
-// Dep 依赖
-type Dep struct {
-}
-
-// Bundle AssetBundle
-type Bundle struct {
-	Name string `json:"name"`
-	MD5  string `json:"md5"`
-	Size int64  `json:"size"`
-	Deps []Dep  `json:"deps"`
-}
 
 // UpgradeQueryReply 更新查询回复
 type UpgradeQueryReply struct {
-	Code    int      `json:"code"`
-	ABValid bool     `json:"abValid"`
-	Name    string   `json:"name"`
-	Version string   `json:"version"`
-	ABList  []Bundle `json:"abList"`
+	Code      int               `json:"code"`
+	ABValid   bool              `json:"abValid"`
+	Name      string            `json:"name"`
+	Version   string            `json:"version"`
+	ABList    []AssetsBundleCfg `json:"abList"`
+	DlRootURL string            `json:"rootURL"` // 客户端根据该地址拼接完整的资源下载地址
 }
 
 func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
@@ -49,105 +36,30 @@ func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
 	w.Write(buf)
 }
 
-func isFileExist(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	return true, err
-}
-
-func findMatchMaxVersionString(currentVersionStr string, versions []string) string {
-	maxVersion := semver.MustParse(currentVersionStr)
-	incMajorVersion := maxVersion.IncMajor()
-	// log.Printf("maxVersion:%v, incMajorVersion:%v", maxVersion, incMajorVersion)
-	for _, ver := range versions {
-		version := semver.MustParse(ver)
-		// 最大版本相同，才可以通过热更更新
-		if version.LessThan(&incMajorVersion) && version.GreaterThan(maxVersion) {
-			maxVersion = version
-		}
-	}
-
-	return maxVersion.Original()
-}
-
 func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
-	qMod := r.URL.Query().Get("qMod")
-	modV := r.URL.Query().Get("modV")
-
 	reply := &UpgradeQueryReply{}
-
-	if qMod == "" {
-		reply.Code = queryErrorParamQModIsNull
-	}
-
-	if modV == "" {
-		reply.Code = queryErrorParamModVIsNull
-	}
-
-	if reply.Code != 0 {
-		replyUpgradeQuery(w, reply)
-		return
-	}
-
-	dirPath := config.FileServerPath + "/" + qMod
-
-	isModuleExist, _ := isFileExist(dirPath)
-	if !isModuleExist {
-		reply.Code = queryErrorModuleNotExist
-		replyUpgradeQuery(w, reply)
-		return
-	}
-
-	files, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	versions := make([]string, 0)
-	for _, f := range files {
-		versionString := f.Name()
-		versions = append(versions, versionString)
-	}
-
-	maxVersion := findMatchMaxVersionString(modV, versions)
-	if maxVersion == modV {
-		reply.Code = 0
-		reply.ABValid = false
-		replyUpgradeQuery(w, reply)
-		return
-	}
-
-	log.Println("maxVersion:", maxVersion)
-	cfgFilePath := dirPath + "/" + maxVersion + "/cfg.json"
-	isCfgFileExist, _ := isFileExist(cfgFilePath)
-	if !isCfgFileExist {
-		reply.Code = 0
-		reply.ABValid = false
-		replyUpgradeQuery(w, reply)
-		return
-	}
-
-	b, err := ioutil.ReadFile(cfgFilePath) // just pass the file name
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = json.Unmarshal(b, reply)
-	if err != nil {
-		reply.Code = queryErrorUnmarshalCfg
-		replyUpgradeQuery(w, reply)
-		return
-	}
-
 	reply.Code = 0
-	reply.ABValid = true
+	reply.ABValid = false
+
+	// 根据request构造查询上下文
+	fctx := parseFromHTTPReq(r)
+	// 寻找可用的更新配置
+	cfg := mmgr.findModuleCfg(fctx)
+	if cfg == nil {
+		// 没有可用的更新配置
+		// 检查是否存在强制更新，也即是模块是否存在默认模块
+		var code int
+		cfg, code = mmgr.getDefaultCfg(fctx)
+		reply.Code = code
+	}
+
+	if cfg != nil {
+		// 发现更新
+		reply.ABValid = true
+		reply.Name = cfg.Name
+		reply.Version = cfg.Version
+		reply.ABList = cfg.AbList
+	}
 
 	replyUpgradeQuery(w, reply)
 }

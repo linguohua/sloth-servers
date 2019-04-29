@@ -1,0 +1,39 @@
+{
+	"operators":{
+		"version":["eq","gt","lt"],
+		"string":["ct","eq"],
+		"int":["eq","gt","lt"]
+	},
+	"variables":{
+		"qMode": {
+			"type":"string"
+		},
+		"modV": {
+			"type":"version"
+		},
+		"csVer": {
+			"type":"version"
+		},
+		"lobbyVer": {
+			"type":"version"
+		},
+		"operatingSystem": {
+			"type":"version"
+		},
+		"operatingSystemFamily": {
+			"type":"version"
+		},
+		"deviceUniqueIdentifier": {
+			"type":"version"
+		},
+		"deviceName": {
+			"type":"version"
+		},
+		"deviceModel": {
+			"type":"version"
+		},
+		"network": {
+			"type":"version"
+		}
+	}
+}
