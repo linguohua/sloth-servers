@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"gconst"
 	"lobbyserver/lobby"
+	"sort"
 
 	"github.com/garyburd/redigo/redis"
 	log "github.com/sirupsen/logrus"
@@ -49,6 +50,7 @@ func loadModuleCfgFromRedis(conn redis.Conn, name string) {
 
 	if len(m.cfgs) > 0 {
 		// 排序，按照版本号由高到底排序
+		sort.Sort(ByVersion(m.cfgs))
 
 		// 检查有没有默认配置
 		for _, mc := range m.cfgs {
