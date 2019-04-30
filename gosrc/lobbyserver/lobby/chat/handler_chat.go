@@ -10,6 +10,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/context"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
@@ -69,7 +70,7 @@ func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 
 // onMessageChat 处理聊天消息
 func handlerChat(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("userID")
+	userID := context.Get(r, "userID").(string)
 	log.Println("handlerChat, userID:", userID)
 
 	body, err := ioutil.ReadAll(r.Body)

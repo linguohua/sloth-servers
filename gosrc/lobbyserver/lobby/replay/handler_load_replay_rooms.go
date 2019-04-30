@@ -9,9 +9,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/golang/protobuf/proto"
-
 	"github.com/garyburd/redigo/redis"
+	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/context"
 )
 
 // func loadReplayPlayerHeadIconURI(players []*gconst.MsgReplayPlayerInfo) {
@@ -49,7 +49,7 @@ import (
 // }
 
 func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("userID")
+	userID := context.Get(r, "userID").(string)
 	log.Println("handleLoadReplayRooms call, userID:", userID)
 	replayType := r.URL.Query().Get("rt")
 

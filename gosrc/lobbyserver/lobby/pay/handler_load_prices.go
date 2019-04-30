@@ -7,6 +7,7 @@ import (
 	"lobbyserver/pricecfg"
 	"net/http"
 
+	"github.com/gorilla/context"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,7 +22,7 @@ func loadPricesReply(w http.ResponseWriter, priceCfgs string) {
 }
 
 func handleLoadPrices(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("userID")
+	userID := context.Get(r, "userID").(string)
 	log.Printf("handleLoadPrices, user %s request load prices", userID)
 
 	if r.ContentLength < 1 {

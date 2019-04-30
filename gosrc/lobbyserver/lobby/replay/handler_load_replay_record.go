@@ -13,8 +13,8 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	//"mssql"
-
 	"github.com/garyburd/redigo/redis"
+	"github.com/gorilla/context"
 )
 
 // func loadPlayerHeadIconURI(players []*gconst.SRMsgPlayerInfo) {
@@ -81,7 +81,7 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 }
 
 func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("userID")
+	userID := context.Get(r, "userID").(string)
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 
 	replayType := r.URL.Query().Get("rt")

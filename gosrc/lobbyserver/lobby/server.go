@@ -14,7 +14,7 @@ import (
 	"lobbyserver/pricecfg"
 
 	"github.com/garyburd/redigo/redis"
-
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
@@ -49,15 +49,14 @@ func tokenExtractMiddleware(old http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
-		nR := r
 		if tk != "" {
 			userID, result := parseTK(tk)
 			if result {
-				query.Add("userID", userID)
+				context.Set(r, "userID", userID)
 			}
 		}
 
-		old.ServeHTTP(w, nR)
+		old.ServeHTTP(w, r)
 	})
 }
 
