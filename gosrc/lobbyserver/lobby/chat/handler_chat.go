@@ -2,24 +2,19 @@ package chat
 
 import (
 	"encoding/json"
-	"fmt"
 	gconst "gconst"
+	"lobbyserver/lobby"
+	log "github.com/sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
-	uuid "github.com/satori/go.uuid"
-	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"lobbyserver/lobby"
 	"net/http"
+	"io/ioutil"
 )
 
 func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
 	// 获取redis链接，并退出函数时释放
 	conn := lobby.Pool().Get()
 	defer conn.Close()
-
-	uid, _ := uuid.NewV4()
-	msgID := fmt.Sprintf("%v", uid)
 
 	buf, err := proto.Marshal(chatMsg)
 	if err != nil {
@@ -28,13 +23,26 @@ func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
 
 	conn.Send("MULTI")
 	for _, userID := range userIds {
-		conn.Send("HSET", gconst.LobbyChatMessagePrefix+userID, msgID, buf)
+		conn.Send("HSET", gconst.LobbyChatMessagePrefix+userID, chatMsg.GetId(), buf)
 	}
 
 	_, err = conn.Do("EXEC")
 	if err != nil {
 		log.Println("saveChatMsg err: ", err)
 	}
+}
+
+func allocateMsgID() int {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	id, err := redis.Int(conn.Do("INCR", gconst.LobbyChatMessageID))
+	if err != nil {
+		log.Error("allocateMsgID error:", err)
+	}
+
+
+	return id
 }
 
 func filterSensitiveWord(chatMsg *lobby.MsgChat) {
@@ -76,6 +84,7 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		return
 	}
 
+
 	chatMsg := &lobby.MsgChat{}
 	err = proto.Unmarshal(body, chatMsg)
 	if err != nil {
@@ -88,6 +97,9 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		filterSensitiveWord(chatMsg)
 
 	}
+
+	msgID := int32(allocateMsgID())
+	chatMsg.Id = &msgID
 
 	sessionMgr := lobby.SessionMgr()
 
@@ -112,6 +124,8 @@ func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
 		if !ok {
 			log.Printf("handlerChat, send msg to %s failed, target user not exists or is offline", userID)
 		}
+
+		saveChatMsg(chatMsg, []string{to, userID})
 
 		break
 	case lobby.ChatScopeType_InRoom:
