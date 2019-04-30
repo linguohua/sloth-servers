@@ -18,7 +18,7 @@ func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	key := fmt.Sprintf("%s%d", gconst.LobbyUserTablePrefix, userInfo.GetUserID())
+	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userInfo.GetUserID())
 
 	userID := userInfo.GetUserID()
 	openID := userInfo.GetOpenID()
@@ -134,7 +134,7 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
 	updateWxUserInfo(userInfo, clientInfo)
 
 	// 生成token给客户端
-	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
+	tk := lobby.GenTK(userID)
 
 	errCode := int32(lobby.LoginError_ErrLoginSuccess)
 

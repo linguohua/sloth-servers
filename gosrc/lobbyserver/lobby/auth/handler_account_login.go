@@ -25,11 +25,11 @@ func replyAccountLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
 	replyLogin(w, loginReply)
 }
 
-func loadUserInfoFromRedis(userID uint64) *lobby.UserInfo {
+func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	key := fmt.Sprintf("%s%d", gconst.LobbyUserTablePrefix, userID)
+	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userID)
 
 	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "sex", "provice", "city", "country", "headImgURL", "phone"))
 	if err != nil {
@@ -86,7 +86,7 @@ func handlerAccountLogin(w http.ResponseWriter, r *http.Request) {
 	mySQLUtil := lobby.MySQLUtil()
 
 	userID := mySQLUtil.GetUserIDBy(phoneNum)
-	if userID == 0 {
+	if userID == "" {
 		errCode := int32(lobby.LoginError_ErrAccountNotExist)
 		loginReply.Result = &errCode
 		replyAccountLogin(w, loginReply)
@@ -116,7 +116,7 @@ func handlerAccountLogin(w http.ResponseWriter, r *http.Request) {
 	userInfo := loadUserInfoFromRedis(userID)
 
 	// 生成token给客户端
-	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
+	tk := lobby.GenTK(userID)
 
 	errCode := int32(lobby.LoginError_ErrLoginSuccess)
 

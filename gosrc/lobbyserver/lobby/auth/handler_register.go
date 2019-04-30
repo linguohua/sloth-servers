@@ -73,10 +73,13 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	clientInfo.DeviceModel = &deviceModel
 	clientInfo.Network = &network
 
+	userInfo := &lobby.UserInfo{}
+	userInfo.UserID = &userID
+
 	data := []byte(password)
 	passwdMD5 := fmt.Sprintf("%x", md5.Sum(data))
 
-	err := mySQLUtil.RegisterAccount(userID, account, passwdMD5, "", clientInfo)
+	err := mySQLUtil.RegisterAccount(account, passwdMD5, "", userInfo, clientInfo)
 	if err != nil {
 		errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
 		reply.Result = &errCode
@@ -86,7 +89,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: 需要保存到redis
 
-	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
+	tk := lobby.GenTK(userID)
 	reply.Token = &tk
 	errCode := int32(0)
 	reply.Result = &errCode

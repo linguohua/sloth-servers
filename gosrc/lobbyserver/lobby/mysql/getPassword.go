@@ -1,30 +1,27 @@
 package mysql
 
 import (
-	// "database/sql"
-	"fmt"
-	log "github.com/sirupsen/logrus"
+	"database/sql"
 )
 
 // 检查手机号是否已经注册过
-func getPasswordBy(accout string) string {
-	query := fmt.Sprintf("select password from account where account = '%s'", accout)
-
-	log.Println("query:", query)
-
-	// return nil
-	stmt, err := dbConn.Prepare(query)
+func getPasswordBy(account string) string {
+	stmt, err := dbConn.Prepare("select password from account where account = ?")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer stmt.Close()
 
-	var password string
-	row := stmt.QueryRow()
+	var password sql.NullString
+	row := stmt.QueryRow(account)
 	err = row.Scan(&password)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return password
+	if password.Valid {
+		return password.String
+	}
+
+	return ""
 }
