@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	gconst "gconst"
+	"io/ioutil"
+	"lobbyserver/lobby"
+	"net/http"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"lobbyserver/lobby"
-	"net/http"
 )
 
 func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
@@ -67,7 +68,8 @@ func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 }
 
 // onMessageChat 处理聊天消息
-func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
+func handlerChat(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	log.Println("handlerChat, userID:", userID)
 
 	body, err := ioutil.ReadAll(r.Body)

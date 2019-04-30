@@ -6,6 +6,6 @@ import (
 
 // InitWith init
 func InitWith() {
-	lobby.AccUserIDHTTPHandlers["/lrproom"] = handleLoadReplayRooms
-	lobby.AccUserIDHTTPHandlers["/lrprecord"] = handleLoadReplayRecord
+	lobby.MainRouter.HandleFunc("/lrproom", handleLoadReplayRooms)
+	lobby.MainRouter.HandleFunc("/lrprecord", handleLoadReplayRecord)
 }

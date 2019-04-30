@@ -8,9 +8,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"io/ioutil"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
-	"io/ioutil"
 )
 
 /*func replyJoinClubRoomError(w http.ResponseWriter, errorCode int32, clubID string) {
@@ -118,7 +119,8 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 	return false
 }*/
 
-func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, userID string) {
+func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
 	// 1. 从请求中获取房间6位数字ID
 	// 2. 检查房间有效性，比如是否存在，是否已经满了

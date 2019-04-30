@@ -73,7 +73,8 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 	}
 }
 
-func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, userID string) {
+func handlerDeleteRoom(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	roomID := r.URL.Query().Get("roomID")
 	if roomID == "" {
 		var errCode = int32(lobby.MsgError_ErrRoomIDIsEmpty)

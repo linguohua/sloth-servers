@@ -7,7 +7,6 @@ import (
 	"lobbyserver/config"
 	"math/rand"
 	"net/http"
-	"path"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -46,35 +45,19 @@ func echoVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
-func authorizedHandler() http.Handler {
+func tokenExtractMiddleware(old http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestPath := "/" + path.Base(r.URL.Path)
-		h2, ok := AccUserIDHTTPHandlers[requestPath]
-		if ok {
-			userID, rt := verifyTokenByQuery(r)
-			if rt {
-				h2(w, r, userID)
-			} else {
-				w.WriteHeader(404)
-				w.Write([]byte("oh, no valid token for handler:" + r.URL.Path))
+		var query = r.URL.Query()
+		var tk = query.Get("tk")
+		nR := r
+		if tk != "" {
+			userID, result := parseTK(tk)
+			if result {
+				query.Add("userID", userID)
 			}
-		} else {
-			w.WriteHeader(404)
-			w.Write([]byte("oh, can't found handler for:" + r.URL.Path))
 		}
-	})
-}
 
-func trustHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestPath := "/" + path.Base(r.URL.Path)
-		h, ok := AccRawHTTPHandlers[requestPath]
-		if ok {
-			h(w, r)
-		} else {
-			w.WriteHeader(404)
-			w.Write([]byte("oh, can't found handler for:" + r.URL.Path))
-		}
+		old.ServeHTTP(w, nR)
 	})
 }
 
@@ -86,23 +69,11 @@ func CreateHTTPServer() {
 
 	initFileServer()
 
-	//loadAllRoomConfigFromRedis()
-
 	pricecfg.LoadAllPriceCfg(pool)
 
-	// 所有模块看到的mainRouter
-	// 外部访问需要形如/prunfast/uuid/pok
 	var mainRouter = rootRouter.PathPrefix("/lobby/uuid/").Subrouter()
-	//mainRouter.HandleFunc("/ws/{wtype}", acceptWebsocket)
 	mainRouter.HandleFunc("/version", echoVersion)
-	mainRouter.PathPrefix("/untrust").Handler(authorizedHandler())
-
-	mainRouter.PathPrefix("/trust").Handler(trustHandler())
-	// log.Println("AccRawHTTPHandlers:", AccRawHTTPHandlers)
-	// for k, v := range AccRawHTTPHandlers {
-	// 	log.Println("path:", k)
-	// 	uhRouter.HandleFunc(k, v)
-	// }
+	mainRouter.Use(tokenExtractMiddleware)
 
 	MainRouter = mainRouter
 

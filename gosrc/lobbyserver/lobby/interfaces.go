@@ -1,10 +1,11 @@
 package lobby
 
 import (
+	"math/rand"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"math/rand"
 )
 
 var (
@@ -16,12 +17,6 @@ var (
 	payUtil IPayUtil
 
 	mySQLUtil IMySQLUtil
-
-	// AccUserIDHTTPHandlers untrust handlers
-	AccUserIDHTTPHandlers = make(map[string]accUserIDHTTPHandler)
-
-	// AccRawHTTPHandlers trust handler
-	AccRawHTTPHandlers = make(map[string]accRawHTTPHandler)
 
 	// MainRouter main-router
 	MainRouter *mux.Router

@@ -6,8 +6,8 @@ import (
 
 // InitWith init
 func InitWith() {
-	lobby.AccRawHTTPHandlers["/upgradeQuery"] = handlerUpgradeQuery
-	lobby.AccRawHTTPHandlers["/upload"] = handlerUpload
+	lobby.MainRouter.HandleFunc("/upgradeQuery", handlerUpgradeQuery)
+	lobby.MainRouter.HandleFunc("/upload", handlerUpload)
 
 	initConditionVariableCfg()
 

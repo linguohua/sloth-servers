@@ -80,7 +80,8 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 	// writeHTTPBodyWithGzip(w, r, bytesArray)
 }
 
-func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID string) {
+func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 
 	replayType := r.URL.Query().Get("rt")

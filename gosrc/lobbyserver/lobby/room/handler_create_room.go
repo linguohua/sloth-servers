@@ -13,9 +13,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
+	"io/ioutil"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
-	"io/ioutil"
 )
 
 const (
@@ -192,7 +193,8 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 	return true
 }
 
-func handlerCreateRoom(w http.ResponseWriter, r *http.Request, userID string) {
+func handlerCreateRoom(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	log.Println("handlerCreateRoom call, userID:", userID)
 
 	// 分配房间ID

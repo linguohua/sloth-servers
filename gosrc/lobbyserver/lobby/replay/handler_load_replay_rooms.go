@@ -48,7 +48,8 @@ import (
 // 	}
 // }
 
-func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, userID string) {
+func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userID")
 	log.Println("handleLoadReplayRooms call, userID:", userID)
 	replayType := r.URL.Query().Get("rt")
 
