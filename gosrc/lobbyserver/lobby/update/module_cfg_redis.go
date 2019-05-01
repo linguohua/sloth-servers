@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"gconst"
 	"lobbyserver/lobby"
-	"sort"
 
 	"github.com/garyburd/redigo/redis"
 	log "github.com/sirupsen/logrus"
@@ -49,16 +48,41 @@ func loadModuleCfgFromRedis(conn redis.Conn, name string) {
 	}
 
 	if len(m.cfgs) > 0 {
-		// 排序，按照版本号由高到底排序
-		sort.Sort(ByVersion(m.cfgs))
+		m.refresh()
+	}
+}
 
-		// 检查有没有默认配置
-		for _, mc := range m.cfgs {
-			if mc.IsDefault {
-				m.defaultCfg = mc
-				break
-			}
-		}
+// saveModuleCfg2Redis 保存ModuleCfg
+func saveModuleCfg2Redis(mc *ModuleCfg) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	jsonBytes, err := json.Marshal(mc)
+	if err != nil {
+		log.Panicln("saveModuleCfg2Redis failed, json marshal error:", err)
+	}
+
+	conn.Send("MULTI")
+	conn.Send("sadd", gconst.LobbyUpgradeModuleSet, mc.Name)
+	conn.Send("hset", gconst.LobbyUpgradeModuleHashPrefix+mc.Name, mc.Version, jsonBytes)
+	_, err = conn.Do("EXEC")
+	if err != nil {
+		log.Panicln("saveModuleCfg2Redis failed, redis error:", err)
+	}
+}
+
+func deleteModuleCfgFromRedis(mcs []*ModuleCfg) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	conn.Send("MULTI")
+	for _, mc := range mcs {
+		conn.Send("hdel", gconst.LobbyUpgradeModuleHashPrefix+mc.Name, mc.Version)
+	}
+
+	_, err := conn.Do("EXEC")
+	if err != nil {
+		log.Panicln("deleteModuleCfgFromRedis failed, redis error:", err)
 	}
 }
 

@@ -13,8 +13,9 @@ import (
 
 	"lobbyserver/pricecfg"
 
+	"context"
+
 	"github.com/garyburd/redigo/redis"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
@@ -45,18 +46,21 @@ func echoVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
+type contextKey string
+
 func tokenExtractMiddleware(old http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
+		var newR = r
 		if tk != "" {
 			userID, result := parseTK(tk)
 			if result {
-				context.Set(r, "userID", userID)
+				newR = r.WithContext(context.WithValue(r.Context(), contextKey("userID"), userID))
 			}
 		}
 
-		old.ServeHTTP(w, r)
+		old.ServeHTTP(w, newR)
 	})
 }
 

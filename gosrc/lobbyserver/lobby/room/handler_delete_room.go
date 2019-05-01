@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/context"
 	log "github.com/sirupsen/logrus"
 
 	"encoding/json"
@@ -75,7 +74,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 }
 
 func handlerDeleteRoom(w http.ResponseWriter, r *http.Request) {
-	userID := context.Get(r, "userID").(string)
+	userID := r.Context().Value("userID").(string)
 	roomID := r.URL.Query().Get("roomID")
 	if roomID == "" {
 		var errCode = int32(lobby.MsgError_ErrRoomIDIsEmpty)

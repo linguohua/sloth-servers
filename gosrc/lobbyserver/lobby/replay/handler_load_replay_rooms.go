@@ -11,7 +11,6 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/context"
 )
 
 // func loadReplayPlayerHeadIconURI(players []*gconst.MsgReplayPlayerInfo) {
@@ -49,7 +48,7 @@ import (
 // }
 
 func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request) {
-	userID := context.Get(r, "userID").(string)
+	userID := r.Context().Value("userID").(string)
 	log.Println("handleLoadReplayRooms call, userID:", userID)
 	replayType := r.URL.Query().Get("rt")
 

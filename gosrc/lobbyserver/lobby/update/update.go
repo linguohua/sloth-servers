@@ -7,7 +7,9 @@ import (
 // InitWith init
 func InitWith() {
 	lobby.MainRouter.HandleFunc("/upgradeQuery", handlerUpgradeQuery)
-	lobby.MainRouter.HandleFunc("/upload", handlerUpload)
+	lobby.MainRouter.HandleFunc("/webapi/update/uploadModule", handlerUpload)
+	lobby.MainRouter.HandleFunc("/webpi/update/loadAllModules", handlerLoadAllModules)
+	lobby.MainRouter.HandleFunc("/webapi/update/deleteModules", handlerDeleteModules)
 
 	initConditionVariableCfg()
 

@@ -35,6 +35,10 @@ func (ctx *findContext) getString(name string) string {
 
 // version2Int 把v1.0.0类似的版本号，转为一个int，方便比较大小
 func version2Int(versionStr string) int {
+	if versionStr == "" {
+		return 0
+	}
+
 	// 第一个字符是'v'，去除
 	var versionStrDot = versionStr[1:]
 	versionArray := strings.Split(versionStrDot, ".")

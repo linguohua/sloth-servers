@@ -14,7 +14,6 @@ import (
 
 	//"mssql"
 	"github.com/garyburd/redigo/redis"
-	"github.com/gorilla/context"
 )
 
 // func loadPlayerHeadIconURI(players []*gconst.SRMsgPlayerInfo) {
@@ -81,7 +80,7 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 }
 
 func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
-	userID := context.Get(r, "userID").(string)
+	userID := r.Context().Value("userID").(string)
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 
 	replayType := r.URL.Query().Get("rt")

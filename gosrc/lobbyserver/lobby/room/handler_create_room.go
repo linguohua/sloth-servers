@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/context"
-
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -196,7 +194,7 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 }
 
 func handlerCreateRoom(w http.ResponseWriter, r *http.Request) {
-	userID := context.Get(r, "userID").(string)
+	userID := r.Context().Value("userID").(string)
 	log.Println("handlerCreateRoom call, userID:", userID)
 
 	// 分配房间ID
