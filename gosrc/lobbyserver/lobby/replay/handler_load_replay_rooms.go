@@ -49,8 +49,8 @@ import (
 // 	}
 // }
 
-func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	userID := r.Context().Value("userID").(string)
+func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := ps.ByName("userID")
 	log.Println("handleLoadReplayRooms call, userID:", userID)
 	replayType := r.URL.Query().Get("rt")
 

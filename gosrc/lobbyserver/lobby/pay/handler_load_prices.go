@@ -22,8 +22,8 @@ func loadPricesReply(w http.ResponseWriter, priceCfgs string) {
 	w.Write([]byte(reply))
 }
 
-func handleLoadPrices(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	userID := r.Context().Value("userID").(string)
+func handleLoadPrices(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := ps.ByName("userID")
 	log.Printf("handleLoadPrices, user %s request load prices", userID)
 
 	if r.ContentLength < 1 {
