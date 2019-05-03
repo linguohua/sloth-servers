@@ -47,5 +47,5 @@ func (*myPayUtil) DoPayAndSave2Redis(roomID string, userID string) (remainDiamon
 // InitWith init
 func InitWith() {
 	lobby.SetPayUtil(payUtil)
-	lobby.AccUserIDHTTPHandlers["/loadPrices"] = handleLoadPrices
+	lobby.MainRouter.HandleFunc("/loadPrices", handleLoadPrices)
 }

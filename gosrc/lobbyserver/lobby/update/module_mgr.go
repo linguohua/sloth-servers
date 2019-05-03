@@ -13,6 +13,8 @@
 package update
 
 import (
+	"sort"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -115,4 +117,88 @@ func (mm *ModulesMgr) getDefaultCfg(ctx *findContext) (*ModuleCfg, int) {
 	}
 
 	return defaultCfg, 0
+}
+
+// addNewModuleCfg 增加新的更新配置
+func (mm *ModulesMgr) addNewModuleCfg(mc *ModuleCfg) {
+	name := mc.Name
+
+	m, ok := mmgr.moduels[name]
+	if !ok {
+		m = &Module{}
+		m.cfgs = make([]*ModuleCfg, 0, 16)
+		mmgr.moduels[name] = m
+	}
+
+	// 转换字符串为int
+	mc.strings2Int()
+
+	var isUpdate = false
+	for i, mc2 := range m.cfgs {
+		if mc2.versionInteger == mc.versionInteger {
+			m.cfgs[i] = mc
+			isUpdate = true
+			break
+		}
+	}
+
+	if !isUpdate {
+		m.cfgs = append(m.cfgs, mc)
+		m.refresh()
+	}
+
+	saveModuleCfg2Redis(mc)
+}
+
+// deleteModuleCfgs 删除一组更新配置
+func (mm *ModulesMgr) deleteModuleCfgs(mcs []*ModuleCfg) {
+	moduleMap := make(map[string]*Module)
+	for _, mc := range mcs {
+		name := mc.Name
+		// 转换字符串为int
+		mc.strings2Int()
+
+		m, ok := mmgr.moduels[name]
+		if !ok {
+			continue
+		}
+
+		m.removeModuleCfg(mc)
+		moduleMap[name] = m
+	}
+
+	// 刷新数据
+	for _, m := range moduleMap {
+		m.resetDefault()
+	}
+
+	deleteModuleCfgFromRedis(mcs)
+}
+
+// refresh 刷新数据，主要是排序以及设置defalut
+func (m *Module) refresh() {
+	// 排序，按照版本号由高到底排序
+	sort.Sort(ByVersion(m.cfgs))
+	m.resetDefault()
+}
+
+func (m *Module) resetDefault() {
+	m.defaultCfg = nil
+	// 检查有没有默认配置
+	for _, mc := range m.cfgs {
+		if mc.IsDefault {
+			m.defaultCfg = mc
+			break
+		}
+	}
+}
+
+// removeModuleCfg 移除模块
+func (m *Module) removeModuleCfg(mc *ModuleCfg) {
+	for i, mc2 := range m.cfgs {
+		if mc2.versionInteger == mc.versionInteger {
+			m.cfgs = append(m.cfgs[:i], m.cfgs[i+1:]...)
+			break
+		}
+	}
 }

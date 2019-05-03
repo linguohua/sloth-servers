@@ -12,44 +12,53 @@ const (
 	conditonVarJSON = `
 	{
 		"operators":{
-			"version":["eq","gt","lt"],
-			"string":["ct","eq"],
-			"int":["eq","gt","lt"]
+			"version":[{"n":"等于","k":"eq"},{"n":"大于","k":"gt"},{"n":"小于","k":"lt"}],
+			"string":[{"n":"等于","k":"eq"},{"n":"包含","k":"ct"}],
+			"int":[{"n":"等于","k":"eq"},{"n":"大于","k":"gt"},{"n":"小于","k":"lt"}]
 		},
 		"variables":{
 			"qMode": {
+                "name":"模块名字",
 				"type":"string"
 			},
 			"modV": {
+                "name":"模块版本",
 				"type":"version"
 			},
 			"csVer": {
+                "name":"csharp版本",
 				"type":"version"
 			},
 			"lobbyVer": {
+                "name":"lobby版本",
 				"type":"version"
 			},
 			"operatingSystem": {
-				"type":"version"
+                "name":"操作系统",
+				"type":"string"
 			},
 			"operatingSystemFamily": {
-				"type":"version"
+                "name":"操作系统集",
+				"type":"string"
 			},
 			"deviceUniqueIdentifier": {
-				"type":"version"
+                "name":"设备唯一ID",
+				"type":"string"
 			},
 			"deviceName": {
-				"type":"version"
+                "name":"设备名字",
+				"type":"string"
 			},
 			"deviceModel": {
-				"type":"version"
+                "name":"设备类",
+				"type":"string"
 			},
 			"network": {
-				"type":"version"
+                "name":"网络类型",
+				"type":"string"
 			}
 		}
-	}
-	`
+	}`
 )
 
 var (
@@ -57,15 +66,22 @@ var (
 	conditionVarCfg *ConditionVariableCfg
 )
 
+// OperatorCfg 条件变量配置
+type OperatorCfg struct {
+	Name     string `json:"n"`
+	Operator string `json:"k"`
+}
+
 // VariableCfg 条件变量配置
 type VariableCfg struct {
 	VType string `json:"type"`
+	Name  string `json:"name"`
 }
 
 // ConditionVariableCfg 条件变量配置
 type ConditionVariableCfg struct {
-	OperatorCfgMap map[string][]string    `json:"operators"`
-	VariableCfgMap map[string]VariableCfg `json:"variables"`
+	OperatorCfgMap map[string][]OperatorCfg `json:"operators"`
+	VariableCfgMap map[string]VariableCfg   `json:"variables"`
 }
 
 // conditionVariableCfgIsInt 判断一个变量是否是整数类型的，也即是可以比较大小的

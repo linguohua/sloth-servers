@@ -6,9 +6,9 @@ import (
 
 // InitWith init
 func InitWith() {
-	lobby.AccRawHTTPHandlers["/wxLogin"] = handlerWxLogin
-	lobby.AccRawHTTPHandlers["/accountLogin"] = handlerAccountLogin
-	lobby.AccRawHTTPHandlers["/quicklyLogin"] = handlerQuicklyLogin
-	lobby.AccRawHTTPHandlers["/register"] = handlerRegister
-	lobby.AccRawHTTPHandlers["/test"] = handlerTest
+	lobby.MainRouter.HandleFunc("/wxLogin", handlerWxLogin)
+	lobby.MainRouter.HandleFunc("/accountLogin", handlerAccountLogin)
+	lobby.MainRouter.HandleFunc("/quicklyLogin", handlerQuicklyLogin)
+	lobby.MainRouter.HandleFunc("/register", handlerRegister)
+	lobby.MainRouter.HandleFunc("/test", handlerTest)
 }

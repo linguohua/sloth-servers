@@ -30,8 +30,8 @@ type ModuleCfg struct {
 	IsDefault bool              `json:"default"` // 是否是默认模块配置，每一个模块只能有一个默认模块配置
 	AbList    []AssetsBundleCfg `json:"abList"`  // 模块的assets bundle列表
 
-	andConditions []*ConditionCfg // AND 条件集合
-	orConditions  []*ConditionCfg // OR 条件集合
+	AndConditions []*ConditionCfg `json:"and"` // AND 条件集合
+	OrConditions  []*ConditionCfg `json:"or"`  // OR 条件集合
 }
 
 // ConditionCfg 条件
@@ -102,7 +102,7 @@ func (cfg *ConditionCfg) verify(ctx *findContext) bool {
 // 相当于： return ((and1 && and2 && and...) && (or1 || or2 || or...))
 func (cfg *ModuleCfg) verifyConditions(ctx *findContext) bool {
 	// 先检查AND关系的conditions列表
-	for _, cond := range cfg.andConditions {
+	for _, cond := range cfg.AndConditions {
 		// 如果有一个AND条件测试失败，则失败
 		if !cond.verify(ctx) {
 			return false
@@ -110,12 +110,12 @@ func (cfg *ModuleCfg) verifyConditions(ctx *findContext) bool {
 	}
 
 	// 没有OR条件，因此默认成功
-	if len(cfg.orConditions) < 1 {
+	if len(cfg.OrConditions) < 1 {
 		return true
 	}
 
 	// 再检查OR关系的conditions列表
-	for _, cond := range cfg.orConditions {
+	for _, cond := range cfg.OrConditions {
 		// 如果有一个OR条件测试成功，则成功
 		if cond.verify(ctx) {
 			return true
@@ -139,12 +139,12 @@ func (cfg *ModuleCfg) strings2Int() {
 	}
 
 	// 把条件中的value转换为int，如果可以转换的话
-	for _, c := range cfg.andConditions {
+	for _, c := range cfg.AndConditions {
 		c.value2Int()
 	}
 
 	// 把条件中的value转换为int，如果可以转换的话
-	for _, c := range cfg.orConditions {
+	for _, c := range cfg.OrConditions {
 		c.value2Int()
 	}
 }

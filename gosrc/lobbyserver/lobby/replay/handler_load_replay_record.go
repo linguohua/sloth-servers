@@ -13,7 +13,6 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	//"mssql"
-
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -80,7 +79,8 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 	// writeHTTPBodyWithGzip(w, r, bytesArray)
 }
 
-func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, userID string) {
+func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 
 	replayType := r.URL.Query().Get("rt")
@@ -182,8 +182,8 @@ func writeHTTPBodyWithGzip(w http.ResponseWriter, r *http.Request, bytesArray []
 		}
 
 		w.Header().Set("Content-Type", "application/octet-stream")
-		// w.Header().Set("Content-Encoding", "gzip")
-		// w.Header().Add("Vary", "Accept-Encoding")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Add("Vary", "Accept-Encoding")
 		bytesCompressed := buf.Bytes()
 		log.Printf("COMPRESS, before:%d, after:%d\n", len(bytesArray), len(bytesCompressed))
 		w.Write(bytesCompressed)
