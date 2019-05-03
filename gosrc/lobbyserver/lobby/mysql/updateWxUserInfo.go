@@ -31,7 +31,16 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) er
 		in deviceMode varchar(32),
 		in networkType varchar(32))
 	*/
-	query := fmt.Sprintf("Call update_wx_user('%d', '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+
+	// return nil
+	stmt, err := dbConn.Prepare("Call update_wx_user(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Println("updateWxUserInfo Prepare1 Err:", err)
+		return err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(
 		userInfo.GetUserID(),
 		userInfo.GetOpenID(),
 		userInfo.GetNickName(),
@@ -52,18 +61,6 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) er
 		clientInfo.GetDeviceName(),
 		clientInfo.GetDeviceModel(),
 		clientInfo.GetNetwork())
-
-	log.Println("query:", query)
-
-	// return nil
-	stmt, err := dbConn.Prepare(query)
-	if err != nil {
-		log.Println("updateWxUserInfo Prepare1 Err:", err)
-		return err
-	}
-	defer stmt.Close()
-
-	result, err := stmt.Exec()
 	if err != nil {
 		panic(err.Error())
 	}

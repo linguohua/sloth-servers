@@ -42,9 +42,6 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	mySQLUtil := lobby.MySQLUtil()
 
-	// var uint64UserID uint64
-	// isNew := false
-	// account := ""
 	if account == "" {
 		// 生成新账号
 		uid, _ := uuid.NewV4()
@@ -67,7 +64,10 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		clientInfo.DeviceModel = &deviceModel
 		clientInfo.Network = &network
 
-		mySQLUtil.RegisterAccount(userID, account, "", "", clientInfo)
+		userInfo := &lobby.UserInfo{}
+		userInfo.UserID = &userID
+
+		mySQLUtil.RegisterAccount(account, "", "",userInfo,  clientInfo)
 	} else {
 		// 要校检是否是快速登录账号，快速登录没有密码
 		myPassword := mySQLUtil.GetPasswordBy(account)
@@ -86,10 +86,8 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		userInfo.UserID = &userID
 	}
 
-	log.Println("userInfo:", userInfo)
-
 	// 生成token给客户端
-	tk := lobby.GenTK(fmt.Sprintf("%d", userID))
+	tk := lobby.GenTK(userID)
 
 	errCode := int32(lobby.LoginError_ErrLoginSuccess)
 
@@ -97,6 +95,7 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	loginReply.Token = &tk
 	loginReply.UserInfo = userInfo
 	loginReply.Account = &account
+	log.Println(loginReply)
 	replyQuicklyLogin(w, loginReply)
 
 }

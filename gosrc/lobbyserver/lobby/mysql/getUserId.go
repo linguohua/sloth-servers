@@ -1,30 +1,27 @@
 package mysql
 
 import (
-	// "database/sql"
-	"fmt"
-	log "github.com/sirupsen/logrus"
+	"database/sql"
 )
 
 // 检查手机号是否已经注册过
-func getUserIDBy(accout string) uint64 {
-	query := fmt.Sprintf("select user_id from account where account = '%s'", accout)
-
-	log.Println("query:", query)
-
-	// return nil
-	stmt, err := dbConn.Prepare(query)
+func getUserIDBy(accout string) string {
+	stmt, err := dbConn.Prepare("select user_id from account where account = ?")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer stmt.Close()
 
-	var userID uint64
-	row := stmt.QueryRow()
+	var userID sql.NullString
+	row := stmt.QueryRow(accout)
 	err = row.Scan(&userID)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return userID
+	if userID.Valid {
+		return userID.String
+	}
+
+	return ""
 }

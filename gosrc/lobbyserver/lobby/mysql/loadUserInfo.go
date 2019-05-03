@@ -1,57 +1,72 @@
 package mysql
 
 import (
-	// "database/sql"
-	"fmt"
-	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
+	"database/sql"
 )
 
 // 查询用户信息
-func loadUserInfo(userID uint64) *lobby.UserInfo {
-	query := fmt.Sprintf("select user_id,open_id, phone, nick_name, sex, provice, city, country, head_img_url from user where user_id = %d", userID)
-
-	log.Println("loadUserInfo query:", query)
-
-	// return nil
-	stmt, err := dbConn.Prepare(query)
+func loadUserInfo(userID string) *lobby.UserInfo {
+	stmt, err := dbConn.Prepare("select open_id, phone, nick_name, sex, provice, city, country, head_img_url from user where user_id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer stmt.Close()
 
-	var uint64UserID uint64
-	var openID string
-	var phone int
-	var nickName string
-	var sex uint32
-	var provice string
-	var city string
-	var country string
-	var headImgURL string
+	var openID sql.NullString
+	var phone sql.NullString
+	var nickName sql.NullString
+	var sex sql.NullInt64
+	var provice sql.NullString
+	var city sql.NullString
+	var country sql.NullString
+	var headImgURL sql.NullString
 
-	row := stmt.QueryRow()
-	err = row.Scan(&uint64UserID, &openID, &phone, &nickName, &sex, &provice, &city, &country, &headImgURL)
+	row := stmt.QueryRow(userID)
+	err = row.Scan(&openID, &phone, &nickName, &sex, &provice, &city, &country, &headImgURL)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+
 	if err != nil {
 		panic(err.Error())
 	}
 
-	if uint64UserID == 0 {
-		return nil
+	userInfo := &lobby.UserInfo{}
+	userInfo.UserID = &userID
+
+	if openID.Valid {
+		userInfo.OpenID = &openID.String
 	}
 
-	phontStr := fmt.Sprintf("%d", phone)
+	if phone.Valid {
+		userInfo.Phone = &phone.String
+	}
 
-	userInfo := &lobby.UserInfo{}
-	userInfo.UserID = &uint64UserID
-	userInfo.OpenID = &openID
-	userInfo.Phone = &phontStr
-	userInfo.NickName = &nickName
-	userInfo.Sex = &sex
-	userInfo.Province = &provice
-	userInfo.City = &city
-	userInfo.Country = &country
-	userInfo.HeadImgUrl = &headImgURL
+	if nickName.Valid {
+		userInfo.NickName = &nickName.String
+	}
+
+	if provice.Valid {
+		userInfo.Province = &provice.String
+	}
+
+	if city.Valid {
+		userInfo.City = &city.String
+	}
+
+	if country.Valid {
+		userInfo.Country = &country.String
+	}
+
+	if headImgURL.Valid {
+		userInfo.HeadImgUrl = &headImgURL.String
+	}
+
+	if sex.Valid {
+		uint32Sex := uint32(sex.Int64)
+		userInfo.Sex = &uint32Sex
+	}
 
 	return userInfo
 }

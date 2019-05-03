@@ -186,7 +186,18 @@ message MsgChat {
 	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
 	required int32 dataType = 4; // 聊天的数据类型
 	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
-	optional int id = 6; // 消息id
+	optional int32 id = 6; // 消息id
+}
+
+// 拉取未读的聊天消息
+message MsgLoadUnreadChatReply {
+	repeated MsgChat msgs = 1; // 消息列表
+	optional int32 cursor = 2; // 下一次迭代的游标，如果为0，则表示迭代已经结束
+}
+
+// 设置消息已读
+message MsgSetReadChat {
+	repeated int32 ids = 1; // 消息id列表
 }
 
 // 房间列表，主要用于把用户的房间列表保存到redis上
@@ -353,7 +364,7 @@ message MsgReplayRoom
 // 微信用户信息
 message UserInfo
 {
-	required uint64 userID = 1;
+	required string userID = 1;
 	optional string openID = 2;
 	optional string nickName = 3;
 	optional uint32 sex = 4;
