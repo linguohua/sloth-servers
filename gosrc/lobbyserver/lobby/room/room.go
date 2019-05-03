@@ -27,8 +27,8 @@ func (*myRoomUtil) DeleteRoomInfoFromRedis(roomID string, userID string) {
 // InitWith init
 func InitWith() {
 	lobby.SetRoomUtil(roomUtil)
-	lobby.RegHTTPHandle("GET", "/createRoom", handlerCreateRoom)
-	lobby.RegHTTPHandle("GET", "/requestRoomInfo", handlerRequestRoomInfo)
+	lobby.RegHTTPHandle("POST", "/createRoom", handlerCreateRoom)
+	lobby.RegHTTPHandle("POST", "/requestRoomInfo", handlerRequestRoomInfo)
 	// lobby.AccUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo // 拉取用户最后所在的房间
 	lobby.RegHTTPHandle("GET", "/deleteRoom", handlerDeleteRoom) // 删除房间
 }
