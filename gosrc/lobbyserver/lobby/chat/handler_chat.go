@@ -75,7 +75,8 @@ func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 }
 
 // onMessageChat 处理聊天消息
-func handlerChat(w http.ResponseWriter, r *http.Request, userID string) {
+func handlerChat(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("UserID")
 	log.Println("handlerChat, userID:", userID)
 
 	body, err := ioutil.ReadAll(r.Body)
