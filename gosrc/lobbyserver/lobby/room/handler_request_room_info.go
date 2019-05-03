@@ -120,7 +120,7 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 }*/
 
 func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value(lobby.ContextKey("userID")).(string)
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
 	// 1. 从请求中获取房间6位数字ID
 	// 2. 检查房间有效性，比如是否存在，是否已经满了

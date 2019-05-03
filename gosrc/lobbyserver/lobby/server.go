@@ -46,7 +46,8 @@ func echoVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
-type contextKey string
+// ContextKey Context key
+type ContextKey string
 
 func tokenExtractMiddleware(old http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +57,7 @@ func tokenExtractMiddleware(old http.Handler) http.Handler {
 		if tk != "" {
 			userID, result := parseTK(tk)
 			if result {
-				newR = r.WithContext(context.WithValue(r.Context(), contextKey("userID"), userID))
+				newR = r.WithContext(context.WithValue(r.Context(), ContextKey("userID"), userID))
 			}
 		}
 

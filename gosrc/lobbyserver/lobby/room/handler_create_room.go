@@ -194,7 +194,7 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 }
 
 func handlerCreateRoom(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value(lobby.ContextKey("userID")).(string)
 	log.Println("handlerCreateRoom call, userID:", userID)
 
 	// 分配房间ID

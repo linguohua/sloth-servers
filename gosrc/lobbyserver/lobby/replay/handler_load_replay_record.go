@@ -80,7 +80,7 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 }
 
 func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value(lobby.ContextKey("userID")).(string)
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 
 	replayType := r.URL.Query().Get("rt")
