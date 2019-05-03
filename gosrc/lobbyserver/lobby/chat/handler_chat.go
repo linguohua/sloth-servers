@@ -8,6 +8,8 @@ import (
 	"lobbyserver/lobby"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
@@ -68,7 +70,7 @@ func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 }
 
 // onMessageChat 处理聊天消息
-func handlerChat(w http.ResponseWriter, r *http.Request) {
+func handlerChat(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Println("handlerChat, userID:", userID)
 

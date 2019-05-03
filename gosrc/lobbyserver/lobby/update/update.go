@@ -6,10 +6,10 @@ import (
 
 // InitWith init
 func InitWith() {
-	lobby.MainRouter.HandleFunc("/upgradeQuery", handlerUpgradeQuery)
-	lobby.MainRouter.HandleFunc("/webapi/update/uploadModule", handlerUpload)
-	lobby.MainRouter.HandleFunc("/webpi/update/loadAllModules", handlerLoadAllModules)
-	lobby.MainRouter.HandleFunc("/webapi/update/deleteModules", handlerDeleteModules)
+	lobby.RegHTTPHandle("GET", "/upgradeQuery", handlerUpgradeQuery)
+	lobby.RegHTTPHandle("POST", "/webapi/update/uploadModule", handlerUpload)
+	lobby.RegHTTPHandle("GET", "/webpi/update/loadAllModules", handlerLoadAllModules)
+	lobby.RegHTTPHandle("POST", "/webapi/update/deleteModules", handlerDeleteModules)
 
 	initConditionVariableCfg()
 

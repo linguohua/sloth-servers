@@ -13,10 +13,8 @@ import (
 
 	"lobbyserver/pricecfg"
 
-	"context"
-
 	"github.com/garyburd/redigo/redis"
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
@@ -29,8 +27,7 @@ type accRawHTTPHandler func(w http.ResponseWriter, r *http.Request)
 
 var (
 	// 根router，只有http server看到
-	rootRouter = mux.NewRouter()
-
+	rootRouter           = httprouter.New()
 	accSysExceptionCount int // 异常计数
 )
 
@@ -42,25 +39,27 @@ func loadCharm(userID string) int32 {
 	return int32(charm)
 }
 
-func echoVersion(w http.ResponseWriter, r *http.Request) {
+func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
-type contextKey string
-
-func tokenExtractMiddleware(old http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// RegHTTPHandle 注册HTTP handler
+func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
+	rootRouter.Handle(method, "/lobby/:uuid"+path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
-		var newR = r
+
 		if tk != "" {
 			userID, result := parseTK(tk)
 			if result {
-				newR = r.WithContext(context.WithValue(r.Context(), contextKey("userID"), userID))
+				var p = httprouter.Param{}
+				p.Key = "userID"
+				p.Value = userID
+				ps = append(ps, p)
 			}
 		}
 
-		old.ServeHTTP(w, newR)
+		handle(w, r, ps)
 	})
 }
 
@@ -70,19 +69,14 @@ func CreateHTTPServer() {
 
 	startRedisClient()
 
-	initFileServer()
+	// initFileServer()
 
 	pricecfg.LoadAllPriceCfg(pool)
 
-	var mainRouter = rootRouter.PathPrefix("/lobby/uuid/").Subrouter()
-	mainRouter.HandleFunc("/version", echoVersion)
-	mainRouter.Use(tokenExtractMiddleware)
+	RegHTTPHandle("GET", "/version", echoVersion)
 
 	// 注册一个文件服务器，以程序当前目录下的web作为根目录
-	rootRouter.PathPrefix("/webax").Handler(http.StripPrefix("/webax", http.FileServer(http.Dir("./web/dist"))))
-
-	MainRouter = mainRouter
-
+	rootRouter.ServeFiles("/webax/*filepath", http.Dir("./web/dist"))
 	gpubsub.Startup(pool, config.ServerID, onNotifyMessage, onGameServerRequest)
 
 	go acceptHTTPRequest()
@@ -107,8 +101,8 @@ func acceptHTTPRequest() {
 
 }
 
-func initFileServer() {
-	// 文件服务器
-	var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
-	rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
-}
+// func initFileServer() {
+// 	// 文件服务器
+// 	var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
+// 	rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
+// }

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"lobbyserver/lobby"
 	"net/http"
+
 	// "crypto/md5"
 	"github.com/golang/protobuf/proto"
+	"github.com/julienschmidt/httprouter"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
@@ -23,7 +25,7 @@ func replyQuicklyLogin(w http.ResponseWriter, loginReply *lobby.MsgQuicklyLoginR
 // 客户端发用户ID上来
 // 如果用户不发用户ID上来，则生成一个新的账号
 // 如果用户存在，则下发用户信息回去给用户
-func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request) {
+func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	log.Println("handlerQuicklyLogin")
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")

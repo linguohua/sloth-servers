@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
@@ -47,7 +49,7 @@ import (
 // 	}
 // }
 
-func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request) {
+func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Println("handleLoadReplayRooms call, userID:", userID)
 	replayType := r.URL.Query().Get("rt")

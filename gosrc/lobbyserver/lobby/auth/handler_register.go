@@ -3,10 +3,12 @@ package auth
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
 	"net/http"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/julienschmidt/httprouter"
+	log "github.com/sirupsen/logrus"
 )
 
 func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply) {
@@ -19,7 +21,7 @@ func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply)
 	w.Write(buf)
 }
 
-func handlerRegister(w http.ResponseWriter, r *http.Request) {
+func handlerRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")
 	csVer := r.URL.Query().Get("csVer")

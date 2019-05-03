@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
@@ -112,7 +114,7 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 	waitWebsocketMessage(ws, user, r)
 }
 
-func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
+func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -130,13 +132,11 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 
 // InitWith init
 func InitWith() {
-	var mainRouter = lobby.MainRouter
 	userMgr = newUserMgr()
 
 	startAliveKeeper()
 
 	lobby.SetSessionMgr(userMgr)
 
-	var sessions = mainRouter.PathPrefix("/ws").Subrouter()
-	sessions.HandleFunc("/", acceptWebsocket)
+	lobby.RegHTTPHandle("GET", "/ws", acceptWebsocket)
 }

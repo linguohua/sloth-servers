@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 
 	"io/ioutil"
@@ -119,7 +120,7 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 	return false
 }*/
 
-func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request) {
+func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
 	// 1. 从请求中获取房间6位数字ID

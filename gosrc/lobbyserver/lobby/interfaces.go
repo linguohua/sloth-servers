@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,9 +16,6 @@ var (
 	payUtil IPayUtil
 
 	mySQLUtil IMySQLUtil
-
-	// MainRouter main-router
-	MainRouter *mux.Router
 
 	// RandGenerator rand generator
 	RandGenerator *rand.Rand

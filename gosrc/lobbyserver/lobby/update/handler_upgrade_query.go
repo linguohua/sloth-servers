@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -36,7 +38,7 @@ func replyUpgradeQuery(w http.ResponseWriter, reply *UpgradeQueryReply) {
 	w.Write(buf)
 }
 
-func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request) {
+func handlerUpgradeQuery(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	reply := &UpgradeQueryReply{}
 	reply.Code = 0
 	reply.ABValid = false

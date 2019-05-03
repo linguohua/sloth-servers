@@ -7,6 +7,8 @@ import (
 	"lobbyserver/lobby"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+
 	//"webdata"
 	"github.com/garyburd/redigo/redis"
 )
@@ -28,7 +30,7 @@ func accSupportVerify(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func onQueryOnlineUser(w http.ResponseWriter, r *http.Request) {
+func onQueryOnlineUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var resultString = `{"count":%d}`
 	w.Write([]byte(fmt.Sprintf(resultString, lobby.SessionMgr().UserCount())))
 }
@@ -88,9 +90,9 @@ func supportMiddleware(old http.Handler) http.Handler {
 
 // InitWith init
 func InitWith() {
-	var mainRouter = lobby.MainRouter
-	var support = mainRouter.PathPrefix("/support").Subrouter()
-	support.Use(supportMiddleware)
+	//var mainRouter = lobby.MainRouter
+	//var support = mainRouter.PathPrefix("/support").Subrouter()
+	//support.Use(supportMiddleware)
 
-	support.HandleFunc("/onlineUser", onQueryOnlineUser)
+	lobby.RegHTTPHandle("GET", "/support/onlineUser", onQueryOnlineUser)
 }

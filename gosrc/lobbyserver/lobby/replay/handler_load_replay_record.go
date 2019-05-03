@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
@@ -79,7 +80,7 @@ func loadReplayRecordFromSQLServer(w http.ResponseWriter, r *http.Request, recor
 	// writeHTTPBodyWithGzip(w, r, bytesArray)
 }
 
-func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request) {
+func handleLoadReplayRecord(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Println("handleLoadReplayRecord call, userID:", userID)
 

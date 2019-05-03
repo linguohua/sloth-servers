@@ -3,12 +3,14 @@ package auth
 import (
 	"fmt"
 	"gconst"
-	"github.com/garyburd/redigo/redis"
-	"github.com/golang/protobuf/proto"
-	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
 	"net/http"
 	"strconv"
+
+	"github.com/garyburd/redigo/redis"
+	"github.com/golang/protobuf/proto"
+	"github.com/julienschmidt/httprouter"
+	log "github.com/sirupsen/logrus"
 )
 
 func replyLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
@@ -61,7 +63,7 @@ func loadUserInfoFromRedis(userID uint64) *lobby.UserInfo {
 	return nil
 }
 
-func handlerAccountLogin(w http.ResponseWriter, r *http.Request) {
+func handlerAccountLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	phoneNum := r.URL.Query().Get("phoneNum")
 	password := r.URL.Query().Get("password")
 

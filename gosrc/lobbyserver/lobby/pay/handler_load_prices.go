@@ -7,6 +7,8 @@ import (
 	"lobbyserver/pricecfg"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,7 +22,7 @@ func loadPricesReply(w http.ResponseWriter, priceCfgs string) {
 	w.Write([]byte(reply))
 }
 
-func handleLoadPrices(w http.ResponseWriter, r *http.Request) {
+func handleLoadPrices(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Printf("handleLoadPrices, user %s request load prices", userID)
 

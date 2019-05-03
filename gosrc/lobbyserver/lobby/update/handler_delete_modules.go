@@ -7,10 +7,11 @@ import (
 
 	// "lobbyserver/lobby"
 	// "github.com/golang/protobuf/proto"
+	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 )
 
-func handlerDeleteModules(w http.ResponseWriter, r *http.Request) {
+func handlerDeleteModules(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// 从body中读取json数据
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()

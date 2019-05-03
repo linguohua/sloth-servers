@@ -8,5 +8,5 @@ import (
 // InitWith init
 func InitWith() {
 	loadSensitiveWordDictionary(config.SensitiveWordFilePath)
-	lobby.MainRouter.HandleFunc("/chat", handlerChat)
+	lobby.RegHTTPHandle("POST", "/chat", handlerChat)
 }

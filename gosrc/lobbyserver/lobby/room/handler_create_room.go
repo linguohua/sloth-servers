@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
+
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -193,7 +195,7 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 	return true
 }
 
-func handlerCreateRoom(w http.ResponseWriter, r *http.Request) {
+func handlerCreateRoom(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	log.Println("handlerCreateRoom call, userID:", userID)
 

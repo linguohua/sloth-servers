@@ -3,10 +3,12 @@ package auth
 import (
 	"fmt"
 	"gconst"
-	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
 	"lobbyserver/wechat"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
+	log "github.com/sirupsen/logrus"
 )
 
 func replyWxLogin(w http.ResponseWriter, loginReply *lobby.MsgLoginReply) {
@@ -83,7 +85,7 @@ func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.UserInfo, error) {
 	return userInfo, nil
 }
 
-func handlerWxLogin(w http.ResponseWriter, r *http.Request) {
+func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	loginReply := &lobby.MsgLoginReply{}
 
 	wechatCode := r.URL.Query().Get("code")

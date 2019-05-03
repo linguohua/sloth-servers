@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 )
 
-func handlerLoadAllModules(w http.ResponseWriter, r *http.Request) {
+func handlerLoadAllModules(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ml := make([]*ModuleCfg, 0, 16)
 
 	// 把所有的配置下发到客户端

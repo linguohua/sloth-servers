@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 
 	"encoding/json"
@@ -73,7 +74,7 @@ func deleteRoomInfoFromRedis(roomID string, userIDString string) {
 	}
 }
 
-func handlerDeleteRoom(w http.ResponseWriter, r *http.Request) {
+func handlerDeleteRoom(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	userID := r.Context().Value("userID").(string)
 	roomID := r.URL.Query().Get("roomID")
 	if roomID == "" {

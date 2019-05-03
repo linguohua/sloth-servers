@@ -1,14 +1,17 @@
 package auth
 
 import (
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
+	log "github.com/sirupsen/logrus"
+
 	// "fmt"
 	"lobbyserver/lobby"
 	// "github.com/golang/protobuf/proto"
 )
 
-func handlerTest(w http.ResponseWriter, r *http.Request) {
+func handlerTest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// log.Println("handlerTest")
 	// qMod := "loginMode"
 	// modV := "1.0.1"

@@ -15,7 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 var (
 	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize}
 	// 根router，只有http server看到
-	rootRouter = mux.NewRouter()
+	rootRouter = httprouter.New()
 
 	roomMgr            = &RoomMgr{}                    // 房间管理
 	monkeyMgr          = &MonkeyMgr{}                  // monkey
@@ -151,7 +151,7 @@ func tryAcceptGameUser(userID string, roomIDString string, ws *websocket.Conn, r
 }
 
 // acceptWebsocket 把http请求转换为websocket
-func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
+func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var requestPath = r.URL.Path
 	requestPath = path.Base(requestPath)
 
@@ -216,23 +216,26 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func echoVersion(w http.ResponseWriter, r *http.Request) {
+func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Write([]byte(fmt.Sprintf("version:%d", versionCode)))
 }
 
-func monkeySupportMiddleware(old http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var p = r.URL.Path
-		log.Println("monkey support handler call:", p)
+func monkeyHTTPHandle(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var spName = ps.ByName("sp")
 
-		if monkeyAccountVerify(w, r) {
-			old.ServeHTTP(w, r)
+	log.Println("monkey support handler call:", spName)
+	if monkeyAccountVerify(w, r) {
+		h, ok := monkeySupportHandlers[spName]
+		if ok {
+			h(w, r)
 		} else {
-			var msg = "no authorization for call monkey handler:" + p
-			log.Println(msg)
-			w.Write([]byte(msg))
+			log.Println("no monkey support handler found:", spName)
 		}
-	})
+	} else {
+		var msg = "no authorization for call monkey handler:" + spName
+		log.Println(msg)
+		w.Write([]byte(msg))
+	}
 }
 
 // CreateHTTPServer 启动服务器
@@ -243,16 +246,12 @@ func CreateHTTPServer() {
 
 	// 所有模块看到的mainRouter
 	// 外部访问需要形如/game/uuid/play
-	var mainRouter = rootRouter.PathPrefix("/game/{uuid}/").Subrouter()
-	mainRouter.HandleFunc("/ws/{wtype}", acceptWebsocket)
-	mainRouter.HandleFunc("/version", echoVersion)
+	rootRouter.Handle("GET", "/game/:uuid/ws/:wtype", acceptWebsocket)
+	rootRouter.Handle("GET", "/game/:uuid/version", echoVersion)
 
-	// monkey support handlers
-	var supportRouter = mainRouter.PathPrefix("/support").Subrouter()
-	supportRouter.Use(monkeySupportMiddleware) // 验证授权
-	for k, v := range monkeySupportHandlers {
-		supportRouter.HandleFunc(k, v)
-	}
+	// POST和GET都要订阅
+	rootRouter.Handle("GET", "/game/:uuid/support/*sp", monkeyHTTPHandle)
+	rootRouter.Handle("POST", "/game/:uuid/support/*sp", monkeyHTTPHandle)
 
 	go acceptHTTPRequest()
 }
