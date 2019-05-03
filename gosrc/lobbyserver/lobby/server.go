@@ -79,6 +79,9 @@ func CreateHTTPServer() {
 	mainRouter.HandleFunc("/version", echoVersion)
 	mainRouter.Use(tokenExtractMiddleware)
 
+	// 注册一个文件服务器，以程序当前目录下的web作为根目录
+	rootRouter.PathPrefix("/webax").Handler(http.StripPrefix("/webax", http.FileServer(http.Dir("./web/dist"))))
+
 	MainRouter = mainRouter
 
 	gpubsub.Startup(pool, config.ServerID, onNotifyMessage, onGameServerRequest)
