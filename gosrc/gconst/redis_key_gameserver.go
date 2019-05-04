@@ -7,16 +7,18 @@ const (
 	GameServerRoomTablePrefix = "g:r:"
 	// GameServerInstancePrefix g 表示game server，i表示instance实例
 	GameServerInstancePrefix = "g:i:"
+
 	// GameServerMJRecorderTablePrefix 麻将打牌记录表格
 	GameServerMJRecorderTablePrefix = "g:rc:"
 	// GameServerMJReplayRoomTablePrefix 麻将房间回播记录
 	GameServerMJReplayRoomTablePrefix = "g:rr:"
+	// GameServerMJReplayRoomListPrefix 用户的回播房间列表
+	GameServerMJReplayRoomListPrefix = "g:rrl:"
 	// GameServerReplayRoomsReferenceSetPrefix 回播记录引用set
 	GameServerReplayRoomsReferenceSetPrefix = "g:rrr:"
-	// GameServerMJRecorderDeletedSet 已经删除了的回播记录set
-	GameServerMJRecorderDeletedSet = "g:rcds"
 	// GameServerMJRecorderShareIDTable 回播记录分享码哈希表
 	GameServerMJRecorderShareIDTable = "g:rrsharedIDs"
+
 	// GameServerMonkeyAccountTablePrefix monkey账号表格，根据游戏类型区分，例如g:mk:1表示大丰麻将的monkey账号表
 	GameServerMonkeyAccountTablePrefix = "g:mk:"
 	// GameServerRoomStatisticsPrefix 统计牌局内数据， g表示game，st表示统计statistics

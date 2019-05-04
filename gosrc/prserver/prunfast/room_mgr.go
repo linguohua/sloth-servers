@@ -17,12 +17,9 @@ import (
 )
 
 var (
-	pool *redis.Pool
-	//redisServer = flag.String("redisServer", gscfg.RedisServer, "")
-	pubSubSequnce = uint32(0)
-	// luaScript               *redis.Script
+	pool                  *redis.Pool
+	pubSubSequnce         = uint32(0)
 	luaScriptForHandScore *redis.Script
-	// luaScriptClubReplayRoom *redis.Script
 )
 
 // RoomMgr 房间管理
@@ -117,7 +114,7 @@ func (rm *RoomMgr) onCreateRoomReq(msgBag *gconst.SSMsgBag) {
 
 	// 房间类型
 	roomType := roomParams.GetRoomType()
-	if roomType != int32(gconst.RoomType_DafengGZ) {
+	if roomType != int32(myRoomType) {
 		log.Println("unsupport room tye:", roomType)
 		rm.replySSMsg(msgBag, gconst.SSMsgError_ErrUnsupportRoomType, nil)
 		return
@@ -331,10 +328,10 @@ func (rm *RoomMgr) register() {
 
 	hashKey := gconst.GameServerInstancePrefix + gscfg.ServerID
 	conn.Send("MULTI")
-	conn.Send("hmset", hashKey, "roomtype", int(gconst.RoomType_DafengGZ), "ver", versionCode, "p", gscfg.ServerPort)
-	conn.Send("SADD", fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, int(gconst.RoomType_DafengGZ)), gscfg.ServerID)
-	conn.Send("SADD", gconst.GameServerRoomTypeSet, int(gconst.RoomType_DafengGZ))
-	// conn.Send("HSET", fmt.Sprintf("%s%d", gconst.RoomTypeKey, gconst.RoomType_DafengGZ), "type", 1)
+	conn.Send("hmset", hashKey, "roomtype", int(myRoomType), "ver", versionCode, "p", gscfg.ServerPort)
+	conn.Send("SADD", fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, int(myRoomType)), gscfg.ServerID)
+	conn.Send("SADD", gconst.GameServerRoomTypeSet, int(myRoomType))
+	// conn.Send("HSET", fmt.Sprintf("%s%d", gconst.RoomTypeKey, myRoomType), "type", 1)
 	_, err := conn.Do("EXEC")
 	if err != nil {
 		log.Panicln("failed to register server to redis:", err)
@@ -342,7 +339,7 @@ func (rm *RoomMgr) register() {
 
 	if gscfg.EtcdServer != "" {
 		// 如果服务器使用etcd，则需要去etcd登记自己
-		gscfg.Regist2Etcd(versionCode, int(gconst.RoomType_DafengGZ))
+		gscfg.Regist2Etcd(versionCode, int(myRoomType))
 	}
 }
 
@@ -367,7 +364,7 @@ func (rm *RoomMgr) restoreRooms() {
 	defer conn.Close()
 
 	// 清空在线玩家数量
-	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, myRoomType)
 	conn.Do("HSET", key, gscfg.ServerID, 0)
 
 	// _, err := luaScriptForHandScore.Do(conn, gconst.LobbyPlayerTablePrefix+"1", -450)
@@ -542,23 +539,6 @@ func pushNotify2RoomServer(reqCode gconst.SSMsgReqCode, params proto.Message) {
 
 //lua脚本
 func createLuaScript() {
-	// 为了兼容老版本数据，保留EXISTS测试检查回播码是否被使用
-	// KEYS[1] 回播记录表格前缀
-	// KEYS[2] 回播记录GUID
-	// KEYS[3] 用于测试的回放码列表
-	// KYES[4] 回播分享码HASHTABLE
-	// script := `for rndNumber in string.gmatch(KEYS[3], '%d+') do
-	// 				local value = redis.call('EXISTS', KEYS[1]..rndNumber)
-	// 				local value2 = redis.call('HEXISTS', KEYS[4], rndNumber)
-	// 				if value == 0 and value2 == 0 then
-	// 					redis.call('HSET', KEYS[4], rndNumber, KEYS[2])
-	// 					redis.call('HSET', KEYS[1]..KEYS[2], 'sid', rndNumber)
-	// 					return rndNumber
-	// 				end
-	// 			end`
-
-	// luaScript = redis.NewScript(4, script)
-
 	script2 := `local value = redis.call('hget', KEYS[1], 'dfHMW')
 		if type(value) ~= 'string' then
 			value = 0
@@ -580,29 +560,4 @@ func createLuaScript() {
 		return 0`
 
 	luaScriptForHandScore = redis.NewScript(2, script2)
-
-	/*
-		// KEYS[1], clubID
-		// KEYS[2], roomID
-		// gconst.ClubTablePrefix+clubID
-		// gconst.ClubReplayRoomsSetPrefix+clubID
-		// gconst.ClubReplayRoomsListPrefix+clubID
-		// gconst.GameServerReplayRoomsReferenceSetPrefix+roomID
-		script4 := `local clubID = KEYS[1]
-			local roomID = KEYS[2]
-			local clubTable = '%s'..clubID
-			local owner = redis.call('HGET', clubTable, 'owner')
-			if owner == false then
-				return
-			end
-			local clubReplayRoomsSet = '%s'..clubID
-			local clubReplayRoomsList = '%s'..clubID
-			local replayRoomsReferenceSet = '%s'..roomID
-			redis.call('SADD', clubReplayRoomsSet, roomID)
-			redis.call('LPUSH', clubReplayRoomsList, roomID)
-			redis.call('SADD', replayRoomsReferenceSet, clubID)`
-		script4Format := fmt.Sprintf(script4, gconst.ClubTablePrefix, gconst.ClubReplayRoomsSetPrefix,
-			gconst.ClubReplayRoomsListPrefix, gconst.GameServerReplayRoomsReferenceSetPrefix)
-		// log.Println(script4Format)
-		luaScriptClubReplayRoom = redis.NewScript(2, script4Format)*/
 }

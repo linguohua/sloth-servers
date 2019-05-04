@@ -30,7 +30,7 @@ func monkeyAccountVerify(w http.ResponseWriter, r *http.Request) bool {
 	conn := pool.Get()
 	defer conn.Close()
 
-	tableName := fmt.Sprintf("%s%d", gconst.GameServerMonkeyAccountTablePrefix, gconst.RoomType_DafengGZ)
+	tableName := fmt.Sprintf("%s%d", gconst.GameServerMonkeyAccountTablePrefix, myRoomType)
 	pass, e := redis.String(conn.Do("HGET", tableName, account))
 	if e != nil || password != pass {
 		return false
