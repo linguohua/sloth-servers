@@ -2,7 +2,6 @@ package prunfast
 
 import (
 	"container/list"
-	fmt "fmt"
 	"gconst"
 	"pokerface"
 	"strings"
@@ -14,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -27,10 +25,6 @@ const (
 // 极端情况下，recorder marshal后的大小接近3K
 // 因此保存redis的时候需要考虑保存速度，以及对redis内存的压力
 type LoopContext struct {
-	//drawCount int
-
-	//actionCount int
-	msgReplayRoom       *pokerface.MsgReplayRoom
 	replayRecordSummary *pokerface.MsgReplayRecordSummary
 
 	recorder *pokerface.SRMsgHandRecorder
@@ -105,7 +99,7 @@ func (lc *LoopContext) snapshootDealActions() {
 	var isContinuoursBanker = room.bankerPlayer().gStatis.isContinuousBanker
 	msgRecorder.IsContinuousBanker = &isContinuoursBanker
 	msgRecorder.RoomNumber = &lc.s.room.roomNumber
-	var roomType32 = int32(gconst.RoomType_DafengGZ)
+	var roomType32 = int32(myRoomType)
 	msgRecorder.RoomType = &roomType32
 
 	extra := &pokerface.SRMsgHandRecorderExtra{}
@@ -156,7 +150,8 @@ func (lc *LoopContext) snapshootDealActions() {
 }
 
 // addDrawAction 记录抽牌动作，配牌工具需要根据flags不同对抽牌动作做必要的选择
-func (lc *LoopContext) addActionWithCards(who *PlayerHolder, action ActionType, msgCardHand *pokerface.MsgCardHand, qaIndex int, flags pokerface.SRFlags) {
+func (lc *LoopContext) addActionWithCards(who *PlayerHolder, action ActionType,
+	msgCardHand *pokerface.MsgCardHand, qaIndex int, flags pokerface.SRFlags) {
 	var msgSRAction = &pokerface.SRAction{}
 	var action32 = int32(action)
 	msgSRAction.Action = &action32
@@ -235,7 +230,8 @@ func (lc *LoopContext) dump() {
 
 // dumpSRAction 打印action
 func dumpSRAction(a *pokerface.SRAction) {
-	log.Printf("chair:%d, a:%d, qi:%d,flag:%d\n", a.GetChairID(), a.GetAction(), a.GetQaIndex(), a.GetFlags())
+	log.Printf("chair:%d, a:%d, qi:%d,flag:%d\n", a.GetChairID(),
+		a.GetAction(), a.GetQaIndex(), a.GetFlags())
 }
 
 // toByteArray 转换为byte数组
@@ -247,84 +243,6 @@ func (lc *LoopContext) toByteArray() []byte {
 	}
 
 	return buf
-}
-
-// dump2Redis 输出到redis，注意此时不能再引用room中的players
-func (lc *LoopContext) dump2Redis(s *SPlaying) {
-	if lc.s.room.isUlimitRound {
-		return
-	}
-
-	if lc.recorder.Actions == nil {
-		lc.actionList2Actions()
-	}
-
-	newUUID, err := uuid.NewV4()
-	if err != nil {
-		log.Panicln("dump2Redis failed, new uuid error:", err)
-	}
-
-	recordID := fmt.Sprintf("%s", newUUID)
-
-	buf, err := proto.Marshal(lc.recorder)
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	_, err = conn.Do("HMSET", gconst.GameServerMJRecorderTablePrefix+recordID, "d", buf, "r", s.room.ID, "cid", s.room.configID)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println("dump2Redis, new record id:", recordID)
-
-	lc.updateReplayRoom(conn, s.room.ID, recordID)
-
-	// 为每一个玩家添加回播房间记录
-	for _, p := range lc.msgReplayRoom.Players {
-		var replayRooms []string
-		replayRoomStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+p.GetUserID(), "rr"))
-		if err != nil {
-			// 由于玩家没有玩过本游戏因此可能mjrc不存在，redis返回nil错误，因此是正常情况不需要输出日志
-			//log.Println(err)
-			replayRoomStr = ""
-		} else {
-			replayRooms = strings.Split(replayRoomStr, ",")
-		}
-
-		found := false
-		if len(replayRooms) > 0 {
-			for _, rr := range replayRooms {
-				if rr == s.room.ID {
-					found = true
-					break
-				}
-			}
-
-		}
-
-		// 房间已经存在
-		if found {
-			continue
-		}
-
-		// 限制每个用户只能保存MJMaxReplayRoomNumber个最近记录
-		// 如果裁剪了用户的最近记录，则需要检查记录是否已经无人引用，如果是则彻底删除记录
-		if len(replayRooms) >= maxReplayRoomNumber {
-			lc.unbindMJReplayRoomIfUseless(conn, replayRooms[0], p.GetUserID())
-			replayRooms = replayRooms[1:]
-		}
-
-		replayRooms = append(replayRooms, s.room.ID)
-		_, err = conn.Do("HSET", gconst.LobbyPlayerTablePrefix+p.GetUserID(), "rr", strArray2Comma(replayRooms))
-		if err != nil {
-			log.Println(err)
-		}
-	}
 }
 
 func (lc *LoopContext) snapshootReplayRecordSummary(room *Room) {
@@ -351,108 +269,6 @@ func (lc *LoopContext) snapshootReplayRecordSummary(room *Room) {
 	}
 
 	lc.replayRecordSummary = replayRecordSummary
-
-	var msgReplayRoom = &pokerface.MsgReplayRoom{}
-	var recordRoomType32 = int32(gconst.RoomType_DafengGZ)
-	msgReplayRoom.RecordRoomType = &recordRoomType32
-	msgReplayRoom.RoomNumber = &room.roomNumber
-	var startTime = unixTimeInMinutes()
-	msgReplayRoom.StartTime = &startTime
-	msgReplayRoom.OwnerUserID = &room.ownerID
-
-	// 玩家列表
-	var replayPlayers = make([]*pokerface.MsgReplayPlayerInfo, len(room.players))
-	for i, p := range room.players {
-		rp := &pokerface.MsgReplayPlayerInfo{}
-		var chairID32 = int32(p.chairID)
-		rp.ChairID = &chairID32
-		var userID = p.userID()
-		rp.UserID = &userID
-		var nick = p.user.getInfo().nick
-		rp.Nick = &nick
-		var sex = p.user.getInfo().sex
-		rp.Sex = &sex
-		var headIconURL = p.user.getInfo().headIconURI
-		rp.HeadIconURI = &headIconURL
-
-		var totalScore32 = int32(p.gStatis.roundScore)
-		rp.TotalScore = &totalScore32
-
-		var avatarID = int32(p.user.getInfo().avatarID)
-		rp.AvatarID = &avatarID
-
-		replayPlayers[i] = rp
-	}
-
-	log.Println("snapshootReplayRecordSummary, players count:", len(replayPlayers))
-	msgReplayRoom.Players = replayPlayers
-
-	lc.msgReplayRoom = msgReplayRoom
-}
-
-// updateReplayRoom 更新回播房间记录
-func (lc *LoopContext) updateReplayRoom(conn redis.Conn, roomID string, recordID string) {
-
-	// 加载房间回播记录列表
-	recordsStr := ""
-	var bb []byte
-	var records []string
-	values, err := redis.Values(conn.Do("HMGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr", "d"))
-	if err == nil {
-		recordsStr, err = redis.String(values[0], err)
-		if err == nil {
-			records = strings.Split(recordsStr, ",")
-		}
-		bb, _ = redis.Bytes(values[1], err)
-	}
-
-	records = append(records, recordID)
-
-	msgReplayRoom := &pokerface.MsgReplayRoom{}
-	if bb != nil && len(bb) > 0 {
-		err = proto.Unmarshal(bb, msgReplayRoom)
-		if err != nil {
-			log.Println("updateReplayRoom proto err:", err)
-		}
-
-		// 保存每一个人的总得分
-		msgReplayRoom.Players = lc.msgReplayRoom.Players
-		log.Println("updateReplayRoom, use old, players count:", len(msgReplayRoom.Players))
-
-	} else {
-		msgReplayRoom = lc.msgReplayRoom
-		log.Println("updateReplayRoom, use new, players count:", len(msgReplayRoom.Players))
-	}
-
-	userIDs := make([]string, len(msgReplayRoom.Players))
-	for i, p := range msgReplayRoom.Players {
-		userIDs[i] = p.GetUserID()
-	}
-
-	var replayRecordSummary = lc.replayRecordSummary
-	replayRecordSummary.RecordUUID = &recordID
-
-	msgReplayRoom.Records = append(msgReplayRoom.Records, replayRecordSummary)
-
-	var endTime = unixTimeInMinutes()
-	msgReplayRoom.EndTime = &endTime
-
-	buf, err := proto.Marshal(msgReplayRoom)
-	if err != nil {
-		log.Println("updateReplayRoom, marshal error:", err)
-		return
-	}
-
-	unixTimeInMinutes32 := unixTimeInMinutes()
-	// 记录加到房间的回放列表
-	conn.Send("MULTI")
-	conn.Send("HMSET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr", strArray2Comma(records),
-		"d", buf, "rrt", int(gconst.RoomType_DafengGZ), "date", unixTimeInMinutes32)
-
-	for _, u := range userIDs {
-		conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
-	}
-	conn.Do("EXEC")
 }
 
 // strArray2Comma 字符串数据转为逗号分隔字符串
@@ -469,104 +285,6 @@ func strArray2Comma(ss []string) string {
 	result = result + ss[len(ss)-1]
 
 	return result
-}
-
-// unbindMJReplayRoomIfUseless 解除回播房间的引用
-func (lc *LoopContext) unbindMJReplayRoomIfUseless(conn redis.Conn, roomID string, referenceBy string) {
-	conn.Send("MULTI")
-	conn.Send("SREM", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, referenceBy)
-	conn.Send("SCARD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID) // 新的回播房间引用关系是保存于这个set中
-	conn.Send("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "u")   // 旧的回播房间引用则是保存在这个field中，以逗号分隔
-
-	values, err := redis.Values(conn.Do("EXEC"))
-	if err != nil && err != redis.ErrNil {
-		log.Println("unbindMJReplayRoomIfUseless, redis err:", err)
-		return
-	}
-
-	refSetSize, _ := redis.Int(values[1], nil)
-	refUserStr, _ := redis.String(values[2], nil) // 这部分相关代码，是由于需要迁移老的回播房间引用存储方式而保留
-
-	if refSetSize > 0 {
-		// 还有其他引用
-		return
-	}
-
-	needUnBind := true
-	// 这部分相关代码，是由于需要迁移老的回播房间引用存储方式而保留
-	if refUserStr != "" {
-
-		found := false
-		users := strings.Split(refUserStr, ",")
-		for i, u := range users {
-			if u == referenceBy {
-				found = true
-				users = append(users[:i], users[i+1:]...)
-				break
-			}
-		}
-
-		if found {
-			// 更新引用的用户列表
-			conn.Send("MULTI")
-			for _, u := range users {
-				conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
-			}
-			conn.Send("HDEL", gconst.GameServerMJReplayRoomTablePrefix+roomID, "u") // 把旧的清理掉
-			conn.Do("EXEC")
-		}
-
-		if len(users) > 0 {
-			// 还有老数据引用着这个回播房间，暂时不能删除
-			needUnBind = false
-		}
-	}
-
-	if needUnBind {
-		// 没有人引用这个记录了，可以删除，删除房间每一局打牌记录
-		lc.unbindMJReplayRecords(conn, roomID)
-
-		// 清理该房间的回播记录
-		conn.Send("MULTI")
-		conn.Send("DEL", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID)
-		conn.Send("DEL", gconst.GameServerMJReplayRoomTablePrefix+roomID)
-		_, err := conn.Do("EXEC")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println("del replay room:", roomID)
-	}
-}
-
-// unbindMJReplayRecords 解除回放记录引用
-func (lc *LoopContext) unbindMJReplayRecords(conn redis.Conn, roomID string) {
-	var records []string
-	recordsStr, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
-	if err != nil {
-	} else {
-		records = strings.Split(recordsStr, ",")
-	}
-
-	if len(records) < 1 {
-		return
-	}
-
-	// 先登记到已删除set中
-	conn.Send("MULTI")
-	for _, r := range records {
-		// 添加到已经被删除set中，以便定时清理任务可以通知sqlserver等持久化数据库做清理
-		conn.Send("SADD", gconst.GameServerMJRecorderDeletedSet, r)
-	}
-	conn.Do("EXEC")
-
-	// 先从redis中删除，回播记录可能已经不存在于redis，已经被腾挪到持久化数据库
-	conn.Send("MULTI")
-	for _, r := range records {
-		conn.Send("DEL", gconst.GameServerMJRecorderTablePrefix+r)
-		lc.cl.Println("delete hand record:", r)
-	}
-	conn.Do("EXEC")
 }
 
 func loadMJLastRecordForRoom(conn redis.Conn, roomID string) []byte {

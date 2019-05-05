@@ -22,6 +22,8 @@ const (
 	wsReadLimit       = 1024 // 每个websocket的接收数据包长度限制
 	wsReadBufferSize  = 2048 // 每个websocket的接收缓冲限制
 	wsWriteBufferSize = 4096 // 每个websocket的发送缓冲限制
+
+	myRoomType = gconst.RoomType_DafengGZ
 )
 
 var (
@@ -48,7 +50,7 @@ func incrOnlinePlayerNum() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, myRoomType)
 	conn.Do("HINCRBY", key, gscfg.ServerID, 1)
 }
 
@@ -57,7 +59,7 @@ func decrOnlinePlayerNum() {
 	conn := pool.Get()
 	defer conn.Close()
 
-	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, gconst.RoomType_DafengGZ)
+	var key = fmt.Sprintf("%s%d", gconst.GameServerOnlineUserNumPrefix, myRoomType)
 	conn.Do("HINCRBY", key, gscfg.ServerID, -1)
 }
 

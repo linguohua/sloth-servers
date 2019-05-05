@@ -71,6 +71,8 @@ type Room struct {
 	rbl                *RoomBlockList
 	networkRequestLock *sync.Mutex // 网络请求处理lock，确保任意时刻，房间只处理一个玩家请求
 
+	msgReplayRoom *pokerface.MsgReplayRoom // 回播
+
 	cl *logrus.Entry
 }
 
@@ -288,11 +290,6 @@ func (r *Room) onGameOver(msgHandOver *pokerface.MsgHandOver) {
 		}
 
 		p.sendMsg(msg, int32(pokerface.MessageCode_OPGameOver))
-	}
-
-	// 如果是俱乐部房间，则需要写大赢家统计
-	if r.clubID != "" && len(r.scoreRecords) > 0 {
-		r.calcSaveGreatWinnersForClubRoom()
 	}
 }
 
@@ -1338,7 +1335,7 @@ func (r *Room) writePlayersStatis() {
 
 		userID := p.userID()
 		// g:yyyymmdd:userID:dsu(roomType)
-		dailyStatisTable := fmt.Sprintf(gconst.GameServerDailyStatisTablePrefix, dd, userID, gconst.RoomType_DafengGZ)
+		dailyStatisTable := fmt.Sprintf(gconst.GameServerDailyStatisTablePrefix, dd, userID, myRoomType)
 		if p.sctx != nil {
 			var totalWinScore = p.sctx.calcTotalWinScore()
 			if totalWinScore != 0 {
@@ -1618,138 +1615,4 @@ func (r *Room) updateUserLocation(userID string, location string) {
 		user := player.user
 		user.send(buf)
 	}
-}
-
-/*
-func (r *Room) isUserClubMember(userID string) bool {
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	i, err := redis.Int(conn.Do("SISMEMBER", gconst.ClubMemberSetPrefix+r.clubID, userID))
-	if err != nil {
-		r.cl.Println("isUserClubMember, redis err:", err)
-		return false
-	}
-
-	if i == 0 {
-		return false
-	}
-
-	return true
-}*/
-
-// calcSaveGreatWinnersForClubRoom 计算并保存大赢家，注意函数会增加一次对局计数和大赢家计数，因此必须是新对局完成后调用本函数
-func (r *Room) calcSaveGreatWinnersForClubRoom() {
-	if r.clubID == "" {
-		return
-	}
-
-	if len(r.scoreRecords) < 1 {
-		return
-	}
-
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	records := r.scoreRecords
-	scoresMap := make(map[string]int)
-	for _, rc := range records {
-		playerScores := rc.PlayerRecords
-		for _, ps := range playerScores {
-			s := scoresMap[ps.GetUserID()]
-			s = s + int(ps.GetScore())
-
-			scoresMap[ps.GetUserID()] = s
-		}
-	}
-
-	// 找到最大的计分
-	maxScore := 0
-	for _, v := range scoresMap {
-		if v > maxScore {
-			maxScore = v
-		}
-	}
-
-	// 找到获得最大计分的玩家userID
-	greatWinnerUserIDs := make([]string, 0, len(scoresMap))
-	for k, v := range scoresMap {
-		if v == maxScore {
-			userID := k
-			greatWinnerUserIDs = append(greatWinnerUserIDs, userID)
-		}
-	}
-
-	// 读取俱乐部统计表
-	clubID := r.clubID
-	timeNow := time.Now()
-	targetDate := timeNow.Format("2006-Jan-02")
-	scoreSetKey := "club:" + targetDate + ":" + clubID
-	clubScoreMap := make(map[string]int)
-	for userID := range scoresMap {
-		clubScoreMap[userID] = 0
-	}
-
-	index := 0
-	userIDs := make([]string, len(scoresMap))
-	for uID := range scoresMap {
-		userIDs[index] = uID
-		index++
-	}
-
-	conn.Send("MULTI")
-	for _, userID := range userIDs {
-		conn.Send("ZSCORE", scoreSetKey, userID)
-	}
-
-	values, _ := redis.Values(conn.Do("EXEC"))
-	index = 0
-	// 每个玩家增加一次对局计数
-	for _, userID := range userIDs {
-		score, _ := redis.Int(values[index], nil)
-		clubScoreMap[userID] = incClubScorePlayCount(score)
-		index++
-	}
-
-	// 大赢家增加一次计数
-	for _, userID := range greatWinnerUserIDs {
-		score, _ := clubScoreMap[userID]
-		clubScoreMap[userID] = incClubScoreWinCount(score)
-	}
-
-	greatWinnersStr := strArray2Comma(greatWinnerUserIDs)
-	conn.Send("MULTI")
-	for userID, score := range clubScoreMap {
-		conn.Send("ZADD", scoreSetKey, score, userID)
-	}
-	conn.Send("HSET", gconst.GameServerMJReplayRoomTablePrefix+r.ID, "gw", greatWinnersStr)
-	conn.Do("EXEC")
-}
-
-func incClubScorePlayCount(score int) int {
-	winCount := int((score & 0xffff0000) >> 16)
-	playCount := int((score & 0x0000ffff))
-
-	if playCount == 0 {
-		playCount = 0xffff
-	}
-
-	playCount = playCount - 1
-
-	score = (winCount << 16) | (playCount)
-
-	return score
-}
-
-func incClubScoreWinCount(score int) int {
-	winCount := int((score & 0xffff0000) >> 16)
-	playCount := int((score & 0x0000ffff))
-
-	winCount = winCount + 1
-
-	score = (winCount << 16) | (playCount)
-
-	return score
 }
