@@ -1,0 +1,2 @@
+protoc --proto_path=../../proto -o df.pb ../../proto/game_mahjong.proto ../../proto/game_mahjong_replay.proto ../../proto/game_mahjong_df.proto ../../proto/game_mahjong_s2s.proto ../../proto/game_mahjong_split2.proto
+@pause
