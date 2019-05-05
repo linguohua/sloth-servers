@@ -1,2 +1,0 @@
-protoc --proto_path=../../proto -o runfast.pb ../../proto/game_pokerface.proto ../../proto/game_pokerface_replay.proto ../../proto/game_pokerface_rf.proto ../../proto/game_pokerface_s2s.proto ../../proto/game_pokerface_split2.proto
-@pause
