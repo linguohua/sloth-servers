@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gsconfig"
+	"gscfg"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,7 +23,7 @@ func waitForSignal() {
 		}
 
 		if s == syscall.SIGUSR2 {
-			gsconfig.ReLoadConfigFile()
+			gscfg.ReLoadConfigFile()
 			continue
 		}
 

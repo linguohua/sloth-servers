@@ -1,7 +1,7 @@
 package main
 
 import (
-	"accessory/config"
+	"config"
 	"fmt"
 	"os"
 	"os/signal"
