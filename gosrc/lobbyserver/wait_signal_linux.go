@@ -1,7 +1,7 @@
 package main
 
 import (
-	"config"
+	"lobbyserver/config"
 	"fmt"
 	"os"
 	"os/signal"
