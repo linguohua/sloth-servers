@@ -2,6 +2,7 @@ package lobby
 
 import (
 	"math/rand"
+	"net/http"
 
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ var (
 	payUtil IPayUtil
 
 	mySQLUtil IMySQLUtil
+
+	updateUtil IUpdateUtil
 
 	// RandGenerator rand generator
 	RandGenerator *rand.Rand
@@ -66,7 +69,7 @@ func SetRoomUtil(obj IRoomUtil) {
 // MySQLUtil mysql utility
 func MySQLUtil() IMySQLUtil {
 	if mySQLUtil == nil {
-		log.Panic("mySQLUtil is null, maybe not mount room package yet")
+		log.Panic("mySQLUtil is null, maybe not mount mysql package yet")
 	}
 
 	return mySQLUtil
@@ -75,6 +78,20 @@ func MySQLUtil() IMySQLUtil {
 // SetMySQLUtil set sql utility
 func SetMySQLUtil(obj IMySQLUtil) {
 	mySQLUtil = obj
+}
+
+// UpdateUtil update utility
+func UpdateUtil() IUpdateUtil {
+	if updateUtil == nil {
+		log.Panic("mySQLUtupdateUtilil is null, maybe not mount update package yet")
+	}
+
+	return updateUtil
+}
+
+// SetUpdateUtil set update utility
+func SetUpdateUtil(obj IUpdateUtil) {
+	updateUtil = obj
 }
 
 // ISessionMgr websocket mgr
@@ -113,4 +130,9 @@ type IMySQLUtil interface {
 	GetOrGenerateUserID(account string) (userID string, isNew bool)
 	RegisterAccount(account string, passwd string, phone string, userInfo *UserInfo, clientInfo *ClientInfo) error
 	LoadUserInfo(userID string) *UserInfo
+}
+
+// IUpdateUtil update utility
+type IUpdateUtil interface {
+	CheckUpdate(r *http.Request) bool
 }

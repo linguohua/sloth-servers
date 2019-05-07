@@ -123,23 +123,22 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := ps.ByName("userID")
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
+
+	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
+
+	// TODO: 检查更新
+	updatUtil := lobby.UpdateUtil()
+	isNeedUpdate := updatUtil.CheckUpdate(r)
+	if isNeedUpdate && isForceUpgrade == "true" {
+		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrIsNeedUpdate), nil)
+		return
+	}
+
 	// 1. 从请求中获取房间6位数字ID
 	// 2. 检查房间有效性，比如是否存在，是否已经满了
 	// 3. 用房间6位数字ID去请求房间id
 	// 4. 获取房间所在服务器的ID
 	// 5. 用服务器ID去获取服务器的URL
-	// if isUserInBlacklist(userID) {
-	// 	log.Println("onMessageRequestRoomInfo,user in black list")
-	// 	replyRequestRoomInfo(w, int32(lobby.MsgError_ErrUserInBlacklist), nil)
-	// 	return
-	// }
-
-	// accessoryMessage, errCode := parseAccessoryMessage(r)
-	// if errCode != int32(lobby.MsgError_ErrSuccess) {
-	// 	replyRequestRoomInfo(w, errCode, nil)
-	// }
-
-	// bytes := accessoryMessage.GetData()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println("handlerCreateRoom error:", err)

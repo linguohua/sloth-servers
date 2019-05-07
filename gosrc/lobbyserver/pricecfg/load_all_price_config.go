@@ -172,19 +172,4 @@ func loadAllPriceConfigFromRedis() {
 		log.Println("try start schedule activity")
 		startScheduleActivity(activityCfg)
 	}
-
-	// buf, err := json.Marshal(cfgs)
-	// if err != nil {
-	// 	log.Println("err:", err)
-	// 	return
-	// }
-	// log.Println(string(buf))
 }
-
-// LoadAllPriceCfg 加载所以的价格配置
-// func LoadAllPriceCfg(p *redis.Pool) {
-// 	pool = p
-// 	loadAllPriceConfigFromRedis()
-
-// 	println("cfg len :", len(cfgs))
-// }

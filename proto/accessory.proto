@@ -39,16 +39,11 @@ enum MsgError {
     ErrUserInOtherRoom = 29;         // 用户正在别的房间
     ErrRoomIsFull = 30;         // 房间里用户已满
     ErrUserInBlacklist = 31;  // 用户在黑名单中
-    ErrUserCanNotCreateCLubRoom = 32;  // 用户不能创建俱乐部房间
-    ErrUserCanNotJoinCLubRoom = 33;   // 仅俱乐部使用的房间，请加入xxx(俱乐部ID)
-    ErrClubIDIsEmtpy = 34;   // 选择基金支付，必须是俱乐部成员
-    ErrRoomPriceCfgNotExist = 35;   // 服务器房间价格配置不存在
-    ErrUserCreateRoomLock = 36;   // 防止用户不断的点击创建房间
-    ErrGenerateRoomNumber= 37;    // 生成房间号失败
-    ErrGroupPayMasterDiamondNotEnough= 38;    // 生成房间号失败
-    ErrNotSupportGroupMasterPay = 39;    // 不支持群主支付
-    ErrOutOfMaxClubCreateRoomNum = 40;    // 超过了茶馆可以创建房最大数量
-    ErrOutOfMaxClubMemberCreateRoomNum = 41;    // 超过了茶馆成员可以创建房最大数量
+    ErrClubIDIsEmtpy = 32;   // 选择基金支付，必须是俱乐部成员
+    ErrRoomPriceCfgNotExist = 33;   // 服务器房间价格配置不存在
+    ErrUserCreateRoomLock = 34;   // 防止用户不断的点击创建房间
+    ErrGenerateRoomNumber= 35;    // 生成房间号失败
+	ErrIsNeedUpdate = 36;  // 需要更新
 }
 
 enum MessageCode{

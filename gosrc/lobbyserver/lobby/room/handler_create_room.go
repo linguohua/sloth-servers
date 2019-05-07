@@ -199,7 +199,16 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	userID := ps.ByName("userID")
 	log.Println("handlerCreateRoom call, userID:", userID)
 
-	// 分配房间ID
+	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
+	log.Println("isForceUpgrade:", isForceUpgrade)
+	// TODO: 检查更新
+	updatUtil := lobby.UpdateUtil()
+	isNeedUpdate := updatUtil.CheckUpdate(r)
+	if isNeedUpdate && isForceUpgrade == "true" {
+		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrIsNeedUpdate), 0)
+		return
+	}
+
 	uid, _ := uuid.NewV4()
 	roomIDString := fmt.Sprintf("%s", uid)
 
