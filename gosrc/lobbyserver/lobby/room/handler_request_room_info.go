@@ -128,13 +128,11 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httproute
 		moduleCfg := getModuleCfg(r, lastRoomInfo)
 		lastRoomInfo.ModuleCfg = &moduleCfg
 
-		if lastRoomInfo.GetRoomNumber() == roomNumber {
-			replyRequestRoomInfo(w, int32(lobby.MsgError_ErrSuccess), lastRoomInfo)
-			return
+		if lastRoomInfo.GetRoomNumber() != roomNumber {
+			log.Printf("handlerRequestRoomInfo, User %s in other room, roomNumber: %s, roomId:%s", userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
 		}
 
-		log.Printf("handlerRequestRoomInfo, User %s in other room, roomNumber: %s, roomId:%s", userID, lastRoomInfo.GetRoomNumber(), lastRoomInfo.GetRoomID())
-		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrUserInOtherRoom), lastRoomInfo)
+		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrSuccess), lastRoomInfo)
 		return
 	}
 
