@@ -15,20 +15,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-/*func replyJoinClubRoomError(w http.ResponseWriter, errorCode int32, clubID string) {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-	clubNumber, _ := redis.String(conn.Do("HGET", gconst.ClubTablePrefix+clubID, "clubNumber"))
-
-	msgRequestRoomInfoRsp := &lobby.MsgRequestRoomInfoRsp{}
-	msgRequestRoomInfoRsp.Result = proto.Int32(errorCode)
-	var errString = lobby.ErrorString[errorCode]
-	errString = fmt.Sprintf(errString, clubNumber)
-	msgRequestRoomInfoRsp.RetMsg = &errString
-
-	reply(w, msgRequestRoomInfoRsp, int32(lobby.MessageCode_OPRequestRoomInfo))
-}*/
-
 func replyRequestRoomInfo(w http.ResponseWriter, errorCode int32, roomInfo *lobby.RoomInfo) {
 
 	msgRequestRoomInfoRsp := &lobby.MsgRequestRoomInfoRsp{}
@@ -44,6 +30,28 @@ func replyRequestRoomInfo(w http.ResponseWriter, errorCode int32, roomInfo *lobb
 	}
 
 	w.Write(bytes)
+}
+
+func getModuleCfg(r *http.Request, roomInfo *lobby.RoomInfo) string {
+	roomConfigJSON := lobby.ParseRoomConfigFromString(roomInfo.GetConfig())
+
+	query := r.URL.Query()
+	isForceUpgrade := query.Get("forceUpgrade")
+	if isForceUpgrade != "true" {
+		return ""
+	}
+
+	// 游戏模块名称
+	query.Set("qMod", roomConfigJSON.ModuleName)
+	//不知道版本是多少，填最低版本，会获取到最高版本的配置
+	r.URL.RawQuery = query.Encode()
+
+	log.Println(" r.URL.Query:", r.URL.Query())
+	updatUtil := lobby.UpdateUtil()
+	moduleCfg := updatUtil.GetModuleCfg(r)
+
+	log.Println("moduleCfg:", moduleCfg)
+	return moduleCfg
 }
 
 func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString string) bool {
@@ -84,55 +92,9 @@ func isFullRoom(roomID string, userID string, conn redis.Conn, roomConfigString 
 
 }
 
-/*func isClubMember(clubID string, userID string) bool {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-
-	result, err := redis.Int(conn.Do("SISMEMBER", gconst.ClubMemberSetPrefix+clubID, userID))
-	if err != nil {
-		log.Println("isCanJoinClubRoom, error:", err)
-		return false
-	}
-
-	if result != 1 {
-		return false
-	}
-
-	return true
-}*/
-
-/*func isGroupMember(groupID string, userID string) bool {
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-
-	vs, err := redis.Strings(conn.Do("HGETALL", gconst.UserClubTablePrefix+userID))
-	if err != nil {
-		return false
-	}
-
-	for i := 0; i < len(vs); i = i + 2 {
-		id := vs[i]
-		if id == groupID {
-			return true
-		}
-	}
-
-	return false
-}*/
-
 func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := ps.ByName("userID")
 	log.Println("handlerRequestRoomInfo call, userID:", userID)
-
-	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
-
-	// TODO: 检查更新
-	updatUtil := lobby.UpdateUtil()
-	isNeedUpdate := updatUtil.CheckUpdate(r)
-	if isNeedUpdate && isForceUpgrade == "true" {
-		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrIsNeedUpdate), nil)
-		return
-	}
 
 	// 1. 从请求中获取房间6位数字ID
 	// 2. 检查房间有效性，比如是否存在，是否已经满了
@@ -162,6 +124,10 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httproute
 
 	var lastRoomInfo = loadLastRoomInfo(userID)
 	if lastRoomInfo != nil {
+		// TODO: 获取模块版本更新信息
+		moduleCfg := getModuleCfg(r, lastRoomInfo)
+		lastRoomInfo.ModuleCfg = &moduleCfg
+
 		if lastRoomInfo.GetRoomNumber() == roomNumber {
 			replyRequestRoomInfo(w, int32(lobby.MsgError_ErrSuccess), lastRoomInfo)
 			return
@@ -228,6 +194,9 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httproute
 
 	var propCfg = getPropCfg(roomTypeInt)
 	roomInfo.PropCfg = &propCfg
+
+	moduleCfg := getModuleCfg(r, lastRoomInfo)
+	lastRoomInfo.ModuleCfg = &moduleCfg
 
 	log.Printf("handlerRequestRoomInfo, userID: %s, roomNumber:%s, roomID:%s, GameServerID:%s", userID, roomNumber, roomID, gameServerID)
 

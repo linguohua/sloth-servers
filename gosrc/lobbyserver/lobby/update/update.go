@@ -1,8 +1,11 @@
 package update
 
 import (
+	"encoding/json"
 	"lobbyserver/lobby"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -13,18 +16,27 @@ var (
 type myUpdateUtil struct {
 }
 
-func (*myUpdateUtil) CheckUpdate(r *http.Request) bool {
+// 获取模块配置
+func (*myUpdateUtil) GetModuleCfg(r *http.Request) string {
 	ctx := parseFromHTTPReq(r)
 	cfg := mmgr.findModuleCfg(ctx)
+	log.Println("GetModuleCfg, cfg:", cfg)
 	if cfg == nil {
 		cfg, _ = mmgr.getDefaultCfg(ctx)
 	}
 
-	if cfg != nil {
-		return true
+	if cfg == nil {
+		return ""
 	}
 
-	return false
+	buf, err := json.Marshal(cfg)
+	if err != nil {
+		log.Error("GetModuleCfg error:", err)
+		return ""
+	}
+
+	return string(buf)
+
 }
 
 // InitWith init

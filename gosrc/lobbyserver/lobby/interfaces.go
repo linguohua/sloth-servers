@@ -134,5 +134,5 @@ type IMySQLUtil interface {
 
 // IUpdateUtil update utility
 type IUpdateUtil interface {
-	CheckUpdate(r *http.Request) bool
+	GetModuleCfg(r *http.Request) string
 }

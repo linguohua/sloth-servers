@@ -197,14 +197,13 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 
 func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := ps.ByName("userID")
-	log.Println("handlerCreateRoom call, userID:", userID)
-
 	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
-	log.Println("isForceUpgrade:", isForceUpgrade)
-	// TODO: 检查更新
+
+	log.Printf("handlerCreateRoom call, userID:%s, isForceUpgrade:%s", userID, isForceUpgrade)
+
 	updatUtil := lobby.UpdateUtil()
-	isNeedUpdate := updatUtil.CheckUpdate(r)
-	if isNeedUpdate && isForceUpgrade == "true" {
+	moduleCfg := updatUtil.GetModuleCfg(r)
+	if isForceUpgrade == "true" && moduleCfg != "" {
 		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrIsNeedUpdate), 0)
 		return
 	}

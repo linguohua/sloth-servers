@@ -69,7 +69,7 @@ func CreateHTTPServer() {
 
 	startRedisClient()
 
-	// initFileServer()
+	loadAllRoomConfigFromRedis()
 
 	pricecfg.LoadAllPriceCfg(pool)
 
