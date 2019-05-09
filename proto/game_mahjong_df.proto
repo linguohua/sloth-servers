@@ -1,5 +1,5 @@
 syntax = "proto2";
-package mahjong;
+package dfmahjong;
 // 用于大丰麻将，东台麻将的一些枚举定义
 
 // 大胡
