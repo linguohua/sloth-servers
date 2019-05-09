@@ -4,7 +4,6 @@ import (
 	"gconst"
 	"lobbyserver/lobby"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -63,16 +62,10 @@ func handleLoadReplayRooms(w http.ResponseWriter, r *http.Request, ps httprouter
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	// 取出玩家的回播房间列表
-	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+userID, "rr"))
+	// 取出玩家的回播房间列表, 最多50个，这个在游戏服那边限制
+	replayRooms, err := redis.Strings(conn.Do("LRANGE", gconst.GameServerMJReplayRoomListPrefix+userID, 0, -1))
 	if err != nil {
 		log.Println("handleLoadReplayRooms, err:", err)
-		return
-	}
-
-	replayRooms := strings.Split(replayRoomsStr, ",")
-	if len(replayRooms) < 1 {
-		log.Println("handleLoadReplayRooms, replay room list is empty")
 		return
 	}
 
