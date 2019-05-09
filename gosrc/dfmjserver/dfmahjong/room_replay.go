@@ -66,7 +66,7 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 	for _, p := range s.room.msgReplayRoom.Players {
 		// 检查用户是否位于房间的回播中
 		userID := p.GetUserID()
-		exist, err := redis.Int(conn.Do("sismember", gconst.GameServerMJReplayRoomTablePrefix+roomID, userID))
+		exist, err := redis.Int(conn.Do("sismember", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, userID))
 		if err != nil {
 			continue
 		}
@@ -80,8 +80,13 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 		conn.Send("RPUSH", gconst.GameServerMJReplayRoomListPrefix+userID, roomID)
 		// 确保最多50个
 		conn.Send("LTRIM", gconst.GameServerMJReplayRoomListPrefix+userID, 0, 50)
+
+		conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, userID)
 		conn.Do("EXEC")
 	}
+
+	// key 48小时后过期
+	conn.Do("EXPIRE", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, 48*60*60)
 }
 
 // updateReplayRoom 更新回播房间记录
@@ -119,11 +124,11 @@ func (lc *LoopContext) updateReplayRoom(conn redis.Conn, room *Room, recordID st
 	// key 48小时后过期
 	conn.Send("EXPIRE", gconst.GameServerMJReplayRoomTablePrefix+roomID, 48*60*60)
 
-	for _, u := range userIDs {
-		conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
-	}
-	// key 48小时后过期
-	conn.Send("EXPIRE", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, 48*60*60)
+	// for _, u := range userIDs {
+	// 	conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, u)
+	// }
+	// // key 48小时后过期
+	// conn.Send("EXPIRE", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, 48*60*60)
 	conn.Do("EXEC")
 }
 
