@@ -130,10 +130,22 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	clientInfo.Network = &network
 
 	mySQLUtil := lobby.MySQLUtil()
-	userID, _ := mySQLUtil.GetOrGenerateUserID(userInfo.GetOpenID())
+	userID, isNew := mySQLUtil.GetOrGenerateUserID(userInfo.GetOpenID())
 	userInfo.UserID = &userID
-	// 保存用户信息
-	updateWxUserInfo(userInfo, clientInfo)
+
+	if isNew {
+		// TODO注册账号
+		err := mySQLUtil.RegisterAccount(userInfo.GetOpenID(), "", "", userInfo, clientInfo)
+		if err != nil {
+			errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
+			loginReply.Result = &errCode
+			replyWxLogin(w, loginReply)
+			return
+		}
+	} else {
+		// 更新用户信息
+		updateWxUserInfo(userInfo, clientInfo)
+	}
 
 	// 生成token给客户端
 	tk := lobby.GenTK(userID)
