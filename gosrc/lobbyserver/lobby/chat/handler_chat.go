@@ -21,9 +21,6 @@ func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	uid, _ := uuid.NewV4()
-	msgID := fmt.Sprintf("%v", uid)
-
 	buf, err := proto.Marshal(chatMsg)
 	if err != nil {
 		return
@@ -31,7 +28,7 @@ func saveChatMsg(chatMsg *lobby.MsgChat, userIds []string) {
 
 	conn.Send("MULTI")
 	for _, userID := range userIds {
-		conn.Send("HSET", gconst.LobbyChatMessagePrefix+userID, msgID, buf)
+		conn.Send("HSET", gconst.LobbyChatMessagePrefix+userID, chatMsg.GetId(), buf)
 	}
 
 	_, err = conn.Do("EXEC")
@@ -92,6 +89,10 @@ func handlerChat(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		filterSensitiveWord(chatMsg)
 
 	}
+
+	uid, _ := uuid.NewV4()
+	msgID := fmt.Sprintf("%v", uid)
+	chatMsg.Id = &msgID
 
 	sessionMgr := lobby.SessionMgr()
 
