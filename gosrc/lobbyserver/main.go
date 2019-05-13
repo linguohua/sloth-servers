@@ -10,6 +10,7 @@ import (
 	"lobbyserver/lobby/replay"
 	"lobbyserver/lobby/room"
 	"lobbyserver/lobby/update"
+	"lobbyserver/lobby/mail"
 
 	//"accwebserver"
 	"flag"
@@ -100,6 +101,7 @@ func main() {
 	auth.InitWith()
 	update.InitWith()
 	chat.InitWith()
+	mail.InitWith()
 
 	if config.Daemon == "yes" {
 		waitForSignal()
