@@ -111,13 +111,11 @@ type IRoomUtil interface {
 
 // IPayUtil pay
 type IPayUtil interface {
+	DoPayForCreateRoom(roomConfigID string, roomID string, userID string) (remainDiamond int, errCode int32)
+	DoPayForEnterRoom(roomID string, userID string) (remainDiamond int, errCode int32)
+
+	Refund2UserWith(roomID string, userID string, handFinish int) (remainDiamond int, errCode int32)
 	Refund2Users(roomID string, handFinish int, inGameUserIDs []string) bool
-	DoPayAndSave2RedisWith(roomType int, roomConfigID string,
-		roomID string, userID string) (remainDiamond int, errCode int32)
-
-	Refund2UserAndSave2Redis(roomID string, userID string, handFinish int) (remainDiamond int, err error)
-
-	DoPayAndSave2Redis(roomID string, userID string) (remainDiamond int, errCode int32)
 }
 
 // IMySQLUtil sql utility
@@ -130,6 +128,8 @@ type IMySQLUtil interface {
 	GetOrGenerateUserID(account string) (userID string, isNew bool)
 	RegisterAccount(account string, passwd string, phone string, userInfo *UserInfo, clientInfo *ClientInfo) error
 	LoadUserInfo(userID string) *UserInfo
+	PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string)
+	RefundForRoom(userID string, refund int, orderID string) (errCode int, lastNum int64)
 }
 
 // IUpdateUtil update utility

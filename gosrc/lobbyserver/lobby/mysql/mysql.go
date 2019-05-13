@@ -44,6 +44,14 @@ func (*mySQLUtil) LoadUserInfo(userID string) *lobby.UserInfo {
 	return loadUserInfo(userID)
 }
 
+func (*mySQLUtil) PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string) {
+	return payForRoom(userID, pay, roomID)
+}
+
+func (*mySQLUtil) RefundForRoom(userID string, refund int, orderID string) (errCode int, lastNum int64) {
+	return refundForRoom(userID, refund, orderID)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)

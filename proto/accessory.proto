@@ -51,6 +51,7 @@ enum MessageCode{
 	OPConnectReply = 1; 	// 连接回复
 	OPChat = 2; 			// 聊天
 	OPUpdateDiamond = 3;    // 更新钻石
+	OPMail = 4; 			// 邮件
 }
 
 // 消息包装，把其他消息体格式化为byte array，
@@ -128,6 +129,7 @@ message RoomInfo
 	optional int32 handStartted = 8; // 已经开始了多少轮牌局
 	optional uint32 lastActiveTime = 9; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
 	optional string propCfg = 10 ; // 道具配置
+	optional string moduleCfg = 11; // 模块配置,JSON格式
 }
 
 //玩家创建房间返回信息
@@ -181,7 +183,7 @@ message MsgChat {
 	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
 	required int32 dataType = 4; // 聊天的数据类型
 	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
-	optional int32 id = 6; // 消息id
+	optional string id = 6; // 消息id
 }
 
 // 拉取未读的聊天消息
@@ -332,29 +334,6 @@ message MsgUserInfo
 	optional int64  gold = 12;
 }
 
-// 回放房间中的玩家信息
-message MsgReplayPlayerInfo
-{
-	required string userID = 1; // userID
-	optional string nick = 2;   // 名字
-	required int32 chairID = 3; // 椅子ID
-
-	optional int32 totalScore = 4; // 总得分
-	optional uint32 sex = 5; // 玩家性别
-	optional string headIconURI = 6; // 玩家头像URI
-	optional int32 avatarID = 7; // 头像框ID
-}
-
-// 回播房间记录
-message MsgReplayRoom
-{
-	required int32 recordRoomType = 1; // 房间类型
-	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
-	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
-	required string roomNumber = 4; // 房间号，仅用于客户端显示
-	optional string roomConfigID = 8; // 房间配置ID
-	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
-}
 
 // 微信用户信息
 message UserInfo
@@ -437,4 +416,74 @@ enum WebsocketConnectError{
 message MsgWebsocketConnectReply
 {
 	required int32 result = 1; // 微信登录返回结果，参见WebsocketConnectError
+}
+
+// 回放房间中的玩家信息
+message MsgReplayPlayerInfo
+{
+	required string userID = 1; // userID
+	optional string nick = 2;   // 名字
+	required int32 chairID = 3; // 椅子ID
+
+	optional int32 totalScore = 4; // 总得分
+	optional uint32 sex = 5; // 玩家性别
+	optional string headIconURI = 6; // 玩家头像URI
+	optional int32 avatarID = 7; // 头像框ID
+}
+
+// 回放记录中玩家的得分信息
+message MsgReplayPlayerScoreSummary
+{
+	required int32 chairID = 1; // 玩家座位ID
+	required int32 score = 2;  // 玩家本手牌的得分
+	required int32 winType = 3; // 玩家本手牌的赢牌类型
+}
+
+// 手牌回放记录概要
+message MsgReplayRecordSummary
+{
+    required string recordUUID = 1; // 手牌回复记录的uuid，根据uuid获得完整的回播记录
+    repeated MsgReplayPlayerScoreSummary playerScores = 2; // 每个玩家的得分
+	required uint32 endTime = 3; // 手牌结束时间
+	optional string shareAbleID = 4; // 8位可以分享的ID
+	optional uint32 startTime = 5; // 手牌开始时间
+}
+
+// 回播房间记录
+message MsgReplayRoom
+{
+	required int32 recordRoomType = 1; // 房间类型
+	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required string roomNumber = 4; // 房间号，仅用于客户端显示
+
+	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+	repeated MsgReplayRecordSummary records = 6; // 每个房间可能有多局手牌记录
+
+	optional string ownerUserID = 7; // 房主ID
+}
+
+enum MailAttachmentType
+{
+	Diamond = 1;  // 钻石
+}
+message MailAttachments
+{
+	required int32 type = 1; // 附件类型
+	required int32 num = 2; // 附件数量
+}
+
+message MsgMail
+{
+	required string id = 1; // 邮件id
+	optional string content = 2; // 邮件内容
+	optional MailAttachments attachments = 3; // 邮件附件
+	optional bool isRead = 4; // 是否已读
+	optional int64 timeStamp = 5; // 时间截，以秒为单位
+}
+
+message MsgLoadMail
+{
+	repeated MsgMail mails = 1; // 邮件列表
+	optional int32 cursor = 2; // 下一次拉取的游标
 }

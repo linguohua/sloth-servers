@@ -41,9 +41,11 @@ func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 	var userID = msgUpdateBalance.GetUserID()
 	log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
 
-	remainDiamond, err := PayUtil().Refund2UserAndSave2Redis(roomID, userID, 0)
-	if err == nil {
+	remainDiamond, result := PayUtil().Refund2UserWith(roomID, userID, 0)
+	if result == 0 {
 		updateMoney(uint32(remainDiamond), userID)
+	} else {
+		log.Error("onReturnDiamondNotify, refund to user failed, result code:", result)
 	}
 }
 
@@ -112,7 +114,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	var payType = roomConfig.PayType
 
 	if !PayUtil().Refund2Users(roomID, int(startHand), userIDs) {
-		log.Println("refund diamond failed")
+		log.Error("refund diamond failed")
 	}
 
 	RoomUtil().DeleteRoomInfoFromRedis(roomID, onwerID)
@@ -139,7 +141,7 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 
 	log.Printf("onAAEnterRoomRequest, roomID:%s, userID:%s", roomID, userID)
 	// roomType := int(gconst.RoomType_DafengMJ)
-	diamond, result := PayUtil().DoPayAndSave2Redis(roomID, userID)
+	diamond, result := PayUtil().DoPayForEnterRoom(roomID, userID)
 	if result != int32(gconst.SSMsgError_ErrSuccess) {
 		var errCode gconst.SSMsgError
 		switch result {

@@ -288,20 +288,10 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	var diamond = 0
-	diamond, errCode = lobby.PayUtil().DoPayAndSave2RedisWith(int(roomType), roomConfigID, roomIDString, userID)
-
-	// 如果是钻石不足，获取最新的钻石返回给客户端
-	if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
-		log.Println("handlerCreateRoom faile err:", err)
-		// TODO: llwant mysql
-		var currentDiamond = 0 // webdata.QueryDiamond(userID)
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough), int32(currentDiamond))
-		return
-	}
-
+	diamond, errCode = lobby.PayUtil().DoPayForCreateRoom(roomConfigID, roomIDString, userID)
 	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
 		log.Println("payAndSave2RedisWith faile err:", err)
-		replyPayError(w, errCode)
+		replayCreateRoom(w, nil, errCode, int32(diamond))
 		return
 	}
 
@@ -344,7 +334,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		if errCode != 0 {
 			log.Println("request game server error:, errCode:", errCode)
 			// 创建房间失败，返还钻石
-			lobby.PayUtil().Refund2UserAndSave2Redis(roomIDString, userID, 0)
+			lobby.PayUtil().Refund2UserWith(roomIDString, userID, 0)
 
 			errCode = converGameServerErrCode2AccServerErrCode(errCode)
 			replayCreateRoom(w, nil, errCode, 0)
@@ -374,7 +364,7 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	} else {
 		// 创建房间失败，返还钻石
 		log.Printf("handlerCreateRoom, user %s create room failed, request game server timeout", userID)
-		lobby.PayUtil().Refund2UserAndSave2Redis(roomIDString, userID, 0)
+		lobby.PayUtil().Refund2UserWith(roomIDString, userID, 0)
 
 		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrRequestGameServerTimeOut), 0)
 	}
