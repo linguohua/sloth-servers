@@ -48,7 +48,7 @@ const (
 	LobbyMailPrefix = "l:mail:"
 
 	// LobbyMailSortSetPrefix 用户有序的邮件列表
-	LobbyMailSortSetPrefix = "l:mails:"
+	LobbyMailSortSetPrefix = "l:mailsort:"
 
 	// LobbyDatabaseConfig 数据库配置
 	LobbyDatabaseConfig = "l:db:cfg"

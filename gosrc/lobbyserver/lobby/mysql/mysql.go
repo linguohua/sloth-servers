@@ -52,6 +52,10 @@ func (*mySQLUtil) RefundForRoom(userID string, refund int, orderID string) (errC
 	return refundForRoom(userID, refund, orderID)
 }
 
+func (*mySQLUtil) UpdateDiamond(userID string, change int64) (lastNum int64, errCode int) {
+	return updateDiamond(userID, change)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)

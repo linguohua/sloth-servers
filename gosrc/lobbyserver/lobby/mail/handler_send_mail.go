@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"github.com/julienschmidt/httprouter"
 	"github.com/golang/protobuf/proto"
-	log "github.com/sirupsen/logrus"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"time"
 	"fmt"
+
 )
 
 // SendMail 发送邮件
@@ -78,6 +79,11 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 	sendMail.Mail.Id = &mailID
 	sendMail.Mail.TimeStamp = &timeStamp
+
+	if sendMail.Mail.Attachments != nil {
+		isReceive := false
+		sendMail.Mail.Attachments.IsReceive = &isReceive
+	}
 
 	sessionMgr := lobby.SessionMgr()
 

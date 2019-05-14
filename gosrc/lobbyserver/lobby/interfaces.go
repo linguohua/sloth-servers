@@ -130,6 +130,7 @@ type IMySQLUtil interface {
 	LoadUserInfo(userID string) *UserInfo
 	PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string)
 	RefundForRoom(userID string, refund int, orderID string) (errCode int, lastNum int64)
+	UpdateDiamond(userID string, change int64) (lastNum int64, errCode int)
 }
 
 // IUpdateUtil update utility

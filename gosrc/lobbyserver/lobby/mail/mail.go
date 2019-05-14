@@ -10,4 +10,5 @@ func InitWith() {
 	lobby.RegHTTPHandle("GET", "/loadMails", handlerLoadMail)
 	lobby.RegHTTPHandle("GET", "/setMailRead", handlerSetMsgRead)
 	lobby.RegHTTPHandle("GET", "/deleteMail", handlerSendMail)
+	lobby.RegHTTPHandle("GET", "/receiveAttachment", handlerReceiveAttahment)
 }

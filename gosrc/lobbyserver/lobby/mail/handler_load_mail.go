@@ -54,10 +54,6 @@ func loadMail(userID string, cursor int, count int)([]*lobby.MsgMail, int32) {
 		mails = append(mails, msgMail)
 
 	}
-	// _, err = conn.Do("EXEC")
-	// if err != nil {
-	// 	log.Println("saveChatMsg err: ", err)
-	// }
 
 	nexCursor := 0
 	if len(mailIDs) == count {
@@ -93,6 +89,5 @@ func handlerLoadMail(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 		return
 	}
 
-	log.Println("handlerLoadMail:, buf:", buf)
 	w.Write(buf)
 }
