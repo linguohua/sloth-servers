@@ -16,7 +16,7 @@ func handlerSetMsgRead(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	userID := ps.ByName("userID")
 	mailID := r.URL.Query().Get("mailID")
 
-	log.Println("handlerSetMsgRead, userID:", userID)
+	log.Printf("handlerSetMsgRead, userID:%s, mailID:%s", userID, mailID)
 
 	conn := lobby.Pool().Get()
 	defer conn.Close()
@@ -43,7 +43,10 @@ func handlerSetMsgRead(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		return
 	}
 
-	conn.Do("HSET", gconst.LobbyMailPrefix+userID, buf)
+	_, err = conn.Do("HSET", gconst.LobbyMailPrefix+userID, mailID, buf)
+	if err != nil {
+		log.Error("handlerSetMsgRead set mail error:", err)
+	}
 
 	w.Write([]byte("ok"))
 }
