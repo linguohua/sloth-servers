@@ -59,16 +59,18 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println("handlerChat error:", err)
+		log.Println("handlerSendMail error:", err)
 		return
 	}
 
 	sendMail := &SendMail{}
 	err = json.Unmarshal(body, sendMail)
 	if err != nil {
-		log.Println("onMessageChat decode failed:", err)
+		log.Println("handlerSendMail decode failed:", err)
 		return
 	}
+
+	log.Println("sendMail:", sendMail)
 
 	uid, _ := uuid.NewV4()
 	mailID := fmt.Sprintf("%v", uid)

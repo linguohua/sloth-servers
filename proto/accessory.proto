@@ -476,10 +476,11 @@ message MailAttachments
 message MsgMail
 {
 	required string id = 1; // 邮件id
-	optional string content = 2; // 邮件内容
-	optional MailAttachments attachments = 3; // 邮件附件
-	optional bool isRead = 4; // 是否已读
-	optional int64 timeStamp = 5; // 时间截，以秒为单位
+	optional string title = 2; //
+	optional string content = 3; // 邮件内容
+	optional MailAttachments attachments = 4; // 邮件附件
+	optional bool isRead = 5; // 是否已读
+	optional int64 timeStamp = 6; // 时间截，以秒为单位
 }
 
 message MsgLoadMail

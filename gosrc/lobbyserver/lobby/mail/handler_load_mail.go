@@ -93,5 +93,6 @@ func handlerLoadMail(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 		return
 	}
 
+	log.Println("handlerLoadMail:, buf:", buf)
 	w.Write(buf)
 }
