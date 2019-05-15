@@ -64,7 +64,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	userInfo.Phone = &phone
 	userInfo.Diamond = &diamondInt32
 
-	return nil
+	return userInfo
 }
 
 func handlerAccountLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
