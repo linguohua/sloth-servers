@@ -44,17 +44,17 @@ func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 
 	remainDiamond, result := PayUtil().Refund2UserWith(roomID, userID, 0)
 	if result == 0 {
-		updateMoney(uint32(remainDiamond), userID)
+		UpdateDiamond(userID, uint64(remainDiamond))
 	} else {
 		log.Error("onReturnDiamondNotify, refund to user failed, result code:", result)
 	}
 }
 
-func updateMoney(diamond uint32, userID string) {
-	var updateUserMoney = &MsgUpdateUserMoney{}
-	var userDiamond = diamond
-	updateUserMoney.Diamond = &userDiamond
-	SessionMgr().SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateDiamond))
+// UpdateDiamond 更新用户钻石
+func UpdateDiamond(userID string, diamond uint64) {
+	var updateUserDiamond = &MsgUpdateUserDiamond{}
+	updateUserDiamond.Diamond = &diamond
+	SessionMgr().SendProtoMsgTo(userID, updateUserDiamond, int32(MessageCode_OPUpdateDiamond))
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {

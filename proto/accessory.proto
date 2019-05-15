@@ -290,9 +290,8 @@ enum ActivityType {
 }
 
 // 更新用户的钱包
-message MsgUpdateUserMoney {
-	required uint32 diamond = 1; // 用户当前剩余砖石数量
-	optional uint32 activityType = 2; // 活动类型
+message MsgUpdateUserDiamond {
+	required uint64 diamond = 1; // 用户当前剩余砖石数量
 }
 
 // 回播房间信息

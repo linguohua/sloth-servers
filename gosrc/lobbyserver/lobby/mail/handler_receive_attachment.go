@@ -59,6 +59,8 @@ func handlerReceiveAttahment(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 
 		conn.Do("HSET", gconst.LobbyUserTablePrefix+userID, "diamond", diamond)
+
+		lobby.UpdateDiamond(userID, uint64(diamond))
 	}
 
 	buf, err = proto.Marshal(mail)
