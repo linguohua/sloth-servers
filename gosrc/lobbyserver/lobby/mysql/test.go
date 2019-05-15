@@ -38,7 +38,7 @@ func testRegisterAccount() {
 	userInfo := &lobby.UserInfo{}
 	userID := "10000022"
 	userInfo.UserID = &userID
-	registerAccount("abc", "111111", "", userInfo, clientInfo)
+	registerAccount("abc", "111111", userInfo, clientInfo)
 }
 
 func test() {
