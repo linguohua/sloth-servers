@@ -67,10 +67,7 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		userInfo := &lobby.UserInfo{}
 		userInfo.UserID = &userID
 
-		err := mySQLUtil.RegisterAccount(account, "", "", userInfo, clientInfo)
-		if err != nil {
-			log.Error("handlerQuicklyLogin, registerAccount err:", err)
-		}
+		registerAccount(account, "", userInfo, clientInfo)
 	} else {
 		// 要校检是否是快速登录账号，快速登录没有密码
 		myPassword := mySQLUtil.GetPasswordBy(account)

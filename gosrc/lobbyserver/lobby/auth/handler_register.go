@@ -21,6 +21,16 @@ func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply)
 	w.Write(buf)
 }
 
+func registerAccount(account string, passwdMD5 string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
+	mySQLUtil := lobby.MySQLUtil()
+	err := mySQLUtil.RegisterAccount(account, passwdMD5, userInfo, clientInfo)
+	if err != nil {
+		log.Error("registerAccount error:", err)
+	}
+
+	saveUserInfo2Redis(userInfo)
+}
+
 func handlerRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")
@@ -81,15 +91,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	data := []byte(password)
 	passwdMD5 := fmt.Sprintf("%x", md5.Sum(data))
 
-	err := mySQLUtil.RegisterAccount(account, passwdMD5, "", userInfo, clientInfo)
-	if err != nil {
-		errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
-		reply.Result = &errCode
-		replyRegister(w, reply)
-		return
-	}
-
-	// TODO: 需要保存到redis
+	registerAccount(account, passwdMD5, userInfo, clientInfo)
 
 	tk := lobby.GenTK(userID)
 	reply.Token = &tk

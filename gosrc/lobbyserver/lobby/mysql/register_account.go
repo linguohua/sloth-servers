@@ -11,7 +11,7 @@ import (
 )
 
 // SaveGRCRecord2SqlServer 保存牌局记录到数据库
-func registerAccount(account string, passwd string, phone string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
+func registerAccount(account string, passwd string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
 	/* Description:	更新微信用户信息
 	`register_account`(
 	in userId varchar(64),
@@ -51,7 +51,7 @@ func registerAccount(account string, passwd string, phone string, userInfo *lobb
 		userInfo.GetUserID(),
 		account,
 		passwd,
-		phone,
+		userInfo.GetPhone(),
 
 		userInfo.GetOpenID(),
 		userInfo.GetNickName(),

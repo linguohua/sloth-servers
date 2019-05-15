@@ -39,7 +39,6 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
 	mySQLUtil := lobby.MySQLUtil()
 	mySQLUtil.UpdateWxUserInfo(userInfo, clientInfo)
 
-	// 保存到redis
 	saveUserInfo2Redis(userInfo)
 }
 
@@ -135,13 +134,7 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 
 	if isNew {
 		// TODO注册账号
-		err := mySQLUtil.RegisterAccount(userInfo.GetOpenID(), "", "", userInfo, clientInfo)
-		if err != nil {
-			errCode := int32(lobby.RegisterError_ErrWriteDatabaseFailed)
-			loginReply.Result = &errCode
-			replyWxLogin(w, loginReply)
-			return
-		}
+		registerAccount(userInfo.GetOpenID(), "", userInfo, clientInfo)
 	} else {
 		// 更新用户信息
 		updateWxUserInfo(userInfo, clientInfo)

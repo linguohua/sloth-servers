@@ -36,8 +36,8 @@ func (*mySQLUtil) GetOrGenerateUserID(account string) (userID string, isNew bool
 	return getOrGenerateUserID(account)
 }
 
-func (*mySQLUtil) RegisterAccount(account string, passwd string, phone string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
-	return registerAccount(account, passwd, phone, userInfo, clientInfo)
+func (*mySQLUtil) RegisterAccount(account string, passwd string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
+	return registerAccount(account, passwd, userInfo, clientInfo)
 }
 
 func (*mySQLUtil) LoadUserInfo(userID string) *lobby.UserInfo {
