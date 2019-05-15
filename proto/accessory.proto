@@ -347,6 +347,7 @@ message UserInfo
 	optional string country = 7;
 	optional string headImgUrl = 8;
 	optional string phone = 9;
+	optional int32 diamond = 10;
 }
 
 enum LoginError
@@ -471,12 +472,13 @@ message MailAttachments
 {
 	required int32 type = 1; // 附件类型
 	required int32 num = 2; // 附件数量
+	optional bool isReceive = 3; // 是否已经领取
 }
 
 message MsgMail
 {
 	required string id = 1; // 邮件id
-	optional string title = 2; //
+	optional string title = 2; // 邮件标题
 	optional string content = 3; // 邮件内容
 	optional MailAttachments attachments = 4; // 邮件附件
 	optional bool isRead = 5; // 是否已读

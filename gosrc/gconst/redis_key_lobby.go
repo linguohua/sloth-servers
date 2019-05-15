@@ -11,6 +11,8 @@ const (
 	LobbyRoomConfigTable = "l:rcfg"
 	// LobbyUserTablePrefix m管理型服务器前缀，u表示用户,保存房间ID列表、用户昵称、用户性别、用户名字、用户头像url
 	LobbyUserTablePrefix = "l:u:"
+	// LobbyUserSet 用户列表
+	LobbyUserSet = "l:uset"
 	// LobbyRoomTablePrefix c表示common，公用的意思，r表示房间，此表维护房间配置ID、创建者、房间号、房间所在的游戏服务器ID等
 	LobbyRoomTablePrefix = "l:r:"
 	// LobbyRoomTableSet ACC维护的房间set

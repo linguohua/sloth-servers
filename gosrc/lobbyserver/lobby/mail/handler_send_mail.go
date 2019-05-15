@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/garyburd/redigo/redis"
 	"time"
 	"fmt"
 
@@ -34,23 +35,47 @@ func saveMail(sendMail *SendMail) {
 		return
 	}
 
-	conn.Send("MULTI")
+	userIDs := sendMail.Users
 
 	if sendMail.IsAll {
 		// TODO: 拉取所有用户，然后把消息保存给所有用户
 
-	} else {
-		for _, userID := range sendMail.Users {
-			conn.Send("HSET", gconst.LobbyMailPrefix+userID, mailID, buf)
-			// sort set
-			conn.Send("ZADD", gconst.LobbyMailSortSetPrefix+userID, time.Now().Unix(), mailID)
-		}
+	}
+
+	conn.Send("MULTI")
+	for _, userID := range userIDs {
+		conn.Send("HSET", gconst.LobbyMailPrefix+userID, mailID, buf)
+		// sort set
+		conn.Send("ZADD", gconst.LobbyMailSortSetPrefix+userID, time.Now().Unix(), mailID)
 	}
 
 	_, err = conn.Do("EXEC")
 	if err != nil {
 		log.Println("saveChatMsg err: ", err)
 	}
+
+	// 确保每个用户只保留50条
+	for _, userID := range userIDs {
+		mailIDs, err := redis.Strings(conn.Do("ZREVRANGE", gconst.LobbyMailSortSetPrefix+userID, 50, -1))
+		if err != nil {
+			log.Error("saveMail, get mail ids error:", err)
+			continue
+		}
+
+		conn.Send("MULTI")
+
+		for _, mailID := range mailIDs {
+			conn.Send("HDEL", gconst.LobbyMailPrefix+userID, mailID)
+			conn.Send("ZREM", gconst.LobbyMailSortSetPrefix+userID, mailID)
+		}
+		_, err = conn.Do("EXEC")
+		if err != nil {
+			log.Error("saveMail, remov mail error:", err)
+		}
+
+	}
+
+
 }
 
 // onMessageChat 处理聊天消息
@@ -89,17 +114,11 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 	if sendMail.IsAll {
 		// 发给所有人
-		bytes, err := proto.Marshal(sendMail.Mail)
-		if err != nil {
-			log.Panic("sendMail, marshal msg failed")
-			return
-		}
 		ops := int32(lobby.MessageCode_OPMail)
 		lobbyMessage := &lobby.LobbyMessage{}
 		lobbyMessage.Ops = &ops
-		lobbyMessage.Data = bytes
 
-		bytes, err = proto.Marshal(lobbyMessage)
+		bytes, err := proto.Marshal(lobbyMessage)
 		if err != nil {
 			log.Panic("sendMail, marshal msg failed")
 			return
@@ -109,11 +128,10 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	} else {
 		// 发给指定用户
 		for _, userID := range sendMail.Users {
-			ok := sessionMgr.SendProtoMsgTo(userID, sendMail.Mail, int32(lobby.MessageCode_OPMail))
+			ok := sessionMgr.SendProtoMsgTo(userID, nil, int32(lobby.MessageCode_OPMail))
 			if !ok {
 				log.Printf("handlerSendMail, send msg to %s failed, target user not exists or is offline", userID)
 			}
-
 		}
 	}
 

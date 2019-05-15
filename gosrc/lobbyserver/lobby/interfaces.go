@@ -126,7 +126,7 @@ type IMySQLUtil interface {
 	GetUserIDBy(account string) string
 	GetPasswordBy(account string) string
 	GetOrGenerateUserID(account string) (userID string, isNew bool)
-	RegisterAccount(account string, passwd string, phone string, userInfo *UserInfo, clientInfo *ClientInfo) error
+	RegisterAccount(account string, passwd string, userInfo *UserInfo, clientInfo *ClientInfo) error
 	LoadUserInfo(userID string) *UserInfo
 	PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string)
 	RefundForRoom(userID string, refund int, orderID string) (errCode int, lastNum int64)
