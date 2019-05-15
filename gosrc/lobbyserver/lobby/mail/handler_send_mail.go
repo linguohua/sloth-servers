@@ -23,6 +23,18 @@ type SendMail struct {
 	Users []string `json:"users"`
 }
 
+func loadAllUserID()[]string {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	userIDs, err := redis.Strings(conn.Do("SMEMBERS", gconst.LobbyUserSet))
+	if err != nil {
+		log.Error("loadAllUserID error:", err)
+	}
+
+	return userIDs
+}
+
 func saveMail(sendMail *SendMail) {
 	// 获取redis链接，并退出函数时释放
 	conn := lobby.Pool().Get()
@@ -36,10 +48,8 @@ func saveMail(sendMail *SendMail) {
 	}
 
 	userIDs := sendMail.Users
-
 	if sendMail.IsAll {
-		// TODO: 拉取所有用户，然后把消息保存给所有用户
-
+		userIDs = loadAllUserID()
 	}
 
 	conn.Send("MULTI")

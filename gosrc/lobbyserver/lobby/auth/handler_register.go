@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/md5"
 	"fmt"
+	"gconst"
 	"lobbyserver/lobby"
 	"net/http"
 
@@ -21,6 +22,13 @@ func replyRegister(w http.ResponseWriter, registerReply *lobby.MsgRegisterReply)
 	w.Write(buf)
 }
 
+func addUser2Set(userID string) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	conn.Do("SADD", gconst.LobbyUserSet, userID)
+}
+
 func registerAccount(account string, passwdMD5 string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
 	mySQLUtil := lobby.MySQLUtil()
 	err := mySQLUtil.RegisterAccount(account, passwdMD5, userInfo, clientInfo)
@@ -29,6 +37,8 @@ func registerAccount(account string, passwdMD5 string, userInfo *lobby.UserInfo,
 	}
 
 	saveUserInfo2Redis(userInfo)
+
+	addUser2Set(userInfo.GetUserID())
 }
 
 func handlerRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

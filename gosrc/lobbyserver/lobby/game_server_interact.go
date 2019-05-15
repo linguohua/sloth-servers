@@ -2,6 +2,7 @@ package lobby
 
 import (
 	"gconst"
+	"gpubsub"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
@@ -258,18 +259,7 @@ func replySSMsg(msgBag *gconst.SSMsgBag, errCode gconst.SSMsgError, params []byt
 		replyMsgBag.Params = params
 	}
 
-	bytes, err := proto.Marshal(replyMsgBag)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	log.Println("publish message, game server url:", msgBag.GetSourceURL())
-	conn.Do("PUBLISH", msgBag.GetSourceURL(), bytes)
+	gpubsub.PublishMsg(msgBag.GetSourceURL(), replyMsgBag)
 }
 
 func getRoomTypeWithServerID(gameServerID string) int {
