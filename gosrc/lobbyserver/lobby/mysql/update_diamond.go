@@ -1,7 +1,7 @@
 package mysql
 
 // 更新钻石
-func updateDiamond(userID string, changeNum int64) (lastNum int64, errCode int) {
+func updateDiamond(userID string, changeNum int64) (lastNum int64, errCode int32) {
 	/* 储存过程
 	update_diamond`(IN userId INT(11), IN changeNum INT(11))
 	*/

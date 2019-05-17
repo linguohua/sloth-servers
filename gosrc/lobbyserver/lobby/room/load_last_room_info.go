@@ -1,10 +1,8 @@
 package room
 
 import (
-	"encoding/json"
 	"gconst"
 	"lobbyserver/lobby"
-	"lobbyserver/lobby/donate"
 	"strconv"
 	"time"
 
@@ -13,22 +11,8 @@ import (
 )
 
 func getPropCfg(roomType int) string {
-	// conn := pool.Get()
-	// defer conn.Close()
-
-	// propCfgString, err := redis.String(conn.Do("HGET", gconst.GamePropsCfgTable, roomType))
-	// if err != nil {
-	// 	log.Println("loadPropCfg error:", err)
-	// 	return ""
-	// }
-	clientPropCfgMap := donate.ClientPropCfgsMap[roomType]
-
-	buf, err := json.Marshal(clientPropCfgMap)
-	if err != nil {
-		return ""
-	}
-
-	return string(buf)
+	donateUtil := lobby.DonateUtil()
+	return donateUtil.GetRoomPropsCfg(roomType)
 }
 
 func loadUserLastEnterRoomID(userID string) string {

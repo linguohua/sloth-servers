@@ -22,6 +22,10 @@ var (
 
 	// RandGenerator rand generator
 	RandGenerator *rand.Rand
+
+	clubMgr IClubMgr
+
+	donateUtil IDonateUtil
 )
 
 // PayUtil room utility
@@ -94,6 +98,34 @@ func SetUpdateUtil(obj IUpdateUtil) {
 	updateUtil = obj
 }
 
+// ClubMgr club manager
+func ClubMgr() IClubMgr {
+	if clubMgr == nil {
+		log.Panic("ClubMgr is null, maybe not mount club package yet")
+	}
+
+	return clubMgr
+}
+
+// SetClubMgr set club manager
+func SetClubMgr(cMgr IClubMgr) {
+	clubMgr = cMgr
+}
+
+// DonateUtil donate util
+func DonateUtil() IDonateUtil {
+	if donateUtil == nil {
+		log.Panic("DonateUtil is null, maybe not mount donate package yet")
+	}
+
+	return donateUtil
+}
+
+// SetDonateUtil set donate util
+func SetDonateUtil(util IDonateUtil) {
+	donateUtil = util
+}
+
 // ISessionMgr websocket mgr
 type ISessionMgr interface {
 	Broacast(msg []byte)
@@ -130,10 +162,21 @@ type IMySQLUtil interface {
 	LoadUserInfo(userID string) *UserInfo
 	PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string)
 	RefundForRoom(userID string, refund int, orderID string) (errCode int, lastNum int64)
-	UpdateDiamond(userID string, change int64) (lastNum int64, errCode int)
+	UpdateDiamond(userID string, change int64) (lastNum int64, errCode int32)
+	CountUserClubNumber(userID string) (count int)
+	CreateClub(clubName string, creator string, isLeague int, wanka int, candy int, maxMember int) (clubID string, clubNumber string, errCode int)
 }
 
 // IUpdateUtil update utility
 type IUpdateUtil interface {
 	GetModuleCfg(r *http.Request) string
+}
+
+// IClubMgr club manager
+type IClubMgr interface {
+}
+
+// IDonateUtil donate util
+type IDonateUtil interface {
+	GetRoomPropsCfg(roomType int) string
 }

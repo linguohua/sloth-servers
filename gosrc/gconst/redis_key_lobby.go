@@ -60,4 +60,7 @@ const (
 
 	// LobbyUpgradeModuleHashPrefix 所有配置了更新的模块的名字set
 	LobbyUpgradeModuleHashPrefix = "l:up:"
+
+	// LobbyUserDonatePrefix 用户道具表
+	LobbyUserDonatePrefix = "l:d:"
 )

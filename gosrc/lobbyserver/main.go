@@ -11,6 +11,7 @@ import (
 	"lobbyserver/lobby/room"
 	"lobbyserver/lobby/update"
 	"lobbyserver/lobby/mail"
+	"lobbyserver/lobby/club"
 
 	//"accwebserver"
 	"flag"
@@ -102,6 +103,7 @@ func main() {
 	update.InitWith()
 	chat.InitWith()
 	mail.InitWith()
+	club.InitWith()
 
 	if config.Daemon == "yes" {
 		waitForSignal()

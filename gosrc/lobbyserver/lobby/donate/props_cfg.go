@@ -59,7 +59,7 @@ type PropCfgMap map[int]*Prop
 var (
 	// ClientPropCfgsMap key index, value Prop
 	// 下发给客户端显示
-	ClientPropCfgsMap = make(map[int]PropCfgMap)
+	clientPropCfgsMap = make(map[int]PropCfgMap)
 	// key propID, value Prop
 	// 服务器扣钻加魅力值用
 	serverPropCfgsMap = make(map[int]PropCfgMap)
@@ -167,7 +167,7 @@ func parsePropsCfgJSON(roomType int, confgJSON string) {
 		serverPropCfgMap[prop.PropID] = &prop
 	}
 
-	ClientPropCfgsMap[roomType] = clientPropCfgMap
+	clientPropCfgsMap[roomType] = clientPropCfgMap
 	serverPropCfgsMap[roomType] = serverPropCfgMap
 }
 
@@ -216,12 +216,12 @@ func loadAllRoomPropCfgs() {
 		}
 	}
 
-	log.Printf("loadAllRoomPropCfgs, from redis:%d, default:%d", fromRedis, len(ClientPropCfgsMap)-fromRedis)
+	log.Printf("loadAllRoomPropCfgs, from redis:%d, default:%d", fromRedis, len(clientPropCfgsMap)-fromRedis)
 }
 
 // GetAllRoomPropCfgs 导出给web
 func GetAllRoomPropCfgs() interface{} {
-	return ClientPropCfgsMap
+	return clientPropCfgsMap
 }
 
 // PP 道具属性，db那边预先定义好
@@ -341,7 +341,7 @@ func UpdateRoomPropsCfg(JSONString string) error {
 		return err
 	}
 
-	ClientPropCfgsMap[propsCfg.RoomType] = propCfgMap
+	clientPropCfgsMap[propsCfg.RoomType] = propCfgMap
 
 	key := fmt.Sprintf("%s%d", gconst.GameServerInstancePrefix, propsCfg.RoomType)
 	conn.Send("MULTI")
