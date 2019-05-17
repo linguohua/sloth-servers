@@ -83,6 +83,20 @@ func initGamePropCfgs() {
 	loadAllRoomPropCfgs()
 }
 
+func getRoomPropsCfg(roomType int) string {
+	clientPropCfgMap, ok := clientPropCfgsMap[roomType]
+	if !ok {
+		return ""
+	}
+
+	buf, err := json.Marshal(clientPropCfgMap)
+	if err != nil {
+		return ""
+	}
+
+	return string(buf)
+}
+
 func defaultPropsCfg() string {
 	// 以第一项为例：
 	// "1"表示道具卡槽位置

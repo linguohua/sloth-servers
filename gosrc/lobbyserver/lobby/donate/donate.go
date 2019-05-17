@@ -2,7 +2,7 @@ package donate
 
 import(
 	"lobbyserver/lobby"
-	"encoding/json"
+	"gconst"
 )
 
 var (
@@ -14,18 +14,14 @@ type myDonateUtil struct {
 }
 
 func (*myDonateUtil) GetRoomPropsCfg(roomType int) string {
-	clientPropCfgMap, ok := clientPropCfgsMap[roomType]
-	if !ok {
-		return ""
-	}
-
-	buf, err := json.Marshal(clientPropCfgMap)
-	if err != nil {
-		return ""
-	}
-
-	return string(buf)
+	return getRoomPropsCfg(roomType)
 }
+
+
+func (*myDonateUtil) DoDoante(propsType uint32, from string, to string, roomType int) (result *gconst.SSMsgDonateRsp, errCode int32) {
+	return donate(propsType, from, to, roomType)
+}
+
 
 // InitWith init
 func InitWith() {

@@ -3,7 +3,7 @@ package lobby
 import (
 	"math/rand"
 	"net/http"
-
+	"gconst"
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
 )
@@ -179,4 +179,5 @@ type IClubMgr interface {
 // IDonateUtil donate util
 type IDonateUtil interface {
 	GetRoomPropsCfg(roomType int) string
+	DoDoante(propsType uint32, from string, to string, roomType int) (result *gconst.SSMsgDonateRsp, errCode int32)
 }

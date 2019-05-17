@@ -178,64 +178,63 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 func onDonateRequest(msgBag *gconst.SSMsgBag) {
 	log.Println("onDonateRequest")
 	// TODO: llwant mysql
-	// var gameServerID = msgBag.GetSourceURL()
-	// var msgDonate = &gconst.SSMsgDonate{}
-	// err := proto.Unmarshal(msgBag.GetParams(), msgDonate)
-	// if err != nil {
-	// 	log.Panicln("Unmarshal SSMsgDonate err:", err)
-	// 	return
-	// }
+	var gameServerID = msgBag.GetSourceURL()
+	var msgDonate = &gconst.SSMsgDonate{}
+	err := proto.Unmarshal(msgBag.GetParams(), msgDonate)
+	if err != nil {
+		log.Panicln("Unmarshal SSMsgDonate err:", err)
+		return
+	}
 
-	// var from = msgDonate.GetFrom()
-	// var to = msgDonate.GetTo()
-	// var propsType = msgDonate.GetPropsType()
-	// if from == "" {
-	// 	log.Panicln("request params from can't be empty")
-	// 	return
-	// }
+	var from = msgDonate.GetFrom()
+	var to = msgDonate.GetTo()
+	var propsType = msgDonate.GetPropsType()
+	if from == "" {
+		log.Panicln("request params from can't be empty")
+		return
+	}
 
-	// if to == "" {
-	// 	log.Panicln("request params from can't be empty")
-	// 	return
-	// }
+	if to == "" {
+		log.Panicln("request params from can't be empty")
+		return
+	}
 
-	// if propsType == 0 {
-	// 	log.Panicln("request params propsType can't be 0")
-	// 	return
-	// }
+	if propsType == 0 {
+		log.Panicln("request params propsType can't be 0")
+		return
+	}
 
-	// if gameServerID == "" {
-	// 	log.Panicln("request params gameServerID can't be emtpy")
-	// 	return
-	// }
+	if gameServerID == "" {
+		log.Panicln("request params gameServerID can't be emtpy")
+		return
+	}
 
-	// var roomType = getRoomTypeWithServerID(gameServerID)
-	// msgDonateRsp, errCode := donate(uint32(propsType), from, to, roomType)
-	// if errCode != int32(gconst.SSMsgError_ErrSuccess) {
-	// 	var msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
-	// 	if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
-	// 		msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
-	// 	}
+	var roomType = getRoomTypeWithServerID(gameServerID)
 
-	// 	replySSMsg(msgBag, msgError, nil)
-	// 	return
-	// }
+	donateUtil := DonateUtil()
+	msgDonateRsp, errCode := donateUtil.DoDoante(uint32(propsType), from, to, roomType)
+	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
+		var msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
+		if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
+			msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
+		}
 
-	// // 通过房间服务器更新用户钻石
-	// user := userMgr.getUserByID(from)
-	// if user != nil {
-	// 	var diamond = msgDonateRsp.GetDiamond()
-	// 	user.updateMoney(uint32(diamond))
-	// }
+		replySSMsg(msgBag, msgError, nil)
+		return
+	}
 
-	// msgDonateRspBuf, err := proto.Marshal(msgDonateRsp)
-	// if err != nil {
-	// 	log.Panicln("Marshal msgDonateRsp err:", err)
-	// 	return
-	// }
+	// 通过房间服务器更新用户钻石
+	var diamond = msgDonateRsp.GetDiamond()
+	UpdateDiamond(from, uint64(diamond))
 
-	// // 通过游戏服务器更新用户钻石与魅力
-	// replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, msgDonateRspBuf)
+	msgDonateRspBuf, err := proto.Marshal(msgDonateRsp)
+	if err != nil {
+		log.Panicln("Marshal msgDonateRsp err:", err)
+		return
+	}
+
+	// 通过游戏服务器更新用户钻石与魅力
+	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, msgDonateRspBuf)
 }
 
 // replySSMsg 给其他服务器回复请求完成
