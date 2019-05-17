@@ -52,8 +52,16 @@ func (*mySQLUtil) RefundForRoom(userID string, refund int, orderID string) (errC
 	return refundForRoom(userID, refund, orderID)
 }
 
-func (*mySQLUtil) UpdateDiamond(userID string, change int64) (lastNum int64, errCode int) {
+func (*mySQLUtil) UpdateDiamond(userID string, change int64) (lastNum int64, errCode int32) {
 	return updateDiamond(userID, change)
+}
+
+func (*mySQLUtil) CountUserClubNumber(userID string) (count int) {
+	return countUserClub(userID)
+}
+
+func (*mySQLUtil) CreateClub(clubName string, creator string, isLeague int, wanka int, candy int, maxMember int) (clubID string, clubNumber string, errCode int) {
+	return createClub(clubName, creator, isLeague, wanka, candy, maxMember)
 }
 
 // InitWith init

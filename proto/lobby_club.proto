@@ -1,0 +1,174 @@
+syntax = "proto2";
+package club;
+
+// 编译
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby/club ./proto/lobby_club.proto
+
+message MsgClubReply
+{
+    required int32 replyCode = 1;
+    optional bytes content = 2;
+}
+
+message MsgClubDisplayInfo
+{
+    required string nick = 1;   // 名字
+	optional uint32 sex = 2; // 玩家性别
+	optional string headIconURL = 3; // 玩家头像URL
+	optional int32 avatarID = 4; // 头像框ID
+}
+
+// 俱乐部成员信息
+message MsgClubMemberInfo
+{
+    required string userID = 1; // userID
+    optional MsgClubDisplayInfo displayInfo = 2; // 显示用
+    optional bool online = 3; // 是否在线
+}
+
+// 俱乐部的基本信息
+message MsgClubBaseInfo
+{
+    required string clubNumber = 1; // 5位俱乐部编号
+    optional string clubName = 2; // 俱乐部名称
+    optional string clubID = 3; // 俱乐部的128位唯一ID
+}
+
+// 俱乐部操作通用回复，免得定义太多消息体
+message MsgCubOperGenericReply
+{
+    required int32 errorCode = 1; // 错误码，如果错误码不为0，则clubBaseInfo无效
+    optional string extra = 2; // 额外的错误信息
+}
+
+// 俱乐部信息
+message MsgClubInfo
+{
+    optional MsgClubBaseInfo baseInfo = 1; // 基础信息
+    optional string creatorUserID = 2; // 创建者userID
+    optional int32 clubLevel = 3; // 等级， 0 是牌友群，1是大联盟
+    optional int32 wanka = 4; // 旺卡
+    optional int32 candy = 5; // 糖果
+    optional int32 maxMember = 6; // 最大成员数量
+}
+
+// 加载自己的俱乐部
+message MsgClubLoadMyClubsReply
+{
+    repeated MsgClubInfo clubs = 1; // 俱乐部列表
+}
+
+// 加载俱乐部更新回复
+message MsgClubLoadUpdateReply
+{
+    repeated MsgClubInfo clubsUpdated = 1; // 俱乐部列表
+    repeated string clubIDsRemoved = 2; // 被移除的club
+}
+
+// 服务器回复请求成员列表
+message MsgClubLoadMembersReply
+{
+    repeated MsgClubMemberInfo members = 1; // 俱乐部成员列表
+    optional int32 cursor = 2; // 页号
+}
+
+// 创建俱乐部服务器给客户端的回复
+message MsgCreateClubReply
+{
+    optional MsgClubInfo clubInfo = 1; // 基本的俱乐部信息
+}
+
+// 俱乐部事件，注意和MsgClubNotification不同，事件是系统生成，不可设置
+message MsgClubEvent
+{
+    required int32 evtType = 1; // 事件类型
+    required uint32 Id = 2; // 事件唯一ID
+    required uint32 generatedTime = 3; // 自2010后时间过去秒数
+    optional string to = 4; // 目标，事件发送给谁，如果为空或者 "" 表示发给俱乐部所有成员
+    optional bytes content = 5; // 时间详细内容，根据evtType做不同的解析
+    optional bool unread = 6; // 为true表示未读
+    optional bool needHandle = 7; // 需要处理，如果为true，表示事件需要处理，例如需要部长批准或者拒绝
+    optional string userID1 = 8; // 第一个userID，具体解析根据evtType不同而不同
+    optional MsgClubDisplayInfo displayInfo1 = 9; // 第一个显示用的信息，具体解析根据evtType不同而不同
+    optional int32 approvalResult = 10; // 批准结果，0表示没有处理，1表示同意，2表示拒绝
+}
+
+// 服务器回复请求事件列表
+message MsgClubLoadEventsReply
+{
+    repeated MsgClubEvent events = 1; // 俱乐部成员列表
+    optional int32 cursor = 2; // 页号
+}
+
+// 俱乐部房间信息
+message MsgClubRoomInfo
+{
+    required int32 roomType = 1; // 房间类型
+    optional string roomRuleJSON = 2; // 房间规则JSON
+    optional int32 playerNumber = 3; // 当前房间人数
+    optional int32 roomState = 4; // 房间状态，0表示等待，1表示游戏已经开始
+    optional string roomNumber = 5; // 房间号码
+    optional string roomUUID = 6; // 房间GUID
+}
+
+// 服务器回复请求俱乐部房间列表
+message MsgClubLoadRoomsReply
+{
+    repeated MsgClubRoomInfo rooms = 1; // 俱乐部成员列表
+    optional int32 cursor = 2; // 页号
+    optional int32 totalRoomCount = 3; // 所有房间数量
+}
+
+// 俱乐部基金事件
+message MsgClubFundEvent
+{
+    required int32 evtType = 1; // 事件类型
+    required uint32 generatedTime = 2; // 自2010后时间过去秒数
+    required string userID = 3; // 事件关联的userID，可能为空
+    required int32 amount = 4; // 基本变化额度，注意，即是是扣除一样是正数，客户端根据evtType来判断是扣除还是增加，正数的目的是让proto系列化时较小空间
+    required int32 total = 5; // 经过变化后最终的值
+}
+
+// 加载俱乐部基金事件的回复
+message MsgClubLoadFundEventsReply
+{
+    repeated MsgClubFundEvent events = 1; // 俱乐部成员列表
+    optional int32 cursor = 2; // 页号
+}
+
+// 加载回播房间的回复
+message MsgClubLoadReplayRoomsReply
+{
+    optional bytes gZipBytes = 1; // 回播房间列表的压缩后字节数组，解析等同于战绩系统中的回播房间列表，先用gzip解压，然后得到一个ReplayRoom列表
+    optional int32 cursor = 2; // 页号
+}
+
+// 大赢家信息
+// message MsgClubGreatWinner
+// {
+//     required string userID = 1; // userID
+//     optional MsgClubDisplayInfo displayInfo1 = 2; //
+//     optional int32 winCount = 3; // 获得大赢家的回播房间数量
+//     optional int32 playCount = 4; // 参与的所有房间数量
+// }
+
+// 加载大赢家列表
+// message MsgClubLoadGreatWinnerReply
+// {
+//     repeated MsgClubGreatWinner winners = 1; // 大赢家列表
+//     optional string date = 2; // 大赢家统计日期，0今天，1昨天，2前天
+//     optional int32 cursor = 3; // 页号
+// }
+
+// 自动开房规则
+// message MsgClubAutoRoomJSON
+// {
+//     required string roomType = 1; // 房间类型
+//     optional string roomRuleJSON = 2; // 房间规则
+// }
+
+// 加载自动开房规则列表
+// message MsgClubLoadAutoRoomJSONReply
+// {
+//     repeated MsgClubAutoRoomJSON roomJSONs = 1; // 自动开房设置
+// }
