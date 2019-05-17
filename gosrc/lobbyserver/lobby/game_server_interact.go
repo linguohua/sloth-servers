@@ -214,6 +214,7 @@ func onDonateRequest(msgBag *gconst.SSMsgBag) {
 	donateUtil := DonateUtil()
 	msgDonateRsp, errCode := donateUtil.DoDoante(uint32(propsType), from, to, roomType)
 	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
+		log.Error("DoDoante failed, errCode:", errCode)
 		var msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
 		if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
 			msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough

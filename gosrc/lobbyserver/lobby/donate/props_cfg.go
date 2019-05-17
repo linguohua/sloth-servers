@@ -36,22 +36,48 @@ const (
 	kissID     = 8
 )
 
-// propsDiamond[flower] = 1
-// propsDiamond[beer] = 3
-// propsDiamond[egg] = 1
-// propsDiamond[slippers] = 3
-// propsDiamond[punch] = 10
-// propsDiamond[faeces] = 5
-// propsDiamond[redWine] = 10
-// propsDiamond[kiss] = 5
-// propsCharm[flower] = 1
-// propsCharm[beer] = 3
-// propsCharm[egg] = -1
-// propsCharm[slippers] = -3
-// propsCharm[punch] = -10
-// propsCharm[faeces] = -5
-// propsCharm[redWine] = 10
-// propsCharm[kiss] = 5
+// var propsCfg = `{
+// 	"1":{
+// 		"propID":1002,
+// 		"diamond":1,
+// 		"charm":1
+// 	},
+// 	"2":{
+// 		"propID":1003,
+// 		"diamond":3,
+// 		"charm":3
+// 	},
+// 	"3":{
+// 		"propID":1004,
+// 		"diamond":1,
+// 		"charm":-1
+// 	},
+// 	"4":{
+// 		"propID":1005,
+// 		"diamond":3,
+// 		"charm":-3
+// 	},
+// 	"5":{
+// 		"propID":1009,
+// 		"diamond":10,
+// 		"charm":-10
+// 	},
+// 	"6":{
+// 		"propID":1008,
+// 		"diamond":5,
+// 		"charm":-5
+// 	},
+// 	"7":{
+// 		"propID":1007,
+// 		"diamond":10,
+// 		"charm":10
+// 	},
+// 	"8":{
+// 		"propID":1006,
+// 		"diamond":5,
+// 		"charm":5
+// 	}
+// }`
 
 // PropCfgMap 道具配置映射表
 type PropCfgMap map[int]*Prop
@@ -107,42 +133,42 @@ func defaultPropsCfg() string {
 	var propsCfg = `{
 		"1":{
 			"propID":1002,
-			"diamond":1,
+			"diamond":0,
 			"charm":1
 		},
 		"2":{
 			"propID":1003,
-			"diamond":3,
+			"diamond":0,
 			"charm":3
 		},
 		"3":{
 			"propID":1004,
-			"diamond":1,
+			"diamond":0,
 			"charm":-1
 		},
 		"4":{
 			"propID":1005,
-			"diamond":3,
+			"diamond":0,
 			"charm":-3
 		},
 		"5":{
 			"propID":1009,
-			"diamond":10,
+			"diamond": 0,
 			"charm":-10
 		},
 		"6":{
 			"propID":1008,
-			"diamond":5,
+			"diamond":0,
 			"charm":-5
 		},
 		"7":{
 			"propID":1007,
-			"diamond":10,
+			"diamond":0,
 			"charm":10
 		},
 		"8":{
 			"propID":1006,
-			"diamond":5,
+			"diamond":0,
 			"charm":5
 		}
 	}`

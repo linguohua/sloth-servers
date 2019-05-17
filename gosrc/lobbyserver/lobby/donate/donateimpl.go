@@ -58,6 +58,7 @@ func donate(propsType uint32, from string, to string, roomType int) (result *gco
 	remainDiamond, errCode := mySQLUtil.UpdateDiamond(from, -cost)
 	// TODO: 在lobby中写成常量
 	if errCode == 2 {
+		log.Error("donate error, diamond not enough, remainDiamond:", remainDiamond)
 		errCode = int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough)
 		return nil, errCode
 	} else if errCode != 0 {
