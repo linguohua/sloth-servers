@@ -47,9 +47,15 @@ message MsgClubInfo
     optional MsgClubBaseInfo baseInfo = 1; // 基础信息
     optional string creatorUserID = 2; // 创建者userID
     optional int32 clubLevel = 3; // 等级， 0 是牌友群，1是大联盟
-    optional int32 wanka = 4; // 旺卡
-    optional int32 candy = 5; // 糖果
-    optional int32 maxMember = 6; // 最大成员数量
+    optional int32 points = 4; // 积分
+    optional int32 wanka = 5; // 旺卡
+    optional int32 candy = 6; // 糖果
+    optional int32 maxMember = 7; // 最大成员数量
+    optional bool joinForbit = 8; // 是否禁止玩家加入
+    optional bool hasUnReadEvents = 9; // 是否有未读消息
+    optional int32 createRoomOption = 10; // 0 允许普通玩家开启房间，1仅部长可以开房间
+    optional int32 payRoomOption = 11; // 创建房间时支付类型，0从基金支付，1是开房者设置（例如AA或者房主支付）
+    optional int32 createTime = 12; // 创建时间
 }
 
 // 加载自己的俱乐部

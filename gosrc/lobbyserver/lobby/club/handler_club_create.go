@@ -60,6 +60,13 @@ func onCreateClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	maxMember := int32(maxMemberPerClub)
 	clubInfo.MaxMember = &maxMember
 
+	club := newBaseClub(clubInfo, clubID)
+	log.Println("club:", club)
+	_, ok := clubMgr.clubs[club.ID]
+	if !ok {
+		clubMgr.clubs[club.ID] = club
+	}
+
 	cr := &MsgCreateClubReply{}
 	cr.ClubInfo = clubInfo
 

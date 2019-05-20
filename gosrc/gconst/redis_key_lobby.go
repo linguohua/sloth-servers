@@ -63,4 +63,22 @@ const (
 
 	// LobbyUserDonatePrefix 用户道具表
 	LobbyUserDonatePrefix = "l:d:"
+
+	// LobbyClubApplicantPrefix 俱乐部申请者列表
+	LobbyClubApplicantPrefix = "L:club:a:"
+
+	// LobbyClubEventTablePrefix 俱乐部事件哈希表，所有的消息，以ID为哈希表的field，以proto marshal后的buffer作为value
+	LobbyClubEventTablePrefix = "L:club:ev:"
+	// LobbyClubNeedHandledTablePrefix 需要部长处理的消息，用于快速确定某个消息是否需要处理，不需要转成proto才能确定
+	LobbyClubNeedHandledTablePrefix = "L:club:evh:"
+	// LobbyClubEventListPrefix 俱乐部事件列表，每一个俱乐部有一个自己的列表，俱乐部所有的事件都保存到该list中
+	LobbyClubEventListPrefix = "L:club:el:"
+	// LobbyClubUnReadEventUserListPrefix 俱乐部用户事件列表，为俱乐部的每一个用户建立一个未读消息列表
+	LobbyClubUnReadEventUserListPrefix = "l:club:uel:"
+	// LobbyClubUnReadEventUserSetPrefix 俱乐部用户事件set,为俱乐部的每一个用户建立一个未读消息set，用于快速确定一个事件对于某个用户来说是否未读
+	LobbyClubUnReadEventUserSetPrefix = "l:club:ues:"
+	// LobbyClubSysTable 俱乐部系统表格，主要是存储一些全局信息
+	LobbyClubSysTable = "m:club:sys"
+	// LobbyClubMemberSetPrefix 牌友群中的成员set
+	LobbyClubMemberSetPrefix = "l:club:m:"
 )

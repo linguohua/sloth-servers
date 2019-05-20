@@ -64,6 +64,30 @@ func (*mySQLUtil) CreateClub(clubName string, creator string, isLeague int, wank
 	return createClub(clubName, creator, isLeague, wanka, candy, maxMember)
 }
 
+func (*mySQLUtil) LoadClubUserIDs(clubID string) (userIDs []string) {
+	return loadClubUserIDs(clubID)
+}
+
+func (*mySQLUtil) LoadUserClubIDs(userID string) (clubIDs []string) {
+	return loadUserClubIDs(userID)
+}
+
+func (*mySQLUtil) LoadClubInfo(clubID string) (clubInfo interface{}) {
+	return loadClubInfo(clubID)
+}
+
+func (*mySQLUtil) LoadUserClubRole(userID string, clubID string) (role int32) {
+	return loadUserClubRole(userID, clubID)
+}
+
+func (*mySQLUtil) DeleteClub(clubID string) (errCode int32) {
+	return deleteClub(clubID)
+}
+
+func (*mySQLUtil) LoadClubIDByNumber(number string) string {
+	return loadClubIDByNumber(number)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)
@@ -75,5 +99,4 @@ func InitWith() {
 	}
 	dbConn = conn
 
-	test()
 }

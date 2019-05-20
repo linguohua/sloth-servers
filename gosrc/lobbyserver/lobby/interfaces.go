@@ -1,9 +1,10 @@
 package lobby
 
 import (
+	"gconst"
 	"math/rand"
 	"net/http"
-	"gconst"
+
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
 )
@@ -165,6 +166,12 @@ type IMySQLUtil interface {
 	UpdateDiamond(userID string, change int64) (lastNum int64, errCode int32)
 	CountUserClubNumber(userID string) (count int)
 	CreateClub(clubName string, creator string, isLeague int, wanka int, candy int, maxMember int) (clubID string, clubNumber string, errCode int)
+	LoadClubUserIDs(clubID string) (userIDs []string)
+	LoadUserClubIDs(userID string) (clubIDs []string)
+	LoadClubInfo(clubID string) (clubInfo interface{})
+	LoadUserClubRole(userID string, clubID string) (role int32)
+	DeleteClub(clubID string) (errCode int32)
+	LoadClubIDByNumber(number string) string
 }
 
 // IUpdateUtil update utility

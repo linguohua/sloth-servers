@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"gconst"
+	"lobbyserver/lobby"
+	"strconv"
+
 	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql" //不能去掉，不然连接数据库的时候提示找不到mssql
 	log "github.com/sirupsen/logrus"
-	"lobbyserver/lobby"
-	"strconv"
 )
 
 // DBConfig 数据库配置

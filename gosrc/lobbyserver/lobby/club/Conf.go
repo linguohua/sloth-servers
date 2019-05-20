@@ -1,8 +1,8 @@
 package club
 
 const (
-	maxClubCreatePerUser = 3
-	maxClubJoinPerUser   = 3
+	maxClubCreatePerUser = 20
+	maxClubJoinPerUser   = 20
 	minClubNumber        = 1000
 	maxClubNumber        = 9999
 	minClubIconIndex     = 0
