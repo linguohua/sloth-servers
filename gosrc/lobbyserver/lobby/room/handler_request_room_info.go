@@ -193,8 +193,8 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httproute
 	var propCfg = getPropCfg(roomTypeInt)
 	roomInfo.PropCfg = &propCfg
 
-	moduleCfg := getModuleCfg(r, lastRoomInfo)
-	lastRoomInfo.ModuleCfg = &moduleCfg
+	moduleCfg := getModuleCfg(r, roomInfo)
+	roomInfo.ModuleCfg = &moduleCfg
 
 	log.Printf("handlerRequestRoomInfo, userID: %s, roomNumber:%s, roomID:%s, GameServerID:%s", userID, roomNumber, roomID, gameServerID)
 
