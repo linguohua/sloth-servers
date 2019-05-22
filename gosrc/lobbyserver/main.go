@@ -11,7 +11,7 @@ import (
 	"lobbyserver/lobby/room"
 	"lobbyserver/lobby/update"
 	"lobbyserver/lobby/mail"
-	"lobbyserver/lobby/club"
+	// "lobbyserver/lobby/club"
 	"lobbyserver/lobby/donate"
 
 	//"accwebserver"
@@ -104,7 +104,7 @@ func main() {
 	update.InitWith()
 	chat.InitWith()
 	mail.InitWith()
-	club.InitWith()
+	// club.InitWith()
 	donate.InitWith()
 
 	if config.Daemon == "yes" {
