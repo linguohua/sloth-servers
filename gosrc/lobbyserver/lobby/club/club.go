@@ -4,6 +4,7 @@ import (
 	"lobbyserver/lobby"
 	"time"
 	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 var (
 	clubMgr *MyClubMgr
@@ -45,9 +46,37 @@ func createClubLuaScript() {
 	luaScriptRemoveMemberEventList = redis.NewScript(3, script3)
 }
 
+func loadAllClub() {
+	log.Println("loading club from database")
+	mySQLUtil := lobby.MySQLUtil()
+	cursor := 0
+	count := 100
+	for ; ; {
+		infos := mySQLUtil.LoadClubInfos(cursor, count)
+		clubInfos := infos.([]*MsgClubInfo)
+		for _, clubInfo := range clubInfos {
+			clubID := clubInfo.GetBaseInfo().GetClubID()
+			club, ok := clubMgr.clubs[clubID]
+			if !ok {
+				club = newBaseClub(clubInfo, clubID)
+				clubMgr.clubs[clubID] = club
+			}
+		}
+
+		if count > len(clubInfos) {
+			break
+		}
+
+		cursor = cursor + count
+	}
+
+}
+
 // InitWith init
 func InitWith() {
 	clubMgr = newClubMgr()
+
+	loadAllClub()
 
 	createClubLuaScript()
 
@@ -57,4 +86,8 @@ func InitWith() {
 	lobby.RegHTTPHandle("GET", "/loadMyClubs", onLoadMyClubs)
 	lobby.RegHTTPHandle("GET", "/disbandClub", onDisbandClub)
 	lobby.RegHTTPHandle("GET", "/loadClubMembers", onLoadClubMembers)
+	lobby.RegHTTPHandle("GET", "/joinClub", onJoinClub)
+	lobby.RegHTTPHandle("GET", "/joinApproval", onJoinApprove)
+	lobby.RegHTTPHandle("GET", "/loadClubEvents", onLoadEvents)
+	lobby.RegHTTPHandle("GET", "/quitClub", onQuit)
 }

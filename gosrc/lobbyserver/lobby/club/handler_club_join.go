@@ -7,12 +7,14 @@ import (
 	"time"
 	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
-
+	"github.com/julienschmidt/httprouter"
 	"github.com/garyburd/redigo/redis"
 )
 
 // onJoinClub 申请加入某个俱乐部
-func onJoinClub(w http.ResponseWriter, r *http.Request, userID string) {
+func onJoinClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	userID := ps.ByName("userID")
+
 	log.Println("onJoinClub, userID:", userID)
 
 	var query = r.URL.Query()
@@ -65,8 +67,10 @@ func onJoinClub(w http.ResponseWriter, r *http.Request, userID string) {
 
 	clubInfo := club.clubInfo
 
+	log.Println("clubInfo:", clubInfo)
+
 	// 俱乐部禁止申请加入
-	if !clubInfo.GetJoinForbit() {
+	if clubInfo.GetJoinForbit() {
 		log.Println("onJoinClub, club forbit to join")
 		sendGenericError(w, ClubOperError_CERR_Club_Forbit_Join)
 		// sendGenericErrorWithExtraString(w, ClubOperError_CERR_Club_Forbit_Join, jReason)

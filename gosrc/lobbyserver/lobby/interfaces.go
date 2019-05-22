@@ -27,6 +27,8 @@ var (
 	clubMgr IClubMgr
 
 	donateUtil IDonateUtil
+
+	mailUtil IMailUtil
 )
 
 // PayUtil room utility
@@ -127,6 +129,20 @@ func SetDonateUtil(util IDonateUtil) {
 	donateUtil = util
 }
 
+// MailUtil mail util
+func MailUtil() IMailUtil {
+	if mailUtil == nil {
+		log.Panic("MailUtil is null, maybe not mount mail package yet")
+	}
+
+	return mailUtil
+}
+
+// SetMailUtil set mail util
+func SetMailUtil(util IMailUtil) {
+	mailUtil = util
+}
+
 // ISessionMgr websocket mgr
 type ISessionMgr interface {
 	Broacast(msg []byte)
@@ -172,6 +188,9 @@ type IMySQLUtil interface {
 	LoadUserClubRole(userID string, clubID string) (role int32)
 	DeleteClub(clubID string) (errCode int32)
 	LoadClubIDByNumber(number string) string
+	AddUserToClub(userID string, clubID string, role int32) (errCode int)
+	LoadClubInfos(cursor int, count int) (clubInfos interface{})
+	RemoveUserFromClub(userID string, clubID string) (errCode int)
 }
 
 // IUpdateUtil update utility
@@ -187,4 +206,9 @@ type IClubMgr interface {
 type IDonateUtil interface {
 	GetRoomPropsCfg(roomType int) string
 	DoDoante(propsType uint32, from string, to string, roomType int) (result *gconst.SSMsgDonateRsp, errCode int32)
+}
+
+// IMailUtil mail util
+type IMailUtil interface {
+	SendMail(userID string, content string, title string)
 }

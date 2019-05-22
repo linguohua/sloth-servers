@@ -120,6 +120,8 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		sendMail.Mail.Attachments.IsReceive = &isReceive
 	}
 
+	saveMail(sendMail)
+
 	sessionMgr := lobby.SessionMgr()
 
 	if sendMail.IsAll {
@@ -145,7 +147,32 @@ func handlerSendMail(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		}
 	}
 
+	w.Write([]byte("ok"))
+}
+
+func sendMail(userID string, content string, title string) {
+	uid, _ := uuid.NewV4()
+	mailID := fmt.Sprintf("%v", uid)
+	timeStamp := time.Now().Unix()
+
+	mail :=  &lobby.MsgMail{}
+	mail.Id = &mailID
+	mail.TimeStamp = &timeStamp
+	mail.Title = &title
+	mail.Content = &content
+	isRead := false
+	mail.IsRead = &isRead
+
+	sendMail := &SendMail{}
+	sendMail.Mail = mail
+	sendMail.IsAll = false
+	sendMail.Users = []string {userID}
+
 	saveMail(sendMail)
 
-	w.Write([]byte("ok"))
+	sessionMgr := lobby.SessionMgr()
+	ok := sessionMgr.SendProtoMsgTo(userID, nil, int32(lobby.MessageCode_OPMail))
+	if !ok {
+		log.Printf("handlerSendMail, send msg to %s failed, target user not exists or is offline", userID)
+	}
 }

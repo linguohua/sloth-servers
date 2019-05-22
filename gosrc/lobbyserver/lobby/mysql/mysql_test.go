@@ -9,7 +9,6 @@ import (
 func TestSomething(t *testing.T) {
 	testDBConnect()
 
-	testLoadClubInfoByNumber("237910")
 }
 
 func testDBConnect() {
@@ -21,10 +20,4 @@ func testDBConnect() {
 	dbConn = gameDBCon
 
 	// defer dbConn.Close()
-}
-
-
-func testLoadClubInfoByNumber(number string) {
-	clubInfo := loadClubInfoByNumber(number)
-	log.Println("clubInfo:", clubInfo)
 }

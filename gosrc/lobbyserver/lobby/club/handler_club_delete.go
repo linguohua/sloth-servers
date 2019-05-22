@@ -3,6 +3,7 @@ package club
 import (
 	"log"
 	"net/http"
+	"gconst"
 	"lobbyserver/lobby"
 	"github.com/julienschmidt/httprouter"
 )
@@ -45,6 +46,7 @@ func onDisbandClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 	// TODO: 拉取所有成员，给他们发通知
 	// TODO: 需要同时解散房间
+	redisClearClubData(clubID)
 
 	mySQLUtil.DeleteClub(clubID)
 
@@ -102,4 +104,21 @@ func onDisbandClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 	// // 把当前剩余的俱乐部给返回去
 	onLoadMyClubs(w, r, ps)
+}
+
+// redisClearClubData 删除俱乐部所有相关表格
+func redisClearClubData( clubID string) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	luaScriptRemoveMemberEventList.Do(conn, gconst.LobbyClubUnReadEventUserListPrefix+clubID+":",
+		gconst.LobbyClubUnReadEventUserSetPrefix+clubID+":", gconst.LobbyClubMemberSetPrefix+clubID)
+
+	conn.Send("MULTI")
+	conn.Send("DEL", gconst.LobbyClubMemberSetPrefix+clubID)
+	conn.Send("DEL", gconst.LobbyClubApplicantPrefix+clubID)
+	conn.Send("DEL", gconst.LobbyClubEventTablePrefix+clubID)
+	conn.Send("DEL", gconst.LobbyClubEventListPrefix+clubID)
+	conn.Send("DEL", gconst.LobbyClubNeedHandledTablePrefix+clubID)
+	conn.Do("EXEC")
 }

@@ -46,6 +46,8 @@ func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // RegHTTPHandle 注册HTTP handler
 func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 	rootRouter.Handle(method, "/lobby/:uuid"+path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
 

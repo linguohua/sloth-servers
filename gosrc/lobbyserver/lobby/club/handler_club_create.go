@@ -2,6 +2,7 @@ package club
 
 import (
 	"net/http"
+	"gconst"
 	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -43,6 +44,10 @@ func onCreateClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		log.Panic("Create club error, errCode:", errCode)
 	}
 
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+	conn.Do("SADD", gconst.LobbyClubMemberSetPrefix+clubID, userID)
+
 	clubBaseInfo := &MsgClubBaseInfo{}
 	clubBaseInfo.ClubID = &clubID
 	clubBaseInfo.ClubNumber = &clubNumber
@@ -61,7 +66,7 @@ func onCreateClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	clubInfo.MaxMember = &maxMember
 
 	club := newBaseClub(clubInfo, clubID)
-	log.Println("club:", club)
+	// log.Println("club:", club)
 	_, ok := clubMgr.clubs[club.ID]
 	if !ok {
 		clubMgr.clubs[club.ID] = club

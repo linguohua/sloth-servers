@@ -88,6 +88,18 @@ func (*mySQLUtil) LoadClubIDByNumber(number string) string {
 	return loadClubIDByNumber(number)
 }
 
+func (*mySQLUtil) AddUserToClub(userID string, clubID string, role int32) (errCode int) {
+	return addUserToClub(userID, clubID, role)
+}
+
+func (*mySQLUtil) LoadClubInfos(cursor int, count int) (clubInfos interface{}) {
+	return loadClubInfos(cursor, count)
+}
+
+func (*mySQLUtil) RemoveUserFromClub(userID string, clubID string) (errCode int) {
+	return removeUserFromClub(userID, clubID)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetMySQLUtil(sqlUtil)

@@ -8,7 +8,7 @@ import (
 
 // 拉取牌友群的成员ID，user_club表，user_id和club_id都是索引，可以从user_id查club_id,也可以从club_id查user_id
 func loadUserClubRole(userID string, clubID string) (role int32) {
-	log.Printf("loadUserClubRole, userID:%s, role:%s", userID, clubID)
+	log.Printf("loadUserClubRole, userID:%s, clubID:%s", userID, clubID)
 	stmt, err := dbConn.Prepare("select club_role from user_club where user_id = ? and club_id = ?")
 	if err != nil {
 		panic(err.Error())

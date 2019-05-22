@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
 )
 // sendGenericError 发送一个错误码到客户端
@@ -130,8 +131,10 @@ func sendClubEventMails(userIDs []string, text string) {
 	// myMail.Title = "俱乐部"
 	// myMail.Text = text
 	// myMail.ExpirationTime = "2018-04-04 14:25:22"
+	title := "牌友圈邮件"
 
-	// for _, userID := range userIDs {
-	// 	myHost.SendMail(text, userID)
-	// }
+	mailUtil := lobby.MailUtil()
+	for _, userID := range userIDs {
+		mailUtil.SendMail(userID, text, title)
+	}
 }
