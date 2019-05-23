@@ -1,0 +1,98 @@
+1.创建牌友圈：
+url:/lobby/uuid/createClub?tk=xxx&clname=xxx
+tk 是token
+clname 是牌友圈名字
+
+返回：MsgCreateClubReply
+
+
+2.拉取牌友圈:
+url: /lobby/uuid/loadMyClubs?tk=xxx
+tk 是token
+
+返回：MsgClubLoadMyClubsReply
+
+3.删除牌友圈
+url: /lobby/uuid/disbandClub?tk=xxx&clubID=xxx
+tk 是token
+clubID 是要删掉的牌友圈ID
+
+返回：MsgClubLoadMyClubsReply
+
+4.拉取牌友圈成员
+url: /lobby/uuid/loadClubMembers?tk=xxx&clubID=xxx
+tk 是token
+clubID 是牌友圈ID
+
+返回：MsgClubLoadMembersReply
+
+5. 申请加入牌友圈
+url: /lobby/uuid/joinClub?tk=xxx&clubNumber=xxx
+tk 是token
+clubNumber 是5位的群号
+
+返回:错误码为0表明申请成功
+
+6. 拉取牌友圈事件（包括申请、退出、踢人事件）：
+url: /lobby/uuid/loadClubEvents?tk=xxx&clubID=xxx&cursor=xxx
+tk 是token
+clubID 是牌友圈ID
+cursor 是游标，不填默认从0开始拉取
+
+返回：MsgClubLoadEventsReply
+
+
+7. 接收申请 （只有群主或者管理员才有权限）
+url: /lobby/uuid/joinApproval?tk=xxx&clubID=xxx&applicantID=xx&agree=xxx&eID=xxx
+tk 是token
+clubID 是牌友圈ID
+applicantID 申请者的用户ID
+agree yes表接受申请，no表示拒绝
+eID 是申请事件ID
+
+返回：错误码为0表明操作成功
+
+8. 成员退出牌友圈
+url: /lobby/uuid/quitClub?tk=xxx&clubID=xxx
+tk 是token
+clubID 是牌友圈ID
+
+返回：MsgClubLoadMyClubsReply
+
+
+9. 创建牌友圈房间
+url: /lobby/uuid/createClubRoom?tk=xxx&clubID=xxx
+tk 是token
+clubID 是牌友圈ID
+
+需要发送的内容：
+//玩家创建房间
+message MsgCreateRoomReq
+{
+	required string config = 1; // JSON格式的规则
+}
+
+
+返回值：lobby.MsgCreateRoomRsp
+//玩家创建房间返回信息
+message MsgCreateRoomRsp
+{
+	required int32 result = 1; //0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
+	optional RoomInfo roomInfo = 2; //房间信息
+	optional string retMsg = 3; // result对应的字符串
+	optional int32 diamond= 4;  // 若创建成功返回剩下的钻石
+}
+
+10. 拉取牌友圈房间
+url: /lobby/uuid/loadClubRooms?tk=xxx&clubID=xxx
+tk 是token
+clubID 是牌友圈ID
+
+返回: lobby.MsgLoadRoomListRsp
+
+11. 删除牌友圈房间
+url: /lobby/uuid/loadClubRooms?tk=xxx&clubID=xxx
+tk 是token
+clubID 是牌友圈ID
+
+返回：lobby.MsgDeleteRoomReply

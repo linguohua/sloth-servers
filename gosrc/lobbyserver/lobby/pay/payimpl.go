@@ -35,7 +35,9 @@ const (
 // Order 保存用户支付记录
 type Order struct {
 	OrderID string `json:"orderID"`
-	Cost    int    `json:"cost"`
+	// 若创建房间失败，则roomConfigID不会保存到room表，因此保存到订单里面
+	RoomConfigID string `json:"roomConfigID"`
+	Cost         int    `json:"cost"`
 }
 
 func getPayDiamondNum(payType int, playerNumAcquired int, handNum int, roomType int) (int, error) {
@@ -115,6 +117,7 @@ func doPayWith(roomConfigID string, roomID string, userID string) (remainDiamond
 		order := &Order{}
 		order.OrderID = orderID
 		order.Cost = -pay
+		order.RoomConfigID = roomConfigID
 
 		buf, err := json.Marshal(order)
 		if err != nil {
@@ -124,7 +127,7 @@ func doPayWith(roomConfigID string, roomID string, userID string) (remainDiamond
 		conn := lobby.Pool().Get()
 		defer conn.Close()
 
-		conn.Do("HSET", gconst.LobbyPayRoomPrefix+roomID, userID, buf)
+		conn.Do("HSET", gconst.LobbyPayOrderPrefix+roomID, userID, buf)
 	}
 
 	return
@@ -132,7 +135,7 @@ func doPayWith(roomConfigID string, roomID string, userID string) (remainDiamond
 
 func loadUsersInRoom(roomID string, conn redis.Conn) []string {
 	// 获取房间内的用户列表
-	vs, err := redis.Values(conn.Do("HGETALL", gconst.LobbyPayRoomPrefix+roomID))
+	vs, err := redis.Values(conn.Do("HGETALL", gconst.LobbyPayOrderPrefix+roomID))
 	if err != nil {
 		log.Println("readUserIDListInRoom, get room players failed:", err)
 		return []string{}
@@ -178,18 +181,9 @@ func refund2UserWith(roomID string, userID string, handFinish int) (remainDiamon
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	conn.Send("MULTI")
-	conn.Send("HGET", gconst.LobbyPayRoomPrefix+roomID, userID)
-	conn.Send("HGET", gconst.LobbyRoomTablePrefix+roomID, "config")
-	vs, err := redis.Values(conn.Do("EXEC"))
+	orderBuf, err := redis.Bytes(conn.Do("HGET", gconst.LobbyPayOrderPrefix+roomID, userID))
 	if err != nil {
-		log.Error("refund2UserWith, load UnRefund order err:", err)
-		return
-	}
-
-	var orderBuf, _ = redis.Bytes(vs[0], nil)
-	if len(orderBuf) == 0 {
-		log.Error("refund2UserWith, return failed, can't get order")
+		log.Error("refund2UserWith, load order from redis err:", err)
 		return
 	}
 
@@ -200,15 +194,9 @@ func refund2UserWith(roomID string, userID string, handFinish int) (remainDiamon
 		return
 	}
 
-	roomConfigID, err := redis.String(vs[0], nil)
-	if err != nil {
-		log.Error("refund2UserWith, return failed, can't get roomType ")
-		return
-	}
-
-	roomConfig := lobby.GetRoomConfig(roomConfigID)
+	roomConfig := lobby.GetRoomConfig(order.RoomConfigID)
 	if roomConfig == nil {
-		log.Error("refund2UserWith, Can not find room config, roomConfigID:", roomConfigID)
+		log.Error("refund2UserWith, Can not find room config, roomConfigID:", order.RoomConfigID)
 		return
 	}
 
@@ -222,7 +210,7 @@ func refund2UserWith(roomID string, userID string, handFinish int) (remainDiamon
 	result, lastNum := mySQLUtil.RefundForRoom(userID, refund, order.OrderID)
 
 	if result == 0 {
-		conn.Do("HDEL", gconst.LobbyPayRoomPrefix+roomID, userID)
+		conn.Do("HDEL", gconst.LobbyPayOrderPrefix+roomID, userID)
 	}
 
 	return int(lastNum), int32(result)

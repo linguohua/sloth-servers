@@ -30,8 +30,8 @@ const (
 	// LobbyPropsTable 道具表
 	LobbyPropsTable = "l:tb"
 
-	// LobbyPayRoomPrefix 房间支付记录
-	LobbyPayRoomPrefix = "l:pay:"
+	// LobbyPayOrderPrefix 房间支付记录
+	LobbyPayOrderPrefix = "l:pay:"
 	// // LobbyRoomPayUsersPrefix 房间已经扣钻石用户列表，用于解散房间时返还钻石给用户, ru表示房间里面的用户
 	// LobbyRoomPayUsersPrefix = "l:pay:ru:"
 	// // LobbyPayUserOrderPrefix 用户的订单记录，m房间管理服务器，o表示支付，此表维护用户的支付记录
@@ -81,4 +81,6 @@ const (
 	LobbyClubSysTable = "m:club:sys"
 	// LobbyClubMemberSetPrefix 牌友群中的成员set
 	LobbyClubMemberSetPrefix = "l:club:m:"
+	// LobbyClubRoomSetPrefix 牌友群房间Set
+	LobbyClubRoomSetPrefix = "l:club:rs:"
 )

@@ -200,6 +200,10 @@ type IUpdateUtil interface {
 
 // IClubMgr club manager
 type IClubMgr interface {
+	GetClub(clubID string) interface{}
+	IsUserPermisionCreateRoom(userID string, clubID string) bool
+	IsUserPermisionDeleteRoom(userID string, clubID string) bool
+	IsClubMember(userID string, clubID string) bool
 }
 
 // IDonateUtil donate util

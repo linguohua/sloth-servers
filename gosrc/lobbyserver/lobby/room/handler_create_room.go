@@ -88,6 +88,15 @@ func saveRoomInfo(msgCreateRoom *gconst.SSMsgCreateRoom, gameServerID string, ro
 	lastActiveTime := timeStampInSecond / 60
 
 	conn.Send("MULTI")
+
+	if msgCreateRoom.GetClubID() != "" {
+		// 保存牌友群房间
+		conn.Send("SADD", gconst.LobbyClubRoomSetPrefix+msgCreateRoom.GetClubID(), roomID)
+	} else {
+		// 保存用户的房间，只保存一个
+		conn.Send("HSET", gconst.LobbyUserTablePrefix+userID, "roomID", roomID)
+	}
+
 	conn.Send("HSET", gconst.LobbyUserTablePrefix+userID, "roomID", roomID)
 	conn.Send("HSET", gconst.LobbyRoomNumberTablePrefix+roomNumberString, "roomID", roomID)
 	conn.Send("HMSET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", userID, "roomConfigID",

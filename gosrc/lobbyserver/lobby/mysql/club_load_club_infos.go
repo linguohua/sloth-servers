@@ -87,9 +87,10 @@ func loadClubInfos(cursor int, count int) (clubInfo []*club.MsgClubInfo) {
 		if len(rawTime) > 0 {
 			createTime, err := time.Parse("2006-01-02 15:04:05", string(rawTime))
 			if err == nil {
-				log.Println("timeStamp:", createTime.Unix())
+				creatime := int32(createTime.Unix())
+				myClubInfo.CreateTime = &creatime
 			} else {
-				log.Println("err:", err)
+				log.Error("loadClubInfos, err:", err)
 			}
 
 		}

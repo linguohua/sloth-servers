@@ -8,6 +8,7 @@ import(
 	"lobbyserver/lobby"
 	"io/ioutil"
 	"github.com/golang/protobuf/proto"
+	"bytes"
 )
 
 // TestSomething 测试用例
@@ -17,12 +18,17 @@ func TestSomething(t *testing.T) {
 	// testCreateClub("10000002")
 	// testLoadMyClubs("10000002")
 	// testDeleteClub("10000002")
-	testLoadClubMembers("10000002")
+	// testLoadClubMembers("10000002")
 	// testJoinClub("10000003")
 	// testLoadClubEvent("10000002")
 	// testJoinApproval("10000002", "10000003", "yes", "5")
 	// testClubQuit("10000003")
-		// testLoadMyClubs("10000003")
+	// testLoadMyClubs("10000003")
+	// testCreateClubRoom("10000002")
+	// testLoadClubRooms("10000002")
+	testDeleteClubRoom("10000002")
+
+
 }
 
 
@@ -471,4 +477,149 @@ func testClubQuit(id string) {
 	}
 
 	log.Println("reply:", reply)
+}
+
+func testCreateClubRoom(id string) {
+	tk := lobby.GenTK(id)
+	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
+	config := `{"playerNumAcquired":4, "payNum":0, "payType":0, "handNum":4, "roomType":1, "modName":"game1"}`
+	createRoomReq := &lobby.MsgCreateRoomReq{}
+	createRoomReq.Config = &config
+
+	buf, err := proto.Marshal(createRoomReq)
+	if err != nil {
+		log.Println("testCreateClubRoom, error:", err)
+		return
+	}
+
+	var url = "http://localhost:3002/lobby/uuid/createClubRoom?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6"
+	client := &http.Client{Timeout: time.Second * 60}
+	req, err := http.NewRequest("POST", url,  bytes.NewBuffer(buf))
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("err: ", err)
+		return
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("resp.StatusCode != 200, resp.StatusCode:", resp.StatusCode)
+		return
+	}
+
+	errcode := resp.Header.Get("error")
+	if errcode != "" {
+		log.Println("errorcode: ", errcode)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("handlerChat error:", err)
+		return
+	}
+
+	reply := &lobby.MsgCreateRoomRsp{}
+	err = proto.Unmarshal(body, reply)
+	if err != nil {
+		log.Println("testCreateClubRoom, err:", err)
+		return
+	}
+
+	if reply.GetResult() != 0 {
+		log.Printf("reply errCode:%d, retMsg:%s", reply.GetResult(), reply.GetRetMsg())
+	} else {
+			log.Println("reply:", reply)
+	}
+	// log.Println("reply:", reply)
+}
+
+func testLoadClubRooms(id string) {
+	tk := lobby.GenTK(id)
+
+	var url = "http://localhost:3002/lobby/uuid/loadClubRooms?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6"
+	client := &http.Client{Timeout: time.Second * 60}
+	req, err := http.NewRequest("POST", url,  nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("err: ", err)
+		return
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("resp.StatusCode != 200, resp.StatusCode:", resp.StatusCode)
+		return
+	}
+
+	errcode := resp.Header.Get("error")
+	if errcode != "" {
+		log.Println("errorcode: ", errcode)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("handlerChat error:", err)
+		return
+	}
+
+	reply := &lobby.MsgLoadRoomListRsp{}
+	err = proto.Unmarshal(body, reply)
+	if err != nil {
+		log.Println("testCreateClubRoom, err:", err)
+		return
+	}
+
+	if reply.GetResult() != 0 {
+		log.Printf("reply errCode:%d, retMsg:%s", reply.GetResult(), reply.GetRetMsg())
+	} else {
+			log.Println("reply:", reply)
+	}
+	// log.Println("reply:", reply)
+}
+
+func testDeleteClubRoom(id string) {
+	tk := lobby.GenTK(id)
+
+	var url = "http://localhost:3002/lobby/uuid/deleteClubRoom?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6&roomID=2d4958eb-5162-429d-beb8-0d81509ad89c"
+	client := &http.Client{Timeout: time.Second * 60}
+	req, err := http.NewRequest("POST", url,  nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("err: ", err)
+		return
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("resp.StatusCode != 200, resp.StatusCode:", resp.StatusCode)
+		return
+	}
+
+	errcode := resp.Header.Get("error")
+	if errcode != "" {
+		log.Println("errorcode: ", errcode)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("handlerChat error:", err)
+		return
+	}
+
+	reply := &lobby.MsgDeleteRoomReply{}
+	err = proto.Unmarshal(body, reply)
+	if err != nil {
+		log.Println("testDeleteClubRoom, err:", err)
+		return
+	}
+
+	if reply.GetResult() != 0 {
+		log.Printf("reply errCode:%d", reply.GetResult())
+	} else {
+			log.Println("reply:", reply)
+	}
+	// log.Println("reply:", reply)
 }
