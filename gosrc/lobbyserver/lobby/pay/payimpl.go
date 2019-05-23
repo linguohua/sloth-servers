@@ -101,10 +101,10 @@ func doPayWith(roomConfigID string, roomID string, userID string) (remainDiamond
 	result, lastNum, orderID := mySQLUtil.PayForRoom(userID, pay, roomID)
 	if result == errorPayNoEnoughDiamond {
 		log.Errorf("Pay no enough diamond, userID:%s, pay:%d, current diamond:%d", userID, pay, lastNum)
-		errCode = int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough)
+		errCode = int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough)
 	} else if result != 0 {
 		log.Errorf("Pay for room failed, result:%d, userID:%s, pay:%d, roomID:%s", result, userID, pay, roomID)
-		errCode = int32(lobby.MsgError_ErrTakeoffDiamondFailedIO)
+		errCode = int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO)
 	} else {
 		errCode = 0
 	}
