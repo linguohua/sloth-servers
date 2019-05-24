@@ -29,4 +29,8 @@ type IUser interface {
 
 	// 发送pong给玩家
 	sendPong(msg string)
+
+	setFromWeb(isFromWeb bool)
+
+	isFromWeb() bool
 }

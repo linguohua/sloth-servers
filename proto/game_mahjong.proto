@@ -80,6 +80,8 @@ enum MessageCode{
     OPUpdateLocation = 21; // 更新玩家的GPS定位信息
     OP2Lobby = 22; // 切换到大厅，连接断开，但是服务器保留玩家座位，并重置状态到offline状态，当且仅当游戏没开始时允许所有客户端发送这个请求
     OPUpdatePropCfg = 23; // 更新牌局内的道具配置
+	OPPing = 100; // ping
+	OPPong = 101; // ping
 }
 
 // 消息包装，把其他消息体格式化为byte array，

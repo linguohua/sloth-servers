@@ -1,6 +1,7 @@
 package dfmahjong
 
 import (
+	"mahjong"
 	"sync"
 	"time"
 
@@ -15,10 +16,11 @@ const (
 
 // GUser 表示一个游戏用户
 type GUser struct {
-	uID  string          // 用户唯一ID
-	ws   *websocket.Conn // websocket 连接对象
-	room *Room
-	info *UserInfo
+	uID       string          // 用户唯一ID
+	ws        *websocket.Conn // websocket 连接对象
+	room      *Room
+	info      *UserInfo
+	isfromWeb bool
 
 	wsLock *sync.Mutex // websocket并发写锁
 }
@@ -84,8 +86,16 @@ func (gu *GUser) sendPing() {
 		gu.wsLock.Lock()
 		defer gu.wsLock.Unlock()
 
+		var err error
 		ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
-		err := ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+
+		if gu.isfromWeb {
+			buf := formatGameMsgByData([]byte("ka"), int32(mahjong.MessageCode_OPPing))
+			ws.WriteMessage(websocket.BinaryMessage, buf)
+		} else {
+			err = ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		}
+
 		if err != nil {
 			log.Printf("user %s ws write err:", err)
 			ws.Close()
@@ -146,4 +156,12 @@ func (gu *GUser) closeWebsocket() {
 		// 否则不能进入room.onUserMessage(gu, message)
 		gu.ws.Close()
 	}
+}
+
+func (gu *GUser) setFromWeb(isFromWeb bool) {
+	gu.isfromWeb = isFromWeb
+}
+
+func (gu *GUser) isFromWeb() bool {
+	return gu.isfromWeb
 }
