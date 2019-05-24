@@ -1,8 +1,8 @@
 package mysql
 
 import (
-	"lobbyserver/lobby"
 	"database/sql"
+	"lobbyserver/lobby"
 )
 
 // 查询用户信息

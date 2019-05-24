@@ -1,6 +1,9 @@
 syntax = "proto2";
 package club;
 
+// 编译
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby/club ./proto/lobby_club_enum.proto
+
 enum ClubReplyCode
 {
     RCNone = 0;
@@ -14,8 +17,8 @@ enum ClubRoleType
     CRoleTypeNone = 0; // 无效角色
     CRoleTypeMember = 1; // 成员
     CRoleTypeCreator = 2; // 创建者
-    CRoleTypeOwner = 4; // 拥有者
-    CRoleTypeMgr = 8; // 管理者
+    // CRoleTypeOwner = 4; // 拥有者
+    CRoleTypeMgr = 3; // 管理者
 }
 
 enum ClubOperError

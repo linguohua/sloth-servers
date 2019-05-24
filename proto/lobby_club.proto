@@ -1,6 +1,9 @@
 syntax = "proto2";
 package club;
 
+// 编译
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby/club ./proto/lobby_club.proto
+
 message MsgClubReply
 {
     required int32 replyCode = 1;
@@ -26,10 +29,9 @@ message MsgClubMemberInfo
 // 俱乐部的基本信息
 message MsgClubBaseInfo
 {
-    required string clubNumber = 1; // 4位俱乐部编号
+    required string clubNumber = 1; // 5位俱乐部编号
     optional string clubName = 2; // 俱乐部名称
-    optional string clubIcon = 3; // 俱乐部图标
-    optional string clubID = 4; // 俱乐部的128位唯一ID
+    optional string clubID = 3; // 俱乐部的128位唯一ID
 }
 
 // 俱乐部操作通用回复，免得定义太多消息体
@@ -43,27 +45,17 @@ message MsgCubOperGenericReply
 message MsgClubInfo
 {
     optional MsgClubBaseInfo baseInfo = 1; // 基础信息
-
-    optional int32 onlinePlayerNum = 2; // 在线人手
-    optional int32 totalPlayerNum = 3; // 全部人数
-
-    optional string stringNotification = 4; // 需要动态展示的公告
-
-    optional string forbitReason = 5; // 禁止申请加入时发给申请者的通告
-
-    optional string creatorUserID = 6; // 创建者userID
-
-    optional int32 fund = 7; // 俱乐部基金数量
-
+    optional string creatorUserID = 2; // 创建者userID
+    optional int32 clubLevel = 3; // 等级， 0 是牌友群，1是大联盟
+    optional int32 points = 4; // 积分
+    optional int32 wanka = 5; // 旺卡
+    optional int32 candy = 6; // 糖果
+    optional int32 maxMember = 7; // 最大成员数量
     optional bool joinForbit = 8; // 是否禁止玩家加入
-
-    optional int32 createRoomOption = 9; // 0 允许普通玩家开启房间，1仅部长可以开房间
-
-    optional int32 payRoomOption = 10; // 创建房间时支付类型，0从基金支付，1是开房者设置（例如AA或者房主支付）
-
-    optional uint32 lastUpdateTime = 11; // 俱乐部信息最后更新时间，客户端定时获取俱乐部更新时，带上这个时间戳
-
-    optional bool hasUnReadEvents = 12; // 是否有未读事件
+    optional bool hasUnReadEvents = 9; // 是否有未读消息
+    optional int32 createRoomOption = 10; // 0 允许普通玩家开启房间，1仅部长可以开房间
+    optional int32 payRoomOption = 11; // 创建房间时支付类型，0从基金支付，1是开房者设置（例如AA或者房主支付）
+    optional int32 createTime = 12; // 创建时间
 }
 
 // 加载自己的俱乐部
@@ -158,31 +150,31 @@ message MsgClubLoadReplayRoomsReply
 }
 
 // 大赢家信息
-message MsgClubGreatWinner
-{
-    required string userID = 1; // userID
-    optional MsgClubDisplayInfo displayInfo1 = 2; //
-    optional int32 winCount = 3; // 获得大赢家的回播房间数量
-    optional int32 playCount = 4; // 参与的所有房间数量
-}
+// message MsgClubGreatWinner
+// {
+//     required string userID = 1; // userID
+//     optional MsgClubDisplayInfo displayInfo1 = 2; //
+//     optional int32 winCount = 3; // 获得大赢家的回播房间数量
+//     optional int32 playCount = 4; // 参与的所有房间数量
+// }
 
 // 加载大赢家列表
-message MsgClubLoadGreatWinnerReply
-{
-    repeated MsgClubGreatWinner winners = 1; // 大赢家列表
-    optional string date = 2; // 大赢家统计日期，0今天，1昨天，2前天
-    optional int32 cursor = 3; // 页号
-}
+// message MsgClubLoadGreatWinnerReply
+// {
+//     repeated MsgClubGreatWinner winners = 1; // 大赢家列表
+//     optional string date = 2; // 大赢家统计日期，0今天，1昨天，2前天
+//     optional int32 cursor = 3; // 页号
+// }
 
 // 自动开房规则
-message MsgClubAutoRoomJSON
-{
-    required string roomType = 1; // 房间类型
-    optional string roomRuleJSON = 2; // 房间规则
-}
+// message MsgClubAutoRoomJSON
+// {
+//     required string roomType = 1; // 房间类型
+//     optional string roomRuleJSON = 2; // 房间规则
+// }
 
 // 加载自动开房规则列表
-message MsgClubLoadAutoRoomJSONReply
-{
-    repeated MsgClubAutoRoomJSON roomJSONs = 1; // 自动开房设置
-}
+// message MsgClubLoadAutoRoomJSONReply
+// {
+//     repeated MsgClubAutoRoomJSON roomJSONs = 1; // 自动开房设置
+// }

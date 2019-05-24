@@ -109,25 +109,25 @@ func handleLoadUserHeadIconURI(w http.ResponseWriter, r *http.Request, userID st
 	replyLoadUserHeadIconSuccess(w, replyMsg)
 }
 
-func reply(w http.ResponseWriter, pb proto.Message, ops int32) {
-	accessoryMessage := &lobby.AccessoryMessage{}
-	accessoryMessage.Ops = &ops
+// func reply(w http.ResponseWriter, pb proto.Message, ops int32) {
+// 	accessoryMessage := &lobby.AccessoryMessage{}
+// 	accessoryMessage.Ops = &ops
 
-	if pb != nil {
-		bytes, err := proto.Marshal(pb)
+// 	if pb != nil {
+// 		bytes, err := proto.Marshal(pb)
 
-		if err != nil {
-			log.Panic("reply msg, marshal msg failed")
-			return
-		}
-		accessoryMessage.Data = bytes
-	}
+// 		if err != nil {
+// 			log.Panic("reply msg, marshal msg failed")
+// 			return
+// 		}
+// 		accessoryMessage.Data = bytes
+// 	}
 
-	bytes, err := proto.Marshal(accessoryMessage)
-	if err != nil {
-		log.Panic("reply msg, marshal msg failed")
-		return
-	}
+// 	bytes, err := proto.Marshal(accessoryMessage)
+// 	if err != nil {
+// 		log.Panic("reply msg, marshal msg failed")
+// 		return
+// 	}
 
-	w.Write(bytes)
-}
+// 	w.Write(bytes)
+// }

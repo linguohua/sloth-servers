@@ -32,6 +32,8 @@ type RoomConfigJSON struct {
 	OpenType int `json:"openType"`
 
 	RoomType int `json:"roomType"`
+
+	ModuleName string `json:"modName"`
 }
 
 func loadAllRoomConfigFromRedis() {

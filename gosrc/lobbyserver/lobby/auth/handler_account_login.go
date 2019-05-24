@@ -33,7 +33,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 
 	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userID)
 
-	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "sex", "provice", "city", "country", "headImgURL", "phone"))
+	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "sex", "provice", "city", "country", "headImgURL", "phone", "diamond"))
 	if err != nil {
 		log.Println("loadUserInfoFromRedis, error", err)
 		return nil
@@ -48,6 +48,9 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	headImgURL := fields[6]
 	phone := fields[7]
 
+	diamond, _ := strconv.Atoi(fields[8])
+	diamondInt32 := int32(diamond)
+
 	userInfo := &lobby.UserInfo{}
 	userInfo.UserID = &userID
 	userInfo.OpenID = &openID
@@ -59,8 +62,9 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	userInfo.Country = &country
 	userInfo.HeadImgUrl = &headImgURL
 	userInfo.Phone = &phone
+	userInfo.Diamond = &diamondInt32
 
-	return nil
+	return userInfo
 }
 
 func handlerAccountLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

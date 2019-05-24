@@ -92,21 +92,21 @@ func loadUserInfoFromRedis(userID string) *UserInfo {
 
 	userInfo.dfHands = dfHands
 
-	vs, err := redis.Strings(values[2], nil)
-	if err != nil {
-		log.Println("parser fileds error: ", err)
-		return userInfo
-	}
+	// vs, err := redis.Strings(values[2], nil)
+	// if err != nil {
+	// 	log.Println("parser fileds error: ", err)
+	// 	return userInfo
+	// }
 
-	var clubIDs = make([]string, 0, len(vs)/2)
-	for i := 0; i < len(vs); i = i + 2 {
-		clubID := vs[i]
-		if clubID != "location" {
-			clubIDs = append(clubIDs, clubID)
-		}
-	}
+	// var clubIDs = make([]string, 0, len(vs)/2)
+	// for i := 0; i < len(vs); i = i + 2 {
+	// 	clubID := vs[i]
+	// 	if clubID != "location" {
+	// 		clubIDs = append(clubIDs, clubID)
+	// 	}
+	// }
 
-	userInfo.clubIDs = clubIDs
+	// userInfo.clubIDs = clubIDs
 
 	return userInfo
 }

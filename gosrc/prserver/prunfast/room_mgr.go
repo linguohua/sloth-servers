@@ -282,18 +282,6 @@ func (rm *RoomMgr) replySSMsg(msgBag *gconst.SSMsgBag, errCode gconst.SSMsgError
 	}
 
 	gpubsub.PublishMsg(msgBag.GetSourceURL(), replyMsgBag)
-
-	// bytes, err := proto.Marshal(replyMsgBag)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-
-	// 获取redis链接，并退出函数时释放
-	// conn := pool.Get()
-	// defer conn.Close()
-
-	// conn.Do("PUBLISH", msgBag.GetSourceURL(), bytes)
 }
 
 // getRoom 获取房间

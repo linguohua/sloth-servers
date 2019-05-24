@@ -4,7 +4,7 @@ package lobby;
 
 //编译：
 //cd src/accessory
-//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby ./proto/accessory.proto
+//protoc --proto_path=./proto  --go_out=./gosrc/lobbyserver/lobby ./proto/lobby.proto
 
 enum MsgError {
     ErrSuccess = 0; // 成功
@@ -14,7 +14,7 @@ enum MsgError {
     ErrNoRoomConfig = 4;  // 没有房间配置，游戏服务器返回
     ErrServerIsFull = 5;  // 解码房间配置错误，游戏服务器返回
     ErrDecodeRoomConfig = 6; // 解码房间配置错误
-    ErrRoomNotExist = 7;     // 服务器已经满
+    ErrRoomNotExist = 7;     // 房间不存在
     ErrDatabase = 8;     // 数据库错误
     ErrRequestGameServerTimeOut = 9;  // 请求游戏服务器错误
     ErrWaitGameServerSN = 10;     // 等待游戏服务器的序列出错
@@ -39,16 +39,14 @@ enum MsgError {
     ErrUserInOtherRoom = 29;         // 用户正在别的房间
     ErrRoomIsFull = 30;         // 房间里用户已满
     ErrUserInBlacklist = 31;  // 用户在黑名单中
-    ErrUserCanNotCreateCLubRoom = 32;  // 用户不能创建俱乐部房间
-    ErrUserCanNotJoinCLubRoom = 33;   // 仅俱乐部使用的房间，请加入xxx(俱乐部ID)
-    ErrClubIDIsEmtpy = 34;   // 选择基金支付，必须是俱乐部成员
-    ErrRoomPriceCfgNotExist = 35;   // 服务器房间价格配置不存在
-    ErrUserCreateRoomLock = 36;   // 防止用户不断的点击创建房间
-    ErrGenerateRoomNumber= 37;    // 生成房间号失败
-    ErrGroupPayMasterDiamondNotEnough= 38;    // 生成房间号失败
-    ErrNotSupportGroupMasterPay = 39;    // 不支持群主支付
-    ErrOutOfMaxClubCreateRoomNum = 40;    // 超过了茶馆可以创建房最大数量
-    ErrOutOfMaxClubMemberCreateRoomNum = 41;    // 超过了茶馆成员可以创建房最大数量
+    ErrClubIDIsEmtpy = 32;   // 选择基金支付，必须是俱乐部成员
+    ErrRoomPriceCfgNotExist = 33;   // 服务器房间价格配置不存在
+    ErrUserCreateRoomLock = 34;   // 防止用户不断的点击创建房间
+    ErrGenerateRoomNumber= 35;    // 生成房间号失败
+	ErrIsNeedUpdate = 36;  // 需要更新
+	ErrOnlyClubCreatorOrManagerAllowCreateRoom = 37; // 只有群主或者管理员才允许创建房间
+	ErrOnlyClubCreatorOrManagerAllowDeleteRoom = 38; // 只有群主或者管理员才允许创建房间
+	ErrNotClubMember = 39; // 不是牌友圈成员
 }
 
 enum MessageCode{
@@ -56,6 +54,7 @@ enum MessageCode{
 	OPConnectReply = 1; 	// 连接回复
 	OPChat = 2; 			// 聊天
 	OPUpdateDiamond = 3;    // 更新钻石
+	OPMail = 4; 			// 邮件
 }
 
 // 消息包装，把其他消息体格式化为byte array，
@@ -133,6 +132,7 @@ message RoomInfo
 	optional int32 handStartted = 8; // 已经开始了多少轮牌局
 	optional uint32 lastActiveTime = 9; // 房间最后活动时间 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
 	optional string propCfg = 10 ; // 道具配置
+	optional string moduleCfg = 11; // 模块配置,JSON格式
 }
 
 //玩家创建房间返回信息
@@ -144,19 +144,11 @@ message MsgCreateRoomRsp
 	optional int32 diamond= 4;  // 若创建成功返回剩下的钻石
 }
 
-//解散玩家创建的房间
-message MsgReleaseRoomReq
+// 删除房间回复
+message MsgDeleteRoomReply
 {
-	required string roomID = 1; // 房间ID
-	optional int32 roomType= 2; // 见RoomType
-}
+	required int32 result = 1;  // 参照MsgError
 
-//解散玩家创建的房间返回信息
-message MsgReleaseRoomRsp
-{
-	required int32 result = 1;  // 1:成功 4:房间不存在 5:不是你建的你解散个毛啊 6:正在游戏中你解散个毛啊
-	optional string roomID  = 2;// 被删除的房间号
-	optional string retMsg = 3; // result对应的字符串
 }
 
 
@@ -186,7 +178,7 @@ message MsgChat {
 	optional string to = 3;  // 发给谁，当且仅当scope是unicast的时候才必须填写
 	required int32 dataType = 4; // 聊天的数据类型
 	required bytes data = 5; // 数据块（可能是一段文字，也可能是emoji表情icon的id，也可能是一大段声音字节流）
-	optional int32 id = 6; // 消息id
+	optional string id = 6; // 消息id
 }
 
 // 拉取未读的聊天消息
@@ -207,7 +199,7 @@ message RoomIDList {
 
 // 拉取房间列表返回
 message MsgLoadRoomListRsp {
-	required int32 result = 1; // 0:成功 1:解码错误 2:编码错误 3:没有房间配置 4:解码房间配置错误 5:服务器已经满
+	required int32 result = 1; // 参照MsgError
 	repeated RoomInfo roomInfos = 2; //房间信息列表
 	optional string retMsg = 3; // 错误码对应的字符串
 }
@@ -293,9 +285,8 @@ enum ActivityType {
 }
 
 // 更新用户的钱包
-message MsgUpdateUserMoney {
-	required uint32 diamond = 1; // 用户当前剩余砖石数量
-	optional uint32 activityType = 2; // 活动类型
+message MsgUpdateUserDiamond {
+	required uint64 diamond = 1; // 用户当前剩余砖石数量
 }
 
 // 回播房间信息
@@ -337,29 +328,6 @@ message MsgUserInfo
 	optional int64  gold = 12;
 }
 
-// 回放房间中的玩家信息
-message MsgReplayPlayerInfo
-{
-	required string userID = 1; // userID
-	optional string nick = 2;   // 名字
-	required int32 chairID = 3; // 椅子ID
-
-	optional int32 totalScore = 4; // 总得分
-	optional uint32 sex = 5; // 玩家性别
-	optional string headIconURI = 6; // 玩家头像URI
-	optional int32 avatarID = 7; // 头像框ID
-}
-
-// 回播房间记录
-message MsgReplayRoom
-{
-	required int32 recordRoomType = 1; // 房间类型
-	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
-	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
-	required string roomNumber = 4; // 房间号，仅用于客户端显示
-	optional string roomConfigID = 8; // 房间配置ID
-	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
-}
 
 // 微信用户信息
 message UserInfo
@@ -373,6 +341,7 @@ message UserInfo
 	optional string country = 7;
 	optional string headImgUrl = 8;
 	optional string phone = 9;
+	optional int32 diamond = 10;
 }
 
 enum LoginError
@@ -442,4 +411,76 @@ enum WebsocketConnectError{
 message MsgWebsocketConnectReply
 {
 	required int32 result = 1; // 微信登录返回结果，参见WebsocketConnectError
+}
+
+// 回放房间中的玩家信息
+message MsgReplayPlayerInfo
+{
+	required string userID = 1; // userID
+	optional string nick = 2;   // 名字
+	required int32 chairID = 3; // 椅子ID
+
+	optional int32 totalScore = 4; // 总得分
+	optional uint32 sex = 5; // 玩家性别
+	optional string headIconURI = 6; // 玩家头像URI
+	optional int32 avatarID = 7; // 头像框ID
+}
+
+// 回放记录中玩家的得分信息
+message MsgReplayPlayerScoreSummary
+{
+	required int32 chairID = 1; // 玩家座位ID
+	required int32 score = 2;  // 玩家本手牌的得分
+	required int32 winType = 3; // 玩家本手牌的赢牌类型
+}
+
+// 手牌回放记录概要
+message MsgReplayRecordSummary
+{
+    required string recordUUID = 1; // 手牌回复记录的uuid，根据uuid获得完整的回播记录
+    repeated MsgReplayPlayerScoreSummary playerScores = 2; // 每个玩家的得分
+	required uint32 endTime = 3; // 手牌结束时间
+	optional string shareAbleID = 4; // 8位可以分享的ID
+	optional uint32 startTime = 5; // 手牌开始时间
+}
+
+// 回播房间记录
+message MsgReplayRoom
+{
+	required int32 recordRoomType = 1; // 房间类型
+	required uint32 startTime = 2;  // 牌局开始时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required uint32 endTime = 3;	// 牌局结束时间, 单位是分钟，自January 1, 1970 UTC，解析时如果转换到秒需要乘以60
+	required string roomNumber = 4; // 房间号，仅用于客户端显示
+
+	repeated MsgReplayPlayerInfo players = 5; // 房间内的玩家列表
+	repeated MsgReplayRecordSummary records = 6; // 每个房间可能有多局手牌记录
+
+	optional string ownerUserID = 7; // 房主ID
+}
+
+enum MailAttachmentType
+{
+	Diamond = 1;  // 钻石
+}
+message MailAttachments
+{
+	required int32 type = 1; // 附件类型
+	required int32 num = 2; // 附件数量
+	optional bool isReceive = 3; // 是否已经领取
+}
+
+message MsgMail
+{
+	required string id = 1; // 邮件id
+	optional string title = 2; // 邮件标题
+	optional string content = 3; // 邮件内容
+	optional MailAttachments attachments = 4; // 邮件附件
+	optional bool isRead = 5; // 是否已读
+	optional int64 timeStamp = 6; // 时间截，以秒为单位
+}
+
+message MsgLoadMail
+{
+	repeated MsgMail mails = 1; // 邮件列表
+	optional int32 cursor = 2; // 下一次拉取的游标
 }

@@ -13,6 +13,7 @@
         "redis_server":"127.0.0.1:6379",
         // 敏感词
         "sensitive_word_file_path":"./SensitiveWordFile.txt",
+        "room_pay_cfg_file":"./PriceCfg.json",
 
         "account":"linux",
         "password":"MMzz----88~bbabcdefgqqb",

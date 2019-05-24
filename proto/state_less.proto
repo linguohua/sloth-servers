@@ -1,5 +1,5 @@
 syntax = "proto2";
-package stateless;
+package gconst;
 
 enum SSMsgType {
     Request = 1;
@@ -101,11 +101,6 @@ message SSMsgCreateRoom {
     required string userID = 4; // 房间拥有者ID
     required string roomNumber = 5; // 房间号
     optional string clubID = 6; // 俱乐部
-    optional string groupID = 7; // 牌友群ID
-    optional string arenaID = 8; // 比赛场ID
-    repeated string userIDs = 9; // 比赛场的所有用户ID
-    optional int32 waitTime = 10; // 比赛场等待开局时间
-    optional string raceTemplateID = 11; // 比赛场模本ID
 }
 
 // 房间管理服务器发送给游戏服务器

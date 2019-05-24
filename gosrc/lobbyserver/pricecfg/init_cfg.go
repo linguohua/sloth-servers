@@ -38,7 +38,12 @@ type Cfg struct {
 	ActivityPriceCfg *ActivityCfg `json:"activityPriceCfg"`
 }
 
-// GetPriceCfg 获取对应类型房间的价格配置
+// GetAllPriceCfgs 获取所有房间价格配置
+func GetAllPriceCfgs() map[int]*Cfg {
+	return cfgs
+}
+
+// GetPriceCfg 获取指定房间价格配置
 func GetPriceCfg(roomType int) *Cfg {
 	return cfgs[roomType]
 }

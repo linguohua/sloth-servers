@@ -2,6 +2,7 @@ package lobby
 
 import (
 	"gconst"
+	"gpubsub"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
@@ -41,17 +42,19 @@ func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 	var userID = msgUpdateBalance.GetUserID()
 	log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
 
-	remainDiamond, err := PayUtil().Refund2UserAndSave2Redis(roomID, userID, 0)
-	if err == nil {
-		updateMoney(uint32(remainDiamond), userID)
+	remainDiamond, result := PayUtil().Refund2UserWith(roomID, userID, 0)
+	if result == 0 {
+		UpdateDiamond(userID, uint64(remainDiamond))
+	} else {
+		log.Error("onReturnDiamondNotify, refund to user failed, result code:", result)
 	}
 }
 
-func updateMoney(diamond uint32, userID string) {
-	var updateUserMoney = &MsgUpdateUserMoney{}
-	var userDiamond = diamond
-	updateUserMoney.Diamond = &userDiamond
-	SessionMgr().SendProtoMsgTo(userID, updateUserMoney, int32(MessageCode_OPUpdateDiamond))
+// UpdateDiamond 更新用户钻石
+func UpdateDiamond(userID string, diamond uint64) {
+	var updateUserDiamond = &MsgUpdateUserDiamond{}
+	updateUserDiamond.Diamond = &diamond
+	SessionMgr().SendProtoMsgTo(userID, updateUserDiamond, int32(MessageCode_OPUpdateDiamond))
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {
@@ -112,7 +115,7 @@ func onDeleteRoomRequest(msgBag *gconst.SSMsgBag) {
 	var payType = roomConfig.PayType
 
 	if !PayUtil().Refund2Users(roomID, int(startHand), userIDs) {
-		log.Println("refund diamond failed")
+		log.Error("refund diamond failed")
 	}
 
 	RoomUtil().DeleteRoomInfoFromRedis(roomID, onwerID)
@@ -139,7 +142,7 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 
 	log.Printf("onAAEnterRoomRequest, roomID:%s, userID:%s", roomID, userID)
 	// roomType := int(gconst.RoomType_DafengMJ)
-	diamond, result := PayUtil().DoPayAndSave2Redis(roomID, userID)
+	diamond, result := PayUtil().DoPayForEnterRoom(roomID, userID)
 	if result != int32(gconst.SSMsgError_ErrSuccess) {
 		var errCode gconst.SSMsgError
 		switch result {
@@ -175,64 +178,64 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 func onDonateRequest(msgBag *gconst.SSMsgBag) {
 	log.Println("onDonateRequest")
 	// TODO: llwant mysql
-	// var gameServerID = msgBag.GetSourceURL()
-	// var msgDonate = &gconst.SSMsgDonate{}
-	// err := proto.Unmarshal(msgBag.GetParams(), msgDonate)
-	// if err != nil {
-	// 	log.Panicln("Unmarshal SSMsgDonate err:", err)
-	// 	return
-	// }
+	var gameServerID = msgBag.GetSourceURL()
+	var msgDonate = &gconst.SSMsgDonate{}
+	err := proto.Unmarshal(msgBag.GetParams(), msgDonate)
+	if err != nil {
+		log.Panicln("Unmarshal SSMsgDonate err:", err)
+		return
+	}
 
-	// var from = msgDonate.GetFrom()
-	// var to = msgDonate.GetTo()
-	// var propsType = msgDonate.GetPropsType()
-	// if from == "" {
-	// 	log.Panicln("request params from can't be empty")
-	// 	return
-	// }
+	var from = msgDonate.GetFrom()
+	var to = msgDonate.GetTo()
+	var propsType = msgDonate.GetPropsType()
+	if from == "" {
+		log.Panicln("request params from can't be empty")
+		return
+	}
 
-	// if to == "" {
-	// 	log.Panicln("request params from can't be empty")
-	// 	return
-	// }
+	if to == "" {
+		log.Panicln("request params from can't be empty")
+		return
+	}
 
-	// if propsType == 0 {
-	// 	log.Panicln("request params propsType can't be 0")
-	// 	return
-	// }
+	if propsType == 0 {
+		log.Panicln("request params propsType can't be 0")
+		return
+	}
 
-	// if gameServerID == "" {
-	// 	log.Panicln("request params gameServerID can't be emtpy")
-	// 	return
-	// }
+	if gameServerID == "" {
+		log.Panicln("request params gameServerID can't be emtpy")
+		return
+	}
 
-	// var roomType = getRoomTypeWithServerID(gameServerID)
-	// msgDonateRsp, errCode := donate(uint32(propsType), from, to, roomType)
-	// if errCode != int32(gconst.SSMsgError_ErrSuccess) {
-	// 	var msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
-	// 	if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
-	// 		msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
-	// 	}
+	var roomType = getRoomTypeWithServerID(gameServerID)
 
-	// 	replySSMsg(msgBag, msgError, nil)
-	// 	return
-	// }
+	donateUtil := DonateUtil()
+	msgDonateRsp, errCode := donateUtil.DoDoante(uint32(propsType), from, to, roomType)
+	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
+		log.Error("DoDoante failed, errCode:", errCode)
+		var msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
+		if errCode == int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough) {
+			msgError = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
+		}
 
-	// // 通过房间服务器更新用户钻石
-	// user := userMgr.getUserByID(from)
-	// if user != nil {
-	// 	var diamond = msgDonateRsp.GetDiamond()
-	// 	user.updateMoney(uint32(diamond))
-	// }
+		replySSMsg(msgBag, msgError, nil)
+		return
+	}
 
-	// msgDonateRspBuf, err := proto.Marshal(msgDonateRsp)
-	// if err != nil {
-	// 	log.Panicln("Marshal msgDonateRsp err:", err)
-	// 	return
-	// }
+	// 通过房间服务器更新用户钻石
+	var diamond = msgDonateRsp.GetDiamond()
+	UpdateDiamond(from, uint64(diamond))
 
-	// // 通过游戏服务器更新用户钻石与魅力
-	// replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, msgDonateRspBuf)
+	msgDonateRspBuf, err := proto.Marshal(msgDonateRsp)
+	if err != nil {
+		log.Panicln("Marshal msgDonateRsp err:", err)
+		return
+	}
+
+	// 通过游戏服务器更新用户钻石与魅力
+	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, msgDonateRspBuf)
 }
 
 // replySSMsg 给其他服务器回复请求完成
@@ -256,18 +259,7 @@ func replySSMsg(msgBag *gconst.SSMsgBag, errCode gconst.SSMsgError, params []byt
 		replyMsgBag.Params = params
 	}
 
-	bytes, err := proto.Marshal(replyMsgBag)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// 获取redis链接，并退出函数时释放
-	conn := pool.Get()
-	defer conn.Close()
-
-	log.Println("publish message, game server url:", msgBag.GetSourceURL())
-	conn.Do("PUBLISH", msgBag.GetSourceURL(), bytes)
+	gpubsub.PublishMsg(msgBag.GetSourceURL(), replyMsgBag)
 }
 
 func getRoomTypeWithServerID(gameServerID string) int {
