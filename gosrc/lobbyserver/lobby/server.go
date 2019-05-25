@@ -31,6 +31,10 @@ var (
 	accSysExceptionCount int // 异常计数
 )
 
+type server struct {
+	r *httprouter.Router
+}
+
 func loadCharm(userID string) int32 {
 	conn := pool.Get()
 	defer conn.Close()
@@ -63,6 +67,11 @@ func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 
 		handle(w, r, ps)
 	})
+}
+
+func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	s.r.ServeHTTP(w, r)
 }
 
 // CreateHTTPServer 启动服务器
