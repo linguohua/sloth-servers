@@ -149,13 +149,6 @@ func (rm *RoomMgr) onCreateRoomReq(msgBag *gconst.SSMsgBag) {
 	room := newRoomFromMgr(ownerID, clubID, roomID, roomConfigID, configJSON, roomNumber)
 	rm.rooms[roomID] = room
 
-	groupID := roomParams.GetGroupID()
-	if groupID != "" {
-		room.userTryEnter(nil, ownerID)
-		player := room.getPlayerByUserID(ownerID)
-		room.onUserOffline(player.user, false)
-	}
-
 	log.Printf("onCreateRoomReq success, UUID:%s, roomNumber:%s\n", roomID, room.roomNumber)
 
 	// 创建房间完成
