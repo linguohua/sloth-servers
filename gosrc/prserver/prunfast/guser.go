@@ -85,7 +85,15 @@ func (gu *GUser) sendPing() {
 		defer gu.wsLock.Unlock()
 
 		ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
-		err := ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		
+		var err error
+		if gu.isfromWeb {
+			buf := formatGameMsgByData([]byte("ka"), int32(mahjong.MessageCode_OPPing))
+			ws.WriteMessage(websocket.BinaryMessage, buf)
+		} else {
+			err = ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		}
+
 		if err != nil {
 			log.Printf("user %s ws write err:", err)
 			ws.Close()
