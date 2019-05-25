@@ -101,13 +101,13 @@ func waitWebsocketMessage(ws *websocket.Conn, userMapItem *UserMapItem, r *http.
 			user.onWebsocketMessage(ws, message)
 		}
 
-		//log.Printf("receive from user %d message:%s", user.userID(), message)
+		// log.Printf("receive from user %s message:%v", user.userID(), message)
 	}
 	log.Printf("ws closed, userId %s, peer:%s", user.userID(), r.RemoteAddr)
 }
 
 // tryAcceptGameUser 游戏玩家接入
-func tryAcceptGameUser(userID string, roomIDString string, ws *websocket.Conn, r *http.Request) {
+func tryAcceptGameUser(userID string, roomIDString string, ws *websocket.Conn, r *http.Request, isFromWeb bool) {
 
 	// 查找房间，如果房间不存在则非法
 	var room = roomMgr.getRoom(roomIDString)
@@ -133,8 +133,8 @@ func tryAcceptGameUser(userID string, roomIDString string, ws *websocket.Conn, r
 	}
 
 	user := room.userTryEnter(ws, userID)
-
 	if user != nil {
+		user.setFromWeb(isFromWeb)
 		userMapItem := &UserMapItem{user: user,
 			lastReceivedTime: time.Now(), lastPingTime: time.Now()}
 		userMapItem.wg.Add(1)
@@ -170,9 +170,12 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	defer ws.Close()
 
 	log.Println("accept websocket:", r.URL)
+	query := r.URL.Query()
+	isWeb := query.Get("web") == "1"
+
 	switch requestPath {
 	case "play":
-		var token = r.URL.Query().Get("tk")
+		var token = query.Get("tk")
 		userID, ok := parseTK(token)
 		if !ok {
 			log.Printf("invalid token, Peer: %s", r.RemoteAddr)
@@ -180,7 +183,7 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		}
 
 		if gscfg.RequiredAppModuleVer > 0 {
-			appModuleVer, err := strconv.Atoi(r.URL.Query().Get("amv"))
+			appModuleVer, err := strconv.Atoi(query.Get("amv"))
 			if err != nil || appModuleVer < gscfg.RequiredAppModuleVer {
 				log.Printf("app module too old, ID:%s, Peer:%s\n", userID, r.RemoteAddr)
 				// 给客户端发送错误
@@ -190,16 +193,16 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		}
 
 		// 房间ID要合法
-		var roomIDString = r.URL.Query().Get("roomID")
-		tryAcceptGameUser(userID, roomIDString, ws, r)
+		var roomIDString = query.Get("roomID")
+		tryAcceptGameUser(userID, roomIDString, ws, r, isWeb)
 		break
 	case "monkey":
-		var userID = r.URL.Query().Get("userID")
+		var userID = query.Get("userID")
 		// 房间ID要合法
-		var roomIDString = r.URL.Query().Get("roomID")
+		var roomIDString = query.Get("roomID")
 		if roomIDString == "" {
 			// 此时monkey传上来的可能是号码
-			var roomNumber = r.URL.Query().Get("roomNumber")
+			var roomNumber = query.Get("roomNumber")
 			if roomNumber == "" {
 				log.Println("monkey has no roomID and roomNumber")
 				return
@@ -213,7 +216,7 @@ func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				return
 			}
 		}
-		tryAcceptGameUser(userID, roomIDString, ws, r)
+		tryAcceptGameUser(userID, roomIDString, ws, r, isWeb)
 		break
 	}
 }
@@ -255,6 +258,7 @@ func CreateHTTPServer() {
 	rootRouter.Handle("GET", "/game/:uuid/support/*sp", monkeyHTTPHandle)
 	rootRouter.Handle("POST", "/game/:uuid/support/*sp", monkeyHTTPHandle)
 
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	go acceptHTTPRequest()
 }
 
