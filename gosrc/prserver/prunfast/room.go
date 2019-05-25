@@ -416,6 +416,19 @@ func (r *Room) onUserMessage(user IUser, msg []byte) {
 		r.onUser2Lobby(user, gmsg)
 		handled = true
 		break
+	case int32(pokerface.MessageCode_OPPing):
+		xd := gmsg.GetData()
+		// bits := binary.LittleEndian.Uint64(xd)
+		// float := math.Float64frombits(bits)
+		buf := formatGameMsgByData(xd, int32(pokerface.MessageCode_OPPong))
+		user.send(buf)
+
+		// log.Println("got ping message! send back data:", float)
+		handled = true
+		break
+	case int32(pokerface.MessageCode_OPPong):
+		handled = true
+		break
 	default:
 		break
 	}
@@ -1027,6 +1040,21 @@ func formatGameMsg(pb proto.Message, ops int32) []byte {
 		}
 		gmsg.Data = buf
 	}
+
+	bytes, err := proto.Marshal(gmsg)
+	if err != nil {
+		logrus.Println("marshal game msg failed:", err)
+		return nil
+	}
+
+	return bytes
+}
+
+func formatGameMsgByData(data []byte, ops int32) []byte {
+	gmsg := &pokerface.GameMessage{}
+	gmsg.Ops = &ops
+
+	gmsg.Data = data
 
 	bytes, err := proto.Marshal(gmsg)
 	if err != nil {

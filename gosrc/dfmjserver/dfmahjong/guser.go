@@ -86,9 +86,9 @@ func (gu *GUser) sendPing() {
 		gu.wsLock.Lock()
 		defer gu.wsLock.Unlock()
 
-		var err error
 		ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
 
+		var err error
 		if gu.isfromWeb {
 			buf := formatGameMsgByData([]byte("ka"), int32(mahjong.MessageCode_OPPing))
 			ws.WriteMessage(websocket.BinaryMessage, buf)

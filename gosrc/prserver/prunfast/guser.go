@@ -15,12 +15,12 @@ const (
 
 // GUser 表示一个游戏用户
 type GUser struct {
-	uID  string          // 用户唯一ID
-	ws   *websocket.Conn // websocket 连接对象
-	room *Room
-	info *UserInfo
-
-	wsLock *sync.Mutex // websocket并发写锁
+	uID       string          // 用户唯一ID
+	ws        *websocket.Conn // websocket 连接对象
+	room      *Room
+	info      *UserInfo
+	isfromWeb bool
+	wsLock    *sync.Mutex // websocket并发写锁
 }
 
 func newGUser(userID string, ws *websocket.Conn, room *Room) *GUser {
@@ -146,4 +146,12 @@ func (gu *GUser) closeWebsocket() {
 		// 否则不能进入room.onUserMessage(gu, message)
 		gu.ws.Close()
 	}
+}
+
+func (gu *GUser) setFromWeb(isFromWeb bool) {
+	gu.isfromWeb = isFromWeb
+}
+
+func (gu *GUser) isFromWeb() bool {
+	return gu.isfromWeb
 }
