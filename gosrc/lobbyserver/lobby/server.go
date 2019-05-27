@@ -15,6 +15,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 )
 
 const (
@@ -31,10 +32,6 @@ var (
 	accSysExceptionCount int // 异常计数
 )
 
-type server struct {
-	r *httprouter.Router
-}
-
 func loadCharm(userID string) int32 {
 	conn := pool.Get()
 	defer conn.Close()
@@ -50,7 +47,7 @@ func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // RegHTTPHandle 注册HTTP handler
 func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 	rootRouter.Handle(method, "/lobby/:uuid"+path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		log.Println("RegHTTPHandle")
 
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
@@ -67,11 +64,6 @@ func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 
 		handle(w, r, ps)
 	})
-}
-
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	s.r.ServeHTTP(w, r)
 }
 
 // CreateHTTPServer 启动服务器
@@ -97,7 +89,7 @@ func acceptHTTPRequest() {
 	portStr := fmt.Sprintf(":%d", config.AccessoryServerPort)
 	s := &http.Server{
 		Addr:    portStr,
-		Handler: rootRouter,
+		Handler: cors.Default().Handler(rootRouter),
 		// ReadTimeout:    10 * time.Second,
 		//WriteTimeout:   120 * time.Second,
 		MaxHeaderBytes: 1 << 8,
