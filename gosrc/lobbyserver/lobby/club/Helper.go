@@ -1,11 +1,11 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"time"
 	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 )
 // sendGenericError 发送一个错误码到客户端
 func sendGenericError(w http.ResponseWriter, errCode ClubOperError) {

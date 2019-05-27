@@ -1,7 +1,6 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"gconst"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/garyburd/redigo/redis"
 	proto "github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 // onQuit 主动退出俱乐部

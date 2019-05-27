@@ -1,13 +1,13 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"gconst"
 	"lobbyserver/lobby"
 	"github.com/garyburd/redigo/redis"
 	"github.com/julienschmidt/httprouter"
 	proto "github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 // 审核其他玩家加入俱乐部申请
@@ -113,7 +113,7 @@ func onJoinApprove(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 		// 检查玩家是否可以加入俱乐部
 		// 检查玩家已经加入过的俱乐部个数
 		maxJoin := mySQLUtil.CountUserClubNumber(userID)
-		if maxJoin < maxClubJoinPerUser {
+		if int32(maxJoin) < clubInfo.GetMaxMember() {
 			// 清理事件
 			_, err := conn.Do("SADD", gconst.LobbyClubMemberSetPrefix+clubID, applicantID)
 			if err != nil {

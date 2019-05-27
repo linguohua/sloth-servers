@@ -156,6 +156,7 @@ type IRoomUtil interface {
 	LoadLastRoomInfo(userID string) *RoomInfo
 	LoadUserLastEnterRoomID(userID string) string
 	DeleteRoomInfoFromRedis(roomID string, userID string)
+	ForceDeleteRoom(roomID string) (errCode int32)
 }
 
 // IPayUtil pay

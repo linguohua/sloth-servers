@@ -205,18 +205,11 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 }
 
 func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 	userID := ps.ByName("userID")
 	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
 
 	log.Printf("handlerCreateRoom call, userID:%s, isForceUpgrade:%s", userID, isForceUpgrade)
-
-	updatUtil := lobby.UpdateUtil()
-	moduleCfg := updatUtil.GetModuleCfg(r)
-	if isForceUpgrade == "true" && moduleCfg != "" {
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrIsNeedUpdate), 0)
-		return
-	}
-
 	uid, _ := uuid.NewV4()
 	roomIDString := fmt.Sprintf("%s", uid)
 
@@ -230,6 +223,13 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	defer func() {
 		removeUserCreateRoomLock(userID)
 	}()
+
+	updatUtil := lobby.UpdateUtil()
+	moduleCfg := updatUtil.GetModuleCfg(r)
+	if isForceUpgrade == "true" && moduleCfg != "" {
+		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrIsNeedUpdate), 0)
+		return
+	}
 
 	var gameServerID = r.URL.Query().Get("gsid")
 

@@ -1,13 +1,12 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"gconst"
 	"strings"
 	"lobbyserver/lobby"
-
 	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 // onSetReadEvents 剔除某个成员

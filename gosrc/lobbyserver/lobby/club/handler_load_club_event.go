@@ -1,7 +1,6 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"gconst"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/julienschmidt/httprouter"
 	proto "github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 // onLoadEvents 加载事件

@@ -24,6 +24,10 @@ func (*myRoomUtil) DeleteRoomInfoFromRedis(roomID string, userID string) {
 	deleteRoomInfoFromRedis(roomID, userID)
 }
 
+func (*myRoomUtil) ForceDeleteRoom(roomID string) (errCode int32) {
+	return forceDeleteRoom(roomID)
+}
+
 // InitWith init
 func InitWith() {
 	lobby.SetRoomUtil(roomUtil)

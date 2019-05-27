@@ -55,6 +55,73 @@ func deleteClubRoomInfoFromRedis(roomID string, clubID string) {
 	}
 }
 
+func forceDeleteRoom(roomID string) (errCode int32) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "roomType"))
+	if err != nil {
+		log.Printf("handlerDeleteRoomForClub, get room %s ownerID, roomType from redis err:%v", roomID, err)
+		return int32(lobby.MsgError_ErrDatabase)
+	}
+
+	var ownerID = fields[0]
+	var roomTypeStr = fields[1]
+	roomType, err := strconv.Atoi(roomTypeStr)
+	if err != nil {
+		log.Error("handlerDeleteRoomForClub, Convert roomTypeStr error:", err)
+	}
+
+	if ownerID == "" && roomTypeStr == "" {
+		return int32(lobby.MsgError_ErrRoomNotExist)
+	}
+
+	//请求游戏服务器删除房间
+	var msgDeleteRoom = &gconst.SSMsgDeleteRoom{}
+	msgDeleteRoom.RoomID = &roomID
+
+	msgDeleteRoomBuf, err := proto.Marshal(msgDeleteRoom)
+	if err != nil {
+		log.Println("parse roomConfig err： ", err)
+		return int32(lobby.MsgError_ErrEncode)
+	}
+
+	msgType := int32(gconst.SSMsgType_Request)
+	requestCode := int32(gconst.SSMsgReqCode_DeleteRoom)
+	status := int32(gconst.SSMsgError_ErrSuccess)
+
+	msgBag := &gconst.SSMsgBag{}
+	msgBag.MsgType = &msgType
+	var sn = lobby.GenerateSn()
+	msgBag.SeqNO = &sn
+	msgBag.RequestCode = &requestCode
+	msgBag.Status = &status
+	var url = config.ServerID
+	msgBag.SourceURL = &url
+	msgBag.Params = msgDeleteRoomBuf
+
+	// log.Println("roomType:", roomType)
+	var gameServerID = loadLatestGameServer(int(roomType))
+
+	succeed, msgBagReply := gpubsub.SendAndWait(gameServerID, msgBag, time.Second)
+
+	if succeed {
+		errCode := msgBagReply.GetStatus()
+		if errCode != 0 {
+
+			errCode = converGameServerErrCode2AccServerErrCode(errCode)
+			return errCode
+		}
+
+		// TODO: 需要退钱给用户
+		deleteClubRoomInfoFromRedis(roomID, ownerID)
+
+		return int32(lobby.MsgError_ErrSuccess)
+	}
+
+	return int32(lobby.MsgError_ErrRequestGameServerTimeOut)
+}
+
 func handlerDeleteClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := ps.ByName("userID")
 	clubID := r.URL.Query().Get("clubID")
@@ -90,75 +157,6 @@ func handlerDeleteClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-
-	fields, err := redis.Strings(conn.Do("HMGET", gconst.LobbyRoomTablePrefix+roomID, "ownerID", "roomType"))
-	if err != nil {
-		log.Printf("handlerDeleteRoomForClub, get room %s ownerID, roomType from redis err:%v", roomID, err)
-		deleteRoomReply(w, int32(lobby.MsgError_ErrDatabase))
-		return
-	}
-
-	var ownerID = fields[0]
-	var roomTypeStr = fields[1]
-	roomType, err := strconv.Atoi(roomTypeStr)
-	if err != nil {
-		log.Error("handlerDeleteRoomForClub, Convert roomTypeStr error:", err)
-	}
-
-	if ownerID == "" && roomTypeStr == "" {
-		log.Printf("handlerDeleteRoomForClub, club %s not exist room %s", clubID, roomID)
-		deleteRoomReply(w, int32(lobby.MsgError_ErrRoomNotExist))
-		return
-	}
-
-	//请求游戏服务器删除房间
-	var msgDeleteRoom = &gconst.SSMsgDeleteRoom{}
-	msgDeleteRoom.RoomID = &roomID
-
-	msgDeleteRoomBuf, err := proto.Marshal(msgDeleteRoom)
-	if err != nil {
-		log.Println("parse roomConfig err： ", err)
-		deleteRoomReply(w, int32(lobby.MsgError_ErrEncode))
-		return
-	}
-
-	msgType := int32(gconst.SSMsgType_Request)
-	requestCode := int32(gconst.SSMsgReqCode_DeleteRoom)
-	status := int32(gconst.SSMsgError_ErrSuccess)
-
-	msgBag := &gconst.SSMsgBag{}
-	msgBag.MsgType = &msgType
-	var sn = lobby.GenerateSn()
-	msgBag.SeqNO = &sn
-	msgBag.RequestCode = &requestCode
-	msgBag.Status = &status
-	var url = config.ServerID
-	msgBag.SourceURL = &url
-	msgBag.Params = msgDeleteRoomBuf
-
-	// log.Println("roomType:", roomType)
-	var gameServerID = loadLatestGameServer(int(roomType))
-
-	succeed, msgBagReply := gpubsub.SendAndWait(gameServerID, msgBag, time.Second)
-
-	if succeed {
-		errCode := msgBagReply.GetStatus()
-		if errCode != 0 {
-
-			errCode = converGameServerErrCode2AccServerErrCode(errCode)
-			deleteRoomReply(w, errCode)
-			return
-		}
-
-		// TODO: 需要退钱给用户
-		deleteRoomInfoFromRedis(roomID, ownerID)
-
-		deleteRoomReply(w, int32(lobby.MsgError_ErrSuccess))
-	} else {
-		var errCode = int32(lobby.MsgError_ErrRequestGameServerTimeOut)
-		deleteRoomReply(w, errCode)
-	}
-
+	errCode := forceDeleteRoom(roomID)
+	deleteRoomReply(w, errCode)
 }
