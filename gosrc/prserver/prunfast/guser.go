@@ -1,6 +1,7 @@
 package prunfast
 
 import (
+	"pokerface"
 	"sync"
 	"time"
 
@@ -30,7 +31,7 @@ func newGUser(userID string, ws *websocket.Conn, room *Room) *GUser {
 	gu.ws = ws
 	gu.wsLock = &sync.Mutex{}
 	if room.isForMonkey {
-		gu.info = &UserInfo{nick: "", sex: 0, headIconURI: ""}
+		gu.info = &UserInfo{nick: "", gender: 0, headIconURI: ""}
 	} else {
 		gu.info = loadUserInfoFromRedis(userID)
 	}
@@ -85,10 +86,10 @@ func (gu *GUser) sendPing() {
 		defer gu.wsLock.Unlock()
 
 		ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
-		
+
 		var err error
 		if gu.isfromWeb {
-			buf := formatGameMsgByData([]byte("ka"), int32(mahjong.MessageCode_OPPing))
+			buf := formatGameMsgByData([]byte("ka"), int32(pokerface.MessageCode_OPPing))
 			ws.WriteMessage(websocket.BinaryMessage, buf)
 		} else {
 			err = ws.WriteMessage(websocket.PingMessage, []byte("ka"))

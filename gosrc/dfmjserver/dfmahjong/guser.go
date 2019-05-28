@@ -32,7 +32,7 @@ func newGUser(userID string, ws *websocket.Conn, room *Room) *GUser {
 	gu.ws = ws
 	gu.wsLock = &sync.Mutex{}
 	if room.isForMonkey {
-		gu.info = &UserInfo{nick: "", sex: 0, headIconURI: ""}
+		gu.info = &UserInfo{nick: "", gender: 0, headIconURI: ""}
 	} else {
 		gu.info = loadUserInfoFromRedis(userID)
 	}

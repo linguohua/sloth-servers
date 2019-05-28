@@ -678,7 +678,7 @@ func serializeMsgRoomInfo(r *Room) *mahjong.MsgRoomInfo {
 
 		var userInfo = p.user.getInfo()
 		msgPlayerInfo.Nick = &userInfo.nick
-		msgPlayerInfo.Sex = &userInfo.sex
+		msgPlayerInfo.Gender = &userInfo.gender
 		msgPlayerInfo.HeadIconURI = &userInfo.headIconURI
 		msgPlayerInfo.Ip = &userInfo.ip
 		msgPlayerInfo.Location = &userInfo.location

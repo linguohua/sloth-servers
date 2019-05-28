@@ -12,7 +12,7 @@ import (
 // UserInfo 用户基本信息
 type UserInfo struct {
 	nick        string
-	sex         uint32
+	gender         uint32
 	headIconURI string
 	ip          string
 	location    string
@@ -32,7 +32,7 @@ func loadUserInfoFromRedis(userID string) *UserInfo {
 	var userInfo = &UserInfo{}
 
 	conn.Send("MULTI")
-	conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "Nick", "Sex", "Protrait", "Addr", "location", "diamond", "charm", "AvatarID", "DanID")
+	conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "Nick", "Gender", "Protrait", "Addr", "location", "diamond", "charm", "AvatarID", "DanID")
 	conn.Send("HGET", gconst.LobbyPlayerTablePrefix+userID, "dfHands")
 	// conn.Send("HGETALL", gconst.UserClubTablePrefix+userID)
 	values, err := redis.Values(conn.Do("EXEC"))
@@ -49,8 +49,8 @@ func loadUserInfoFromRedis(userID string) *UserInfo {
 
 	userInfo.nick = fileds[0]
 
-	sex, _ := strconv.ParseUint(fileds[1], 10, 32)
-	userInfo.sex = uint32(sex)
+	gender, _ := strconv.ParseUint(fileds[1], 10, 32)
+	userInfo.gender = uint32(gender)
 
 	userInfo.headIconURI = fileds[2]
 	userInfo.ip = fileds[3]

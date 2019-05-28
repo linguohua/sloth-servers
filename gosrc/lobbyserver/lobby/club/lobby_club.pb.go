@@ -70,7 +70,7 @@ func (m *MsgClubReply) GetContent() []byte {
 
 type MsgClubDisplayInfo struct {
 	Nick             *string `protobuf:"bytes,1,req,name=nick" json:"nick,omitempty"`
-	Sex              *uint32 `protobuf:"varint,2,opt,name=sex" json:"sex,omitempty"`
+	Gender              *uint32 `protobuf:"varint,2,opt,name=gender" json:"gender,omitempty"`
 	HeadIconURL      *string `protobuf:"bytes,3,opt,name=headIconURL" json:"headIconURL,omitempty"`
 	AvatarID         *int32  `protobuf:"varint,4,opt,name=avatarID" json:"avatarID,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -89,8 +89,8 @@ func (m *MsgClubDisplayInfo) GetNick() string {
 }
 
 func (m *MsgClubDisplayInfo) GetSex() uint32 {
-	if m != nil && m.Sex != nil {
-		return *m.Sex
+	if m != nil && m.Gender != nil {
+		return *m.Gender
 	}
 	return 0
 }

@@ -25,13 +25,13 @@ func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
 	userID := userInfo.GetUserID()
 	openID := userInfo.GetOpenID()
 	nickName := userInfo.GetNickName()
-	sex := userInfo.GetSex()
+	gender := userInfo.GetGender()
 	provice := userInfo.GetProvince()
 	city := userInfo.GetCity()
 	country := userInfo.GetCountry()
 	headImgURL := userInfo.GetHeadImgUrl()
 
-	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "sex", sex,
+	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "gender", gender,
 		"provice", provice, "city", city, "country", country, "headImgURL", headImgURL)
 }
 
@@ -74,8 +74,8 @@ func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.UserInfo, error) {
 	userInfo := &lobby.UserInfo{}
 	userInfo.OpenID = &userInfoReply.OpenID
 	userInfo.NickName = &userInfoReply.NickName
-	sexUint32 := uint32(userInfoReply.Sex)
-	userInfo.Sex = &sexUint32
+	sexUint32 := uint32(userInfoReply.Gender)
+	userInfo.Gender = &sexUint32
 	userInfo.Province = &userInfoReply.Province
 	userInfo.City = &userInfoReply.City
 	userInfo.Country = &userInfoReply.Country

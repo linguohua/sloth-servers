@@ -43,10 +43,10 @@ import (
 // 		var headIconURI = fileds[1]
 
 // 		sexUint64, _ := strconv.ParseUint(sexString, 10, 32)
-// 		var sex = uint32(sexUint64)
+// 		var gender = uint32(sexUint64)
 
 // 		var player = players[index]
-// 		player.Sex = &sex
+// 		player.Gender = &gender
 // 		player.HeadIconURI = &headIconURI
 // 	}
 // }

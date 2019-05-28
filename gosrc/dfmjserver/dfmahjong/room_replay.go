@@ -151,8 +151,8 @@ func (lc *LoopContext) createReplayRoom(room *Room) *mahjong.MsgReplayRoom {
 		rp.UserID = &userID
 		var nick = p.user.getInfo().nick
 		rp.Nick = &nick
-		var sex = p.user.getInfo().sex
-		rp.Sex = &sex
+		var gender = p.user.getInfo().gender
+		rp.Gender = &gender
 		var headIconURL = p.user.getInfo().headIconURI
 		rp.HeadIconURI = &headIconURL
 

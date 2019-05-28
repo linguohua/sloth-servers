@@ -84,7 +84,7 @@ func constructClubMemberList(memberIDs []string, conn redis.Conn, club *Club) []
 
 	conn.Send("MULTI")
 	for _, mID := range memberIDs {
-		conn.Send("HMGET", gconst.LobbyUserTablePrefix+mID, "Nick", "Sex", "Protrait", "AvatarID")
+		conn.Send("HMGET", gconst.LobbyUserTablePrefix+mID, "Nick", "Gender", "Protrait", "AvatarID")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))
@@ -104,9 +104,9 @@ func constructClubMemberList(memberIDs []string, conn redis.Conn, club *Club) []
 		displayInfo := &MsgClubDisplayInfo{}
 		nick := strValues[0]
 		displayInfo.Nick = &nick
-		sex, _ := strconv.Atoi(strValues[1])
-		sex32 := uint32(sex)
-		displayInfo.Sex = &sex32
+		gender, _ := strconv.Atoi(strValues[1])
+		sex32 := uint32(gender)
+		displayInfo.Gender = &sex32
 		headIconURL := strValues[2]
 		displayInfo.HeadIconURL = &headIconURL
 		avatarID, _ := strconv.Atoi(strValues[3])

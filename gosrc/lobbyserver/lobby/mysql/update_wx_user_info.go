@@ -3,8 +3,9 @@ package mysql
 import (
 	// "database/sql"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"lobbyserver/lobby"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // SaveGRCRecord2SqlServer 保存牌局记录到数据库
@@ -15,7 +16,7 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) er
 		in openId varchar(32),
 		in userName varchar(64) ,
 		in nickName varchar(32),
-		in sex int(1) ,
+		in gender int(1) ,
 		in provice varchar(32),
 		in city varchar(32),
 		in country varchar(32),
@@ -45,7 +46,7 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) er
 		userInfo.GetOpenID(),
 		userInfo.GetNickName(),
 		userInfo.GetNickName(),
-		userInfo.GetSex(),
+		userInfo.GetGender(),
 		userInfo.GetProvince(),
 		userInfo.GetCity(),
 		userInfo.GetCountry(),

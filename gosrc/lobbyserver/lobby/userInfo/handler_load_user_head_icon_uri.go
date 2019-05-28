@@ -95,8 +95,8 @@ func handleLoadUserHeadIconURI(w http.ResponseWriter, r *http.Request, userID st
 		var headIconInfo = &lobby.MsgHeadIconInfo{}
 		var userID = userIDs[index]
 		sexUint64, _ := strconv.ParseUint(fileds[0], 10, 32)
-		var sex = uint32(sexUint64)
-		headIconInfo.Sex = &sex
+		var gender = uint32(sexUint64)
+		headIconInfo.Gender = &gender
 		headIconInfo.UserID = &userID
 		var headIconURI = fileds[1]
 		headIconInfo.HeadIconURI = &headIconURI

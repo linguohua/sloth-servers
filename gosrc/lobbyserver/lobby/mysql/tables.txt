@@ -40,7 +40,7 @@ account | password | register_time
 
 8. 用户表 （user）
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-user_id | open_id | phone | name | nick_name | sex | provice | city | country | head_img_url | mod_name | mod_version | core_version | lobby_version | system_family | device_id | device_name | device_mode | network_type | register_type
+user_id | open_id | phone | name | nick_name | gender | provice | city | country | head_img_url | mod_name | mod_version | core_version | lobby_version | system_family | device_id | device_name | device_mode | network_type | register_type
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 9. 微信账号表（wx_account)

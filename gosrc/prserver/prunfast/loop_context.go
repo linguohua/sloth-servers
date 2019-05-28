@@ -119,8 +119,8 @@ func (lc *LoopContext) snapshootDealActions() {
 		var nick = p.user.getInfo().nick
 		sp.Nick = &nick
 
-		var sex = p.user.getInfo().sex
-		sp.Sex = &sex
+		var gender = p.user.getInfo().gender
+		sp.Gender = &gender
 		var headIconURL = p.user.getInfo().headIconURI
 		sp.HeadIconURI = &headIconURL
 

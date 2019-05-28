@@ -44,7 +44,7 @@ func filterSensitiveWord(chatMsg *lobby.MsgChat) {
 		Index    int    `json:"index"`
 		URL      string `json:"url"`
 		NickName string `json:"nickname"`
-		Sex      string `json:"sex"`
+		Gender      string `json:"gender"`
 	}
 
 	var msgContent = MsgContent{}

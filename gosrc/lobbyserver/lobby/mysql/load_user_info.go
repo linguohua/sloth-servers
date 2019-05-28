@@ -7,7 +7,7 @@ import (
 
 // 查询用户信息
 func loadUserInfo(userID string) *lobby.UserInfo {
-	stmt, err := dbConn.Prepare("select open_id, phone, nick_name, sex, provice, city, country, head_img_url from user where user_id = ?")
+	stmt, err := dbConn.Prepare("select open_id, phone, nick_name, gender, provice, city, country, head_img_url from user where user_id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -16,14 +16,14 @@ func loadUserInfo(userID string) *lobby.UserInfo {
 	var openID sql.NullString
 	var phone sql.NullString
 	var nickName sql.NullString
-	var sex sql.NullInt64
+	var gender sql.NullInt64
 	var provice sql.NullString
 	var city sql.NullString
 	var country sql.NullString
 	var headImgURL sql.NullString
 
 	row := stmt.QueryRow(userID)
-	err = row.Scan(&openID, &phone, &nickName, &sex, &provice, &city, &country, &headImgURL)
+	err = row.Scan(&openID, &phone, &nickName, &gender, &provice, &city, &country, &headImgURL)
 	if err == sql.ErrNoRows {
 		return nil
 	}
@@ -63,9 +63,9 @@ func loadUserInfo(userID string) *lobby.UserInfo {
 		userInfo.HeadImgUrl = &headImgURL.String
 	}
 
-	if sex.Valid {
-		uint32Sex := uint32(sex.Int64)
-		userInfo.Sex = &uint32Sex
+	if gender.Valid {
+		uint32Sex := uint32(gender.Int64)
+		userInfo.Gender = &uint32Sex
 	}
 
 	return userInfo

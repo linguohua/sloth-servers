@@ -20,7 +20,7 @@ func registerAccount(account string, passwd string, userInfo *lobby.UserInfo, cl
 	in phone varchar(11),
 	in openId varchar(32),
 	in nickName varchar(64),
-	in sex int(1) ,
+	in gender int(1) ,
 	in provice varchar(32),
 	in city varchar(32),
 	in country varchar(32),
@@ -55,7 +55,7 @@ func registerAccount(account string, passwd string, userInfo *lobby.UserInfo, cl
 
 		userInfo.GetOpenID(),
 		userInfo.GetNickName(),
-		userInfo.GetSex(),
+		userInfo.GetGender(),
 		userInfo.GetProvince(),
 		userInfo.GetCity(),
 		userInfo.GetCountry(),

@@ -33,7 +33,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 
 	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userID)
 
-	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "sex", "provice", "city", "country", "headImgURL", "phone", "diamond"))
+	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "gender", "provice", "city", "country", "headImgURL", "phone", "diamond"))
 	if err != nil {
 		log.Println("loadUserInfoFromRedis, error", err)
 		return nil
@@ -41,7 +41,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 
 	openID := fields[0]
 	nickName := fields[1]
-	sex, _ := strconv.Atoi(fields[2])
+	gender, _ := strconv.Atoi(fields[2])
 	provice := fields[3]
 	city := fields[4]
 	country := fields[5]
@@ -55,8 +55,8 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	userInfo.UserID = &userID
 	userInfo.OpenID = &openID
 	userInfo.NickName = &nickName
-	sexUint32 := uint32(sex)
-	userInfo.Sex = &sexUint32
+	sexUint32 := uint32(gender)
+	userInfo.Gender = &sexUint32
 	userInfo.Province = &provice
 	userInfo.City = &city
 	userInfo.Country = &country
