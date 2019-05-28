@@ -13,7 +13,7 @@ message MsgClubReply
 message MsgClubDisplayInfo
 {
     required string nick = 1;   // 名字
-	optional uint32 sex = 2; // 玩家性别
+	optional uint32 gender = 2; // 玩家性别
 	optional string headIconURL = 3; // 玩家头像URL
 	optional int32 avatarID = 4; // 头像框ID
 }

@@ -28,7 +28,7 @@ message MsgPlayerInfo {
     required int32 state = 3; // 玩家当前状态PlayerState
     optional string name = 4; // 玩家名称
     optional string nick = 5; // 玩家昵称
-    optional uint32 sex = 6; // 玩家性别，0未设置，1男性，2女性
+    optional uint32 gender = 6; // 玩家性别，0未设置，1男性，2女性
     optional string headIconURI = 7; // 玩家头像URI
     optional string ip = 8; // 玩家外网ip
     optional string location = 9; // 玩家位置信息,json格式
@@ -68,7 +68,7 @@ message MsgRoomInfo {
     optional int32 handStartted = 5; // 已经开始了多少手牌
 
     repeated MsgRoomHandScoreRecord scoreRecords = 6;
-	
+
 	optional int32 handFinished = 7; // 已经完成了多少手牌
 }
 

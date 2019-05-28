@@ -6,7 +6,7 @@ message SRMsgPlayerInfo {
     required string userID = 1;
     required int32 chairID = 2;
     optional string nick = 3;
-    optional uint32 sex = 4;
+    optional uint32 gender = 4;
     optional string headIconURI = 5;
     optional int32 avatarID = 6; // 头像框ID
 }

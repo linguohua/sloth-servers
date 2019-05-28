@@ -269,7 +269,7 @@ message MsgLoadUserHeadIconURI {
 // 用户的头像信息
 message MsgHeadIconInfo {
 	required string userID = 1;   // 用户ID
-	optional uint32 sex = 2; //  用户性别，0未设置，1男性，2女性
+	optional uint32 gender = 2; //  用户性别，0未设置，1男性，2女性
 	optional string headIconURI = 3;   // 用户头像
 }
 
@@ -316,7 +316,7 @@ message MsgUserInfo
 {
 	required string uid = 1;
 	required string name = 2;
-	required int64 sex = 3;
+	required int64 gender = 3;
 	required string protrait = 4;
 	required string token = 5;
 	required int64  diamond = 6;
@@ -335,7 +335,7 @@ message UserInfo
 	required string userID = 1;
 	optional string openID = 2;
 	optional string nickName = 3;
-	optional uint32 sex = 4;
+	optional uint32 gender = 4;
 	optional string province = 5;
 	optional string city = 6;
 	optional string country = 7;
@@ -421,7 +421,7 @@ message MsgReplayPlayerInfo
 	required int32 chairID = 3; // 椅子ID
 
 	optional int32 totalScore = 4; // 总得分
-	optional uint32 sex = 5; // 玩家性别
+	optional uint32 gender = 5; // 玩家性别
 	optional string headIconURI = 6; // 玩家头像URI
 	optional int32 avatarID = 7; // 头像框ID
 }
