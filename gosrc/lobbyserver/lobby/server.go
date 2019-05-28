@@ -47,8 +47,6 @@ func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // RegHTTPHandle 注册HTTP handler
 func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 	rootRouter.Handle(method, "/lobby/:uuid"+path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		log.Println("RegHTTPHandle")
-
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
 
@@ -75,6 +73,8 @@ func CreateHTTPServer() {
 	loadAllRoomConfigFromRedis()
 
 	pricecfg.LoadAllPriceCfg(pool)
+
+	rootRouter.HandleOPTIONS = false
 
 	RegHTTPHandle("GET", "/version", echoVersion)
 
