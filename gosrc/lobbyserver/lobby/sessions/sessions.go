@@ -94,7 +94,9 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 
 	replyConnectMsg(ws, int32(lobby.WebsocketConnectError_ConnectSuccess))
 
-	var user = newUser(ws, userID)
+	isWeb := r.URL.Query().Get("web") == "1"
+
+	var user = newUser(ws, userID, isWeb)
 
 	oldUser := userMgr.getUserByID(user.uID)
 	if oldUser != nil {
@@ -115,6 +117,9 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 }
 
 func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

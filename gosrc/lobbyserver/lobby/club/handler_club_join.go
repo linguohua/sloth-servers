@@ -1,7 +1,6 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"gconst"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 // onJoinClub 申请加入某个俱乐部
@@ -57,17 +57,14 @@ func onJoinClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
+	clubInfo := club.clubInfo
 	// 检查玩家已经加入过的俱乐部个数
 	maxJoin := mySQLUtil.CountUserClubNumber(userID)
-	if maxJoin >= maxClubJoinPerUser {
+	if int32(maxJoin) >= clubInfo.GetMaxMember() {
 		log.Println("onJoinClub, user has join exceed max limit:", maxJoin)
 		sendGenericError(w, ClubOperError_CERR_Exceed_Max_Club_Count_Limit)
 		return
 	}
-
-	clubInfo := club.clubInfo
-
-	log.Println("clubInfo:", clubInfo)
 
 	// 俱乐部禁止申请加入
 	if clubInfo.GetJoinForbit() {

@@ -15,6 +15,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	websocketWriteDeadLine = 5 * time.Second
+)
+
 // UserInfo 用户信息
 type UserInfo struct {
 	UserID      int64  `json:"userID"`
@@ -36,10 +40,12 @@ type User struct {
 	wsLock *sync.Mutex // websocket并发写锁
 
 	sqllock *sync.Mutex
+
+	isFromWeb bool
 }
 
 // newUser 新建用户对象
-func newUser(ws *websocket.Conn, userID string) *User {
+func newUser(ws *websocket.Conn, userID string, isFromWeb bool) *User {
 	u := &User{}
 	u.uID = userID
 	u.ws = ws
@@ -47,6 +53,7 @@ func newUser(ws *websocket.Conn, userID string) *User {
 	u.lastReceivedTime = time.Now()
 	u.wsLock = &sync.Mutex{}
 	u.sqllock = &sync.Mutex{}
+	u.isFromWeb = isFromWeb
 
 	u.wg.Add(1)
 
@@ -55,9 +62,27 @@ func newUser(ws *websocket.Conn, userID string) *User {
 
 func (u *User) sendPing() {
 	if u.ws != nil {
+		// u.wsLock.Lock()
+		// u.ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		// u.wsLock.Unlock()
+
 		u.wsLock.Lock()
-		u.ws.WriteMessage(websocket.PingMessage, []byte("ka"))
-		u.wsLock.Unlock()
+		defer u.wsLock.Unlock()
+
+		u.ws.SetWriteDeadline(time.Now().Add(websocketWriteDeadLine))
+
+		var err error
+		if u.isFromWeb {
+			buf := formatMsgByData([]byte("ka"), int32(lobby.MessageCode_OPPing))
+			u.ws.WriteMessage(websocket.BinaryMessage, buf)
+		} else {
+			err = u.ws.WriteMessage(websocket.PingMessage, []byte("ka"))
+		}
+
+		if err != nil {
+			log.Printf("user %s ws write err:", err)
+			u.ws.Close()
+		}
 	}
 }
 
@@ -131,6 +156,14 @@ func (u *User) onWebsocketMessage(ws *websocket.Conn, message []byte) {
 	var msgCode = lobby.MessageCode(lobbyMessage.GetOps())
 
 	switch msgCode {
+	case lobby.MessageCode_OPPing:
+		u.lastReceivedTime = time.Now()
+		buf := formatMsgByData(lobbyMessage.GetData(), int32(lobby.MessageCode_OPPong))
+		u.send(buf)
+		break
+	case lobby.MessageCode_OPPong:
+		u.lastReceivedTime = time.Now()
+		break
 	// case lobby.MessageCode_OPUpdateUserInfo:
 	// 	onMessageUpdateUserInfo(u, accessoryMessage)
 	// 	break
@@ -194,4 +227,19 @@ func onMessageUpdateUserInfo(user *User, lobbyMessage *lobby.LobbyMessage) {
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 	conn.Do("HSET", gconst.LobbyUserTablePrefix+userIDstring, "location", location)
+}
+
+func formatMsgByData(data []byte, msgCode int32) []byte {
+	lobbyMessage := &lobby.LobbyMessage{}
+	lobbyMessage.Ops = &msgCode
+	lobbyMessage.Data = data
+
+	buf, err := proto.Marshal(lobbyMessage)
+	if err != nil {
+		log.Println(err)
+		return []byte{}
+	}
+
+	return buf
+
 }

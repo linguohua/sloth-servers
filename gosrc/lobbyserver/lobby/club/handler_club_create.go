@@ -28,6 +28,7 @@ func onCreateClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		return
 	}
 
+	// TODO: 判断是否有权限创建牌友圈
 
 	mySQLUtil := lobby.MySQLUtil()
 	clubCount := mySQLUtil.CountUserClubNumber(userID)

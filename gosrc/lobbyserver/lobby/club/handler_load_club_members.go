@@ -1,14 +1,14 @@
 package club
 
 import (
-	"log"
 	"net/http"
 	"strconv"
+	"gconst"
 	"lobbyserver/lobby"
 	"github.com/garyburd/redigo/redis"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
-	"gconst"
+	log "github.com/sirupsen/logrus"
 )
 
 // onLoadClubMembers 加载俱乐部成员列表

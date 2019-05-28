@@ -55,6 +55,9 @@ enum MessageCode{
 	OPChat = 2; 			// 聊天
 	OPUpdateDiamond = 3;    // 更新钻石
 	OPMail = 4; 			// 邮件
+	OPPing = 100; 			// ping
+	OPPong = 101; 			// ping
+
 }
 
 // 消息包装，把其他消息体格式化为byte array，

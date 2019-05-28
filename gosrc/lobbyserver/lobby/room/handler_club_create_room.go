@@ -16,8 +16,25 @@ import (
 
 	"io/ioutil"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 )
+
+var (
+	maxClubRoom = 50
+)
+
+func countClubRoom(clubID string) int {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	count, err := redis.Int(conn.Do("SCARD", gconst.LobbyClubRoomSetPrefix+clubID))
+	if err != nil {
+		log.Error("countClubRoom error:", err)
+	}
+
+	return count
+}
 
 func handlerCreateClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	userID := ps.ByName("userID")
@@ -25,6 +42,20 @@ func handlerCreateClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter
 	clubID := r.URL.Query().Get("clubID")
 
 	log.Printf("handlerCreateRoom call, userID:%s, isForceUpgrade:%s, clubID:%s", userID, isForceUpgrade, clubID)
+
+	uid, _ := uuid.NewV4()
+	roomIDString := fmt.Sprintf("%s", uid)
+
+	if isUserCreateRoomLock(userID, roomIDString) {
+		log.Println("User crate room is lock !")
+		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrUserCreateRoomLock), 0)
+		return
+	}
+
+	// 退出函数，则清除锁
+	defer func() {
+		removeUserCreateRoomLock(userID)
+	}()
 
 	updatUtil := lobby.UpdateUtil()
 	moduleCfg := updatUtil.GetModuleCfg(r)
@@ -43,25 +74,19 @@ func handlerCreateClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
+	// TODO: 检查是否超过最大房间数
+	roomCount := countClubRoom(clubID)
+	if roomCount >= maxClubRoom {
+		log.Printf("handlerCreateClubRoom, club %s max room limit %d", clubID, maxClubRoom)
+		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrRequestInvalidParam), 0)
+		return
+	}
+
 	if !clubMgr.IsUserPermisionCreateRoom(userID, clubID) {
 		log.Printf("handlerCreateClubRoom, user %s not allow create room in club %s", userID, clubID)
 		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrOnlyClubCreatorOrManagerAllowCreateRoom), 0)
 		return
 	}
-
-	uid, _ := uuid.NewV4()
-	roomIDString := fmt.Sprintf("%s", uid)
-
-	if isUserCreateRoomLock(userID, roomIDString) {
-		log.Println("User crate room is lock !")
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrUserCreateRoomLock), 0)
-		return
-	}
-
-	// 退出函数，则清除锁
-	defer func() {
-		removeUserCreateRoomLock(userID)
-	}()
 
 	var gameServerID = r.URL.Query().Get("gsid")
 

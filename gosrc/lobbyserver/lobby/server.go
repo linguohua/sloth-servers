@@ -15,6 +15,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 )
 
 const (
@@ -46,8 +47,6 @@ func echoVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // RegHTTPHandle 注册HTTP handler
 func RegHTTPHandle(method string, path string, handle httprouter.Handle) {
 	rootRouter.Handle(method, "/lobby/:uuid"+path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
 		var query = r.URL.Query()
 		var tk = query.Get("tk")
 
@@ -75,6 +74,8 @@ func CreateHTTPServer() {
 
 	pricecfg.LoadAllPriceCfg(pool)
 
+	rootRouter.HandleOPTIONS = false
+
 	RegHTTPHandle("GET", "/version", echoVersion)
 
 	// 注册一个文件服务器，以程序当前目录下的web作为根目录
@@ -88,7 +89,7 @@ func acceptHTTPRequest() {
 	portStr := fmt.Sprintf(":%d", config.AccessoryServerPort)
 	s := &http.Server{
 		Addr:    portStr,
-		Handler: rootRouter,
+		Handler: cors.Default().Handler(rootRouter),
 		// ReadTimeout:    10 * time.Second,
 		//WriteTimeout:   120 * time.Second,
 		MaxHeaderBytes: 1 << 8,

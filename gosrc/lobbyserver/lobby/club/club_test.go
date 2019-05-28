@@ -24,9 +24,9 @@ func TestSomething(t *testing.T) {
 	// testJoinApproval("10000002", "10000003", "yes", "5")
 	// testClubQuit("10000003")
 	// testLoadMyClubs("10000003")
-	// testCreateClubRoom("10000002")
+	testCreateClubRoom("10000002")
 	// testLoadClubRooms("10000002")
-	testDeleteClubRoom("10000002")
+	// testDeleteClubRoom("10000002")
 
 
 }
@@ -132,7 +132,7 @@ func testLoadMyClubs(id string) {
 func testDeleteClub(id string) {
 	tk := lobby.GenTK(id)
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
-	var url = "http://localhost:3002/lobby/uuid/disbandClub?tk="+ tk + "&clubID=2f2c5ef8-7ac9-11e9-a192-107b445225b6"
+	var url = "http://localhost:3002/lobby/uuid/disbandClub?tk="+ tk + "&clubID=9949cd58-7e97-11e9-a192-107b445225b6"
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -248,7 +248,7 @@ func testLoadClubMembers(id string) {
 func testJoinClub(id string) {
 	tk := lobby.GenTK(id)
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
-	var url = "http://localhost:3002/lobby/uuid/joinClub?tk="+ tk + "&clubNumber=84318"
+	var url = "http://localhost:3002/lobby/uuid/joinClub?tk="+ tk + "&clubNumber=24367"
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -367,7 +367,7 @@ func testJoinApproval(id string, applicantID string, agree string, eID string) {
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
 
 	var url = "http://localhost:3002/lobby/uuid/joinApproval?tk="+ tk +
-	"&clubID=6b512ef0-7b77-11e9-a192-107b445225b6&applicantID="+applicantID+"&agree="+ agree +"&eID=" + eID
+	"&clubID=3ca992e8-7e99-11e9-a192-107b445225b6&applicantID="+applicantID+"&agree="+ agree +"&eID=" + eID
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -492,9 +492,9 @@ func testCreateClubRoom(id string) {
 		return
 	}
 
-	var url = "http://localhost:3002/lobby/uuid/createClubRoom?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6"
+	var url = "http://localhost:3002/lobby/uuid/createClubRoom?tk="+ tk + "&clubID=9949cd58-7e97-11e9-a192-107b445225b6"
 	client := &http.Client{Timeout: time.Second * 60}
-	req, err := http.NewRequest("POST", url,  bytes.NewBuffer(buf))
+	req, err := http.NewRequest("OPTIONS", url,  bytes.NewBuffer(buf))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -537,7 +537,7 @@ func testCreateClubRoom(id string) {
 func testLoadClubRooms(id string) {
 	tk := lobby.GenTK(id)
 
-	var url = "http://localhost:3002/lobby/uuid/loadClubRooms?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6"
+	var url = "http://localhost:3002/lobby/uuid/loadClubRooms?tk="+ tk + "&clubID=9949cd58-7e97-11e9-a192-107b445225b6"
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("POST", url,  nil)
 
@@ -582,7 +582,7 @@ func testLoadClubRooms(id string) {
 func testDeleteClubRoom(id string) {
 	tk := lobby.GenTK(id)
 
-	var url = "http://localhost:3002/lobby/uuid/deleteClubRoom?tk="+ tk + "&clubID=6b512ef0-7b77-11e9-a192-107b445225b6&roomID=2d4958eb-5162-429d-beb8-0d81509ad89c"
+	var url = "http://localhost:3002/lobby/uuid/deleteClubRoom?tk="+ tk + "&clubID=5fab2ce0-7e06-11e9-a192-107b445225b6&roomID=2d4958eb-5162-429d-beb8-0d81509ad89c"
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("POST", url,  nil)
 

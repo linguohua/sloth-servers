@@ -1,13 +1,13 @@
 package club
 
 import (
-	"log"
 	"gconst"
 	"net/http"
 	"lobbyserver/lobby"
 	"github.com/julienschmidt/httprouter"
 	"github.com/garyburd/redigo/redis"
 	proto "github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 // onLoadMyClubs 加载自己的俱乐部
