@@ -30,14 +30,19 @@ func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
 	city := userInfo.GetCity()
 	country := userInfo.GetCountry()
 	headImgURL := userInfo.GetHeadImgUrl()
+	diamond := userInfo.GetDiamond()
 
 	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "gender", gender,
-		"provice", provice, "city", city, "country", country, "headImgURL", headImgURL)
+		"provice", provice, "city", city, "country", country, "headImgURL", headImgURL, "diamond", diamond)
 }
 
 func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
 	mySQLUtil := lobby.MySQLUtil()
 	mySQLUtil.UpdateWxUserInfo(userInfo, clientInfo)
+
+	// 更新用户redis中信息和钻石
+	diamond := mySQLUtil.LoadUserDiamond(userInfo.GetUserID())
+	userInfo.Diamond = &diamond
 
 	saveUserInfo2Redis(userInfo)
 }
@@ -129,7 +134,7 @@ func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	clientInfo.Network = &network
 
 	mySQLUtil := lobby.MySQLUtil()
-	userID, isNew := mySQLUtil.GetOrGenerateUserID(userInfo.GetOpenID())
+	userID, isNew := mySQLUtil.LoadOrGenerateUserID(userInfo.GetOpenID())
 	userInfo.UserID = &userID
 
 	if isNew {

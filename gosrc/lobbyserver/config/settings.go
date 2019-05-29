@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"gconst"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/DisposaBoy/JsonConfigReader"
 	"github.com/coreos/etcd/client"
@@ -45,6 +46,8 @@ var (
 	EtcdServer = ""
 
 	FileServerPath = "./fileServer"
+
+	DefaultDiamond = 0
 )
 
 var (
@@ -113,6 +116,8 @@ func ParseConfigFile(filepath string) bool {
 		DbPassword string `json:"dbPassword"`
 		DbUser     string `json:"dbUser"`
 		DbName     string `json:"dbName"`
+
+		DefaultDiamond int `json:"default_diamond"`
 	}
 
 	loadedCfgFilePath = filepath
@@ -240,6 +245,8 @@ func ParseConfigFile(filepath string) bool {
 		log.Println("redis server id  must not be empty!")
 		return false
 	}
+
+	DefaultDiamond = params.DefaultDiamond
 
 	return true
 }

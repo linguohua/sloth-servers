@@ -24,16 +24,16 @@ func (*mySQLUtil) UpdateAccountUserInfo(account string, clientInfo *lobby.Client
 	return updateAccountUserInfo(account, clientInfo)
 }
 
-func (*mySQLUtil) GetUserIDBy(account string) string {
-	return getUserIDBy(account)
+func (*mySQLUtil) LoadUserIDByAccount(account string) string {
+	return loadUserIDByAccount(account)
 }
 
-func (*mySQLUtil) GetPasswordBy(account string) string {
-	return getPasswordBy(account)
+func (*mySQLUtil) LoadPasswordByAccount(account string) string {
+	return loadPasswordByAccount(account)
 }
 
-func (*mySQLUtil) GetOrGenerateUserID(account string) (userID string, isNew bool) {
-	return getOrGenerateUserID(account)
+func (*mySQLUtil) LoadOrGenerateUserID(account string) (userID string, isNew bool) {
+	return loadOrGenerateUserID(account)
 }
 
 func (*mySQLUtil) RegisterAccount(account string, passwd string, userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) error {
@@ -98,6 +98,10 @@ func (*mySQLUtil) LoadClubInfos(cursor int, count int) (clubInfos interface{}) {
 
 func (*mySQLUtil) RemoveUserFromClub(userID string, clubID string) (errCode int) {
 	return removeUserFromClub(userID, clubID)
+}
+
+func (*mySQLUtil) LoadUserDiamond(userID string) int64 {
+	return loadUserDiamond(userID)
 }
 
 // InitWith init

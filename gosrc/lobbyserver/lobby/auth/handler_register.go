@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"gconst"
+	"lobbyserver/config"
 	"lobbyserver/lobby"
 	"net/http"
 
@@ -35,6 +36,14 @@ func registerAccount(account string, passwdMD5 string, userInfo *lobby.UserInfo,
 	if err != nil {
 		log.Error("registerAccount error:", err)
 	}
+
+	// 注册账号的时候，送钻石，可以在配置中配
+	lastDiamond, errCode := mySQLUtil.UpdateDiamond(userInfo.GetUserID(), int64(config.DefaultDiamond))
+	if errCode != 0 {
+		log.Error("registerAccount UpdateDiamond, errCode:", errCode)
+	}
+
+	userInfo.Diamond = &lastDiamond
 
 	saveUserInfo2Redis(userInfo)
 
@@ -75,7 +84,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	// 检查手机号是否已经注册过, 如果已经注册过，返回错误
 	// 如果没注册过，则生成个新用户
 	mySQLUtil := lobby.MySQLUtil()
-	userID, isNew := mySQLUtil.GetOrGenerateUserID(account)
+	userID, isNew := mySQLUtil.LoadOrGenerateUserID(account)
 	if !isNew {
 		errCode := int32(lobby.RegisterError_ErrAccountExist)
 		reply.Result = &errCode

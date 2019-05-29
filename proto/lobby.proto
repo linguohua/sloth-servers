@@ -315,21 +315,21 @@ message MsgAccLoadReplayRecord
 }
 
 //玩家信息
-message MsgUserInfo
-{
-	required string uid = 1;
-	required string name = 2;
-	required int64 gender = 3;
-	required string protrait = 4;
-	required string token = 5;
-	required int64  diamond = 6;
-	required string nick = 7;
-	required int64  charm = 8;
-	required string  addr = 9;
-	required string  avatar = 10;
-	optional int64  dan = 11;
-	optional int64  gold = 12;
-}
+// message MsgUserInfo
+// {
+// 	required string uid = 1;
+// 	required string name = 2;
+// 	required int64 gender = 3;
+// 	required string protrait = 4;
+// 	required string token = 5;
+// 	required int64  diamond = 6;
+// 	required string nick = 7;
+// 	required int64  charm = 8;
+// 	required string  addr = 9;
+// 	required string  avatar = 10;
+// 	optional int64  dan = 11;
+// 	optional int64  gold = 12;
+// }
 
 
 // 微信用户信息
@@ -344,7 +344,7 @@ message UserInfo
 	optional string country = 7;
 	optional string headImgUrl = 8;
 	optional string phone = 9;
-	optional int32 diamond = 10;
+	optional int64 diamond = 10;
 }
 
 enum LoginError

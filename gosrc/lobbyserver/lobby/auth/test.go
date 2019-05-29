@@ -43,6 +43,6 @@ func handlerTest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// w.Write([]byte("ok"))
 	mySQLUtil := lobby.MySQLUtil()
-	userID, isNew := mySQLUtil.GetOrGenerateUserID("12333")
+	userID, isNew := mySQLUtil.LoadOrGenerateUserID("12333")
 	log.Println("userID:", userID, isNew)
 }

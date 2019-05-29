@@ -50,7 +50,7 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	loginReply := &lobby.MsgQuicklyLoginReply{}
 
-	userID, isNew := mySQLUtil.GetOrGenerateUserID(account)
+	userID, isNew := mySQLUtil.LoadOrGenerateUserID(account)
 	if isNew {
 		clientInfo := &lobby.ClientInfo{}
 		clientInfo.QMod = &qMod
@@ -70,7 +70,7 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		registerAccount(account, "", userInfo, clientInfo)
 	} else {
 		// 要校检是否是快速登录账号，快速登录没有密码
-		myPassword := mySQLUtil.GetPasswordBy(account)
+		myPassword := mySQLUtil.LoadPasswordByAccount(account)
 		if myPassword != "" {
 			errCode := int32(lobby.LoginError_ErrPasswordNotMatch)
 			loginReply.Result = &errCode
@@ -78,6 +78,8 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 			return
 		}
+
+		// TODO:从mysql中取用户的数据出来更新redis
 	}
 
 	userInfo := loadUserInfoFromRedis(userID)

@@ -49,7 +49,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	phone := fields[7]
 
 	diamond, _ := strconv.Atoi(fields[8])
-	diamondInt32 := int32(diamond)
+	diamondInt64 := int64(diamond)
 
 	userInfo := &lobby.UserInfo{}
 	userInfo.UserID = &userID
@@ -62,7 +62,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 	userInfo.Country = &country
 	userInfo.HeadImgUrl = &headImgURL
 	userInfo.Phone = &phone
-	userInfo.Diamond = &diamondInt32
+	userInfo.Diamond = &diamondInt64
 
 	return userInfo
 }
@@ -91,7 +91,7 @@ func handlerAccountLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	mySQLUtil := lobby.MySQLUtil()
 
-	userID := mySQLUtil.GetUserIDBy(phoneNum)
+	userID := mySQLUtil.LoadUserIDByAccount(phoneNum)
 	if userID == "" {
 		errCode := int32(lobby.LoginError_ErrAccountNotExist)
 		loginReply.Result = &errCode
@@ -100,7 +100,7 @@ func handlerAccountLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		return
 	}
 
-	myPassword := mySQLUtil.GetPasswordBy(phoneNum)
+	myPassword := mySQLUtil.LoadPasswordByAccount(phoneNum)
 	if myPassword == "" {
 		errCode := int32(lobby.LoginError_ErrAccountNotSetPassword)
 		loginReply.Result = &errCode

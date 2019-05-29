@@ -173,9 +173,9 @@ type IMySQLUtil interface {
 	// StartMySQL(ip string, port int, user string, password string, gameDB string)
 	UpdateWxUserInfo(UserInfo *UserInfo, clientInfo *ClientInfo) error
 	UpdateAccountUserInfo(account string, clientInfo *ClientInfo) error
-	GetUserIDBy(account string) string
-	GetPasswordBy(account string) string
-	GetOrGenerateUserID(account string) (userID string, isNew bool)
+	LoadUserIDByAccount(account string) string
+	LoadPasswordByAccount(account string) string
+	LoadOrGenerateUserID(account string) (userID string, isNew bool)
 	RegisterAccount(account string, passwd string, userInfo *UserInfo, clientInfo *ClientInfo) error
 	LoadUserInfo(userID string) *UserInfo
 	PayForRoom(userID string, pay int, roomID string) (errCode int, lastNum int64, orderID string)
@@ -192,6 +192,7 @@ type IMySQLUtil interface {
 	AddUserToClub(userID string, clubID string, role int32) (errCode int)
 	LoadClubInfos(cursor int, count int) (clubInfos interface{})
 	RemoveUserFromClub(userID string, clubID string) (errCode int)
+	LoadUserDiamond(userID string) int64
 }
 
 // IUpdateUtil update utility
