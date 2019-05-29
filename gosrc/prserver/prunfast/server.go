@@ -27,7 +27,9 @@ const (
 )
 
 var (
-	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize}
+	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize, CheckOrigin: func(r *http.Request) bool {
+		return true
+	}}
 	// 根router，只有http server看到
 	rootRouter = httprouter.New()
 

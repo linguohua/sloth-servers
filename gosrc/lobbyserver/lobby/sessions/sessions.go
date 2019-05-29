@@ -20,7 +20,9 @@ const (
 )
 
 var (
-	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize}
+	upgrader = websocket.Upgrader{ReadBufferSize: wsReadBufferSize, WriteBufferSize: wsWriteBufferSize, CheckOrigin: func(r *http.Request) bool {
+		return true
+	}}
 
 	userMgr *UserMgr
 )
@@ -117,9 +119,6 @@ func tryAcceptUser(ws *websocket.Conn, r *http.Request) {
 }
 
 func acceptWebsocket(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
-	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
