@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"gconst"
 	"time"
+	"fmt"
 	"lobbyserver/lobby"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -138,6 +139,7 @@ func newApplicateEvent(clubID string, applicantUserID string, owner string) {
 	conn.Send("HSET", gconst.LobbyClubNeedHandledTablePrefix+clubID, eventID32, owner)
 	conn.Send("LPUSH", gconst.LobbyClubEventListPrefix+clubID, eventID32)
 	conn.Send("SADD", gconst.LobbyClubApplicantPrefix+clubID, applicantUserID)
+	conn.Send("LPUSH", gconst.LobbyClubUserApplicantEventPrefix + applicantUserID, fmt.Sprintf("%s,%d", clubID, eventID32))
 
 	_, err = conn.Do("EXEC")
 	if err != nil {

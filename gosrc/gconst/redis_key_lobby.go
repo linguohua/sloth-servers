@@ -74,13 +74,15 @@ const (
 	// LobbyClubEventListPrefix 俱乐部事件列表，每一个俱乐部有一个自己的列表，俱乐部所有的事件都保存到该list中
 	LobbyClubEventListPrefix = "l:club:el:"
 	// LobbyClubUnReadEventUserListPrefix 俱乐部用户事件列表，为俱乐部的每一个用户建立一个未读消息列表
-	LobbyClubUnReadEventUserListPrefix = "l:club:uel:"
+	LobbyClubUnReadEventUserListPrefix = "l:club:ur:uel:"
 	// LobbyClubUnReadEventUserSetPrefix 俱乐部用户事件set,为俱乐部的每一个用户建立一个未读消息set，用于快速确定一个事件对于某个用户来说是否未读
-	LobbyClubUnReadEventUserSetPrefix = "l:club:ues:"
+	LobbyClubUnReadEventUserSetPrefix = "l:club:ur:ues:"
 	// LobbyClubSysTable 俱乐部系统表格，主要是存储一些全局信息
 	LobbyClubSysTable = "m:club:sys"
 	// LobbyClubMemberSetPrefix 牌友群中的成员set
 	LobbyClubMemberSetPrefix = "l:club:m:"
 	// LobbyClubRoomSetPrefix 牌友群房间Set
 	LobbyClubRoomSetPrefix = "l:club:rs:"
+	// LobbyClubUserApplicantEventPrefix 用户的申请记录列表
+	LobbyClubUserApplicantEventPrefix = "l:club:uel:"
 )

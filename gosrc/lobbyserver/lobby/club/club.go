@@ -90,4 +90,5 @@ func InitWith() {
 	lobby.RegHTTPHandle("GET", "/joinApproval", onJoinApprove)
 	lobby.RegHTTPHandle("GET", "/loadClubEvents", onLoadEvents)
 	lobby.RegHTTPHandle("GET", "/quitClub", onQuit)
+	lobby.RegHTTPHandle("GET", "/loadMyApplyEvent", onLoadMyApplyEvent)
 }

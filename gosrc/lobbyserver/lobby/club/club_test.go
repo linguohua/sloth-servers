@@ -14,19 +14,20 @@ import(
 // TestSomething 测试用例
 func TestSomething(t *testing.T) {
 	log.Println("TestSomething")
-
+	log.Println("now time:", int64(time.Millisecond))
 	// testCreateClub("10000002")
 	// testLoadMyClubs("10000002")
 	// testDeleteClub("10000002")
 	// testLoadClubMembers("10000002")
-	// testJoinClub("10000003")
+	// testJoinClub("10000004", "56135")
 	// testLoadClubEvent("10000002")
 	// testJoinApproval("10000002", "10000003", "yes", "5")
 	// testClubQuit("10000003")
 	// testLoadMyClubs("10000003")
-	testCreateClubRoom("10000002")
+	// testCreateClubRoom("10000002")
 	// testLoadClubRooms("10000002")
 	// testDeleteClubRoom("10000002")
+	testLoadMyApplyEvent("10000004")
 
 
 }
@@ -245,10 +246,10 @@ func testLoadClubMembers(id string) {
 	log.Println("reply:", reply)
 }
 
-func testJoinClub(id string) {
+func testJoinClub(id string, clubNumber string) {
 	tk := lobby.GenTK(id)
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
-	var url = "http://localhost:3002/lobby/uuid/joinClub?tk="+ tk + "&clubNumber=24367"
+	var url = "http://localhost:3002/lobby/uuid/joinClub?tk="+ tk + "&clubNumber=" + clubNumber
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -622,4 +623,68 @@ func testDeleteClubRoom(id string) {
 			log.Println("reply:", reply)
 	}
 	// log.Println("reply:", reply)
+}
+
+func testLoadMyApplyEvent(id string) {
+	tk := lobby.GenTK(id)
+
+	var url = "http://localhost:3002/lobby/uuid/loadMyApplyEvent?tk="+ tk
+	client := &http.Client{Timeout: time.Second * 60}
+	req, err := http.NewRequest("GET", url,  nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("err: ", err)
+		return
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("resp.StatusCode != 200, resp.StatusCode:", resp.StatusCode)
+		return
+	}
+
+	errcode := resp.Header.Get("error")
+	if errcode != "" {
+		log.Println("errorcode: ", errcode)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("handlerChat error:", err)
+		return
+	}
+
+	msgClubReply := &MsgClubReply{}
+	err = proto.Unmarshal(body, msgClubReply)
+	if err != nil {
+		log.Println("err:", err)
+	}
+
+	if msgClubReply.GetReplyCode() == int32(ClubReplyCode_RCError) {
+		genericRely := &MsgCubOperGenericReply{}
+		err = proto.Unmarshal(msgClubReply.GetContent(), genericRely)
+		if err != nil {
+			log.Println("parse error:", err)
+		}
+
+		log.Println("errCode:", genericRely.GetErrorCode())
+		return
+	}
+
+	buf := msgClubReply.GetContent()
+	if len(buf) == 0 {
+		log.Println("len(buf) == 0")
+		return
+	}
+
+	reply := &MsgClubLoadEventsReply{}
+	err = proto.Unmarshal(buf, reply)
+	if err != nil {
+		log.Println("err:", err)
+	}
+
+	events := reply.GetEvents()
+	log.Println("reply:", reply)
+	log.Println("event:", len(events))
 }
