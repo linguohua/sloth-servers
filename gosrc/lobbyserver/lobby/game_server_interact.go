@@ -5,6 +5,7 @@ import (
 	"gpubsub"
 
 	"github.com/garyburd/redigo/redis"
+
 	"github.com/golang/protobuf/proto"
 	log "github.com/sirupsen/logrus"
 )
@@ -42,19 +43,15 @@ func onReturnDiamondNotify(msgBag *gconst.SSMsgBag) {
 	var userID = msgUpdateBalance.GetUserID()
 	log.Printf("onReturnDiamondNotify, roomID:%s, userID:%s", roomID, userID)
 
-	remainDiamond, result := PayUtil().Refund2UserWith(roomID, userID, 0)
-	if result == 0 {
-		UpdateDiamond(userID, uint64(remainDiamond))
-	} else {
+	result := PayUtil().Refund2UserWith(roomID, userID, 0)
+	if result != 0 {
 		log.Error("onReturnDiamondNotify, refund to user failed, result code:", result)
 	}
-}
-
-// UpdateDiamond 更新用户钻石
-func UpdateDiamond(userID string, diamond uint64) {
-	var updateUserDiamond = &MsgUpdateUserDiamond{}
-	updateUserDiamond.Diamond = &diamond
-	SessionMgr().SendProtoMsgTo(userID, updateUserDiamond, int32(MessageCode_OPUpdateDiamond))
+	// if result == 0 {
+	// 	UpdateDiamond(userID, uint64(remainDiamond))
+	// } else {
+	// 	log.Error("onReturnDiamondNotify, refund to user failed, result code:", result)
+	// }
 }
 
 func onGameServerRequest(msgBag *gconst.SSMsgBag) {
@@ -142,18 +139,20 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 
 	log.Printf("onAAEnterRoomRequest, roomID:%s, userID:%s", roomID, userID)
 	// roomType := int(gconst.RoomType_DafengMJ)
-	diamond, result := PayUtil().DoPayForEnterRoom(roomID, userID)
-	if result != int32(gconst.SSMsgError_ErrSuccess) {
+	result := PayUtil().DoPayForEnterRoom(roomID, userID)
+	if result != int32(MsgError_ErrSuccess) {
 		var errCode gconst.SSMsgError
 		switch result {
-		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough):
+		case int32(MsgError_ErrTakeoffDiamondFailedNotEnough):
 			errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough
 			break
 		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO):
 			errCode = gconst.SSMsgError_ErrTakeoffDiamondFailedIO
 			break
-		case int32(gconst.SSMsgError_ErrNoRoomConfig):
+		case int32(MsgError_ErrNoRoomConfig):
 			errCode = gconst.SSMsgError_ErrNoRoomConfig
+			break
+		case int32(MsgError_ErrRoomPriceCfgNotExist):
 			break
 		case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedRepeat):
 			// 如果已经扣取钻石，则直接返回成功，让用户再次进入房间
@@ -166,13 +165,13 @@ func onAAEnterRoomRequest(msgBag *gconst.SSMsgBag) {
 
 		replySSMsg(msgBag, errCode, nil)
 
-		log.Printf("onAAEnterRoomRequest, pay failed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
+		log.Printf("onAAEnterRoomRequest, pay failed reply game server, roomID:%s, userID:%s", roomID, userID)
 		return
 	}
 
 	replySSMsg(msgBag, gconst.SSMsgError_ErrSuccess, nil)
 
-	log.Printf("onAAEnterRoomRequest, pay successed reply game server, roomID:%s, userID:%s,remaind diamond:%d", roomID, userID, diamond)
+	log.Printf("onAAEnterRoomRequest, pay successed reply game server, roomID:%s, userID:%s", roomID, userID)
 }
 
 func onDonateRequest(msgBag *gconst.SSMsgBag) {
@@ -223,10 +222,6 @@ func onDonateRequest(msgBag *gconst.SSMsgBag) {
 		replySSMsg(msgBag, msgError, nil)
 		return
 	}
-
-	// 通过房间服务器更新用户钻石
-	var diamond = msgDonateRsp.GetDiamond()
-	UpdateDiamond(from, uint64(diamond))
 
 	msgDonateRspBuf, err := proto.Marshal(msgDonateRsp)
 	if err != nil {

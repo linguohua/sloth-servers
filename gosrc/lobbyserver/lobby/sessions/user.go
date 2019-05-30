@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"gconst"
 	"lobbyserver/lobby"
-	"strings"
 	"sync"
 	"time"
 
@@ -177,32 +176,6 @@ func userID2Str(userID int64) string {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(userID))
 	return hex.EncodeToString(b)
-}
-
-func (u *User) saveAuthInfo(userInfo *UserInfo, realIP string) {
-	log.Println("saveAuthInfo")
-	if userInfo == nil {
-		userInfo = &UserInfo{}
-	}
-
-	var ws = u.ws
-	remoteAddr := ws.RemoteAddr().String()
-	addrs := strings.Split(remoteAddr, ":")
-	var ip = realIP
-	if ip == "" && len(addrs) == 2 {
-		ip = addrs[0]
-	}
-
-	// 查询钻石
-	// TODO: llwant mysql
-	// diamond, _ := webdata.QueryDiamond(u.uID)
-	// log.Println("ip:", ip)
-	diamond := 0
-	conn := lobby.Pool().Get()
-	defer conn.Close()
-
-	conn.Do("HMSET", gconst.LobbyUserTablePrefix+u.uID, "userName", userInfo.SdkUserName,
-		"userNick", userInfo.SdkUserNick, "userSex", userInfo.SdkUserSex, "userLogo", userInfo.SdkUserLogo, "ip", ip, "diaomond", diamond)
 }
 
 func (u *User) detach() {

@@ -149,6 +149,7 @@ type ISessionMgr interface {
 	SendTo(id string, msg []byte) bool
 	SendProtoMsgTo(userID string, protoMsg proto.Message, opcode int32) bool
 	UserCount() int
+	UpdateUserDiamond(userID string, diamond uint64)
 }
 
 // IRoomUtil room helper
@@ -161,10 +162,10 @@ type IRoomUtil interface {
 
 // IPayUtil pay
 type IPayUtil interface {
-	DoPayForCreateRoom(roomConfigID string, roomID string, userID string) (remainDiamond int, errCode int32)
-	DoPayForEnterRoom(roomID string, userID string) (remainDiamond int, errCode int32)
+	DoPayForCreateRoom(roomConfigID string, roomID string, userID string) (errCode int32)
+	DoPayForEnterRoom(roomID string, userID string) (errCode int32)
 
-	Refund2UserWith(roomID string, userID string, handFinish int) (remainDiamond int, errCode int32)
+	Refund2UserWith(roomID string, userID string, handFinish int) (errCode int32)
 	Refund2Users(roomID string, handFinish int, inGameUserIDs []string) bool
 }
 

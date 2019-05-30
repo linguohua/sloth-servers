@@ -10,5 +10,5 @@ func InitWith() {
 	lobby.RegHTTPHandle("GET", "/accountLogin", handlerAccountLogin)
 	lobby.RegHTTPHandle("GET", "/quicklyLogin", handlerQuicklyLogin)
 	lobby.RegHTTPHandle("GET", "/register", handlerRegister)
-	lobby.RegHTTPHandle("GET", "/test", handlerTest)
+	// lobby.RegHTTPHandle("GET", "/test", handlerTest)
 }

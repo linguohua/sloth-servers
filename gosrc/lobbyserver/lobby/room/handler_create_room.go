@@ -35,29 +35,9 @@ const (
 var (
 	//MaxRoomCount 用户可以创建房间的最多个数
 	MaxRoomCount = 20
-)
 
-// 注意支付函数返回的错误码都是是stateless里面的
-// 需要转成客户端对应的错误
-func replyPayError(w http.ResponseWriter, payError int32) {
-	switch payError {
-	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedIO):
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedIO), 0)
-		break
-	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedNotEnough):
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough), 0)
-		break
-	case int32(gconst.SSMsgError_ErrNoRoomConfig):
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedNotEnough), 0)
-		break
-	case int32(gconst.SSMsgError_ErrTakeoffDiamondFailedRepeat):
-		replayCreateRoom(w, nil, int32(lobby.MsgError_ErrTakeoffDiamondFailedRepeat), 0)
-		break
-	default:
-		log.Println("unknow pay error:", payError)
-	}
-	return
-}
+	timeStat = int64(0)
+)
 
 func replayCreateRoom(w http.ResponseWriter, roomInfo *lobby.RoomInfo, errorCode int32, remainDiamond int32) {
 	msgCreateRoomRsp := &lobby.MsgCreateRoomRsp{}
@@ -72,6 +52,9 @@ func replayCreateRoom(w http.ResponseWriter, roomInfo *lobby.RoomInfo, errorCode
 		log.Panic("reply msg, marshal msg failed")
 		return
 	}
+
+	timeStat = time.Now().UnixNano() - timeStat
+	log.Println("timeStat:", float64(timeStat)/1000000000)
 
 	w.Write(bytes)
 }
@@ -205,6 +188,7 @@ func isUserCreateRoomLock(userID string, roomID string) bool {
 }
 
 func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	timeStat = time.Now().UnixNano()
 
 	userID := ps.ByName("userID")
 	isForceUpgrade := r.URL.Query().Get("forceUpgrade")
@@ -297,9 +281,9 @@ func handlerCreateRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	var diamond = 0
-	diamond, errCode = lobby.PayUtil().DoPayForCreateRoom(roomConfigID, roomIDString, userID)
-	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
-		log.Println("payAndSave2RedisWith faile err:", err)
+	errCode = lobby.PayUtil().DoPayForCreateRoom(roomConfigID, roomIDString, userID)
+	if errCode != int32(lobby.MsgError_ErrSuccess) {
+		log.Println("DoPayForCreateRoom faile errCode:", errCode)
 		replayCreateRoom(w, nil, errCode, int32(diamond))
 		return
 	}

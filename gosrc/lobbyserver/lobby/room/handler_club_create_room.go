@@ -154,7 +154,7 @@ func handlerCreateClubRoom(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	var diamond = 0
-	diamond, errCode = lobby.PayUtil().DoPayForCreateRoom(roomConfigID, roomIDString, userID)
+	errCode = lobby.PayUtil().DoPayForCreateRoom(roomConfigID, roomIDString, userID)
 	if errCode != int32(gconst.SSMsgError_ErrSuccess) {
 		log.Println("payAndSave2RedisWith faile err:", err)
 		replayCreateRoom(w, nil, errCode, int32(diamond))

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"gconst"
 	"lobbyserver/lobby"
 	"net/http"
 
@@ -20,6 +21,18 @@ func replyQuicklyLogin(w http.ResponseWriter, loginReply *lobby.MsgQuicklyLoginR
 	}
 
 	w.Write(buf)
+}
+
+func updateUserDiamondFromRedis(userID string, diamond int64) {
+	conn := lobby.Pool().Get()
+	defer conn.Close()
+
+	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userID)
+
+	_, err := conn.Do("HSET", key, "diamond", diamond)
+	if err != nil {
+		log.Error("updateUserDiamondFromRedis error:", err)
+	}
 }
 
 // 客户端发用户ID上来
@@ -80,6 +93,8 @@ func handlerQuicklyLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 		}
 
 		// TODO:从mysql中取用户的数据出来更新redis
+		diamond := mySQLUtil.LoadUserDiamond(userID)
+		updateUserDiamondFromRedis(userID, diamond)
 	}
 
 	userInfo := loadUserInfoFromRedis(userID)

@@ -1,6 +1,10 @@
 package sessions
 
-import "github.com/golang/protobuf/proto"
+import (
+	"lobbyserver/lobby"
+
+	"github.com/golang/protobuf/proto"
+)
 
 // UserMgr 用户管理
 type UserMgr struct {
@@ -64,4 +68,11 @@ func (um *UserMgr) SendProtoMsgTo(userID string, protoMsg proto.Message, opcode 
 // UserCount 当前会话数量
 func (um *UserMgr) UserCount() int {
 	return len(um.users)
+}
+
+// UpdateUserDiamond 通过websocket 更新用户钻石
+func (um *UserMgr) UpdateUserDiamond(userID string, diamond uint64) {
+	var updateUserDiamond = &lobby.MsgUpdateUserDiamond{}
+	updateUserDiamond.Diamond = &diamond
+	um.SendProtoMsgTo(userID, updateUserDiamond, int32(lobby.MessageCode_OPUpdateDiamond))
 }
