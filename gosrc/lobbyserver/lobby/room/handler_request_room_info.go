@@ -9,8 +9,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 
-	"io/ioutil"
-
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/protobuf/proto"
 )
@@ -101,21 +99,7 @@ func handlerRequestRoomInfo(w http.ResponseWriter, r *http.Request, ps httproute
 	// 3. 用房间6位数字ID去请求房间id
 	// 4. 获取房间所在服务器的ID
 	// 5. 用服务器ID去获取服务器的URL
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println("handlerCreateRoom error:", err)
-		return
-	}
-
-	var msgRequestRoomInfo = &lobby.MsgRequestRoomInfo{}
-	err = proto.Unmarshal(body, msgRequestRoomInfo)
-	if err != nil {
-		log.Println("onMessageRequestRoomInfo,1 Unmarshal err:", err)
-		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrDecode), nil)
-		return
-	}
-
-	var roomNumber = msgRequestRoomInfo.GetRoomNumber()
+	var roomNumber = r.URL.Query().Get("roomNumber")
 	if roomNumber == "" {
 		log.Println("onMessageRequestRoomInfo roomNumber is empty")
 		replyRequestRoomInfo(w, int32(lobby.MsgError_ErrRoomNumberIsEmpty), nil)
