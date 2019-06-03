@@ -3,4 +3,7 @@ protoc --proto_path=../../proto --go_out=../../gosrc/mahjong  ../../proto/game_m
 @REM 大丰麻将
 protoc --proto_path=../../proto --go_out=../../gosrc/dfmjserver/dfmahjong ../../proto/game_mahjong_df.proto
 
+@REM 湛江麻将
+protoc --proto_path=../../proto --go_out=../../gosrc/zjmjserver/zjmahjong ../../proto/game_mahjong_zj.proto
+
 @pause
