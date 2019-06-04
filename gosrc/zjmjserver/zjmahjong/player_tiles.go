@@ -2,8 +2,9 @@ package zjmahjong
 
 import (
 	"container/list"
-	log "github.com/sirupsen/logrus"
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type tileList = *list.List
@@ -198,9 +199,9 @@ func (pt *PlayerTiles) concealedKongAble() bool {
 	return false
 }
 
-// isAllTripletOrKong 胡牌是否由4个刻子和一对构成
+// isAllTriplet 胡牌是否由4个刻子和一对构成
 // 注意杠牌也是刻子
-func (pt *PlayerTiles) isAllTripletOrKong() bool {
+func (pt *PlayerTiles) isAllTriplet() bool {
 	pt.hand2Slots()
 	pairs := 0
 	for _, v := range pt.slots {
@@ -221,15 +222,21 @@ func (pt *PlayerTiles) isAllTripletOrKong() bool {
 		}
 	}
 
-	// 落地牌组不能有顺子
+	// 落地牌组必须全部是碰牌组
 	for e := pt.fixedMelds.Front(); e != nil; e = e.Next() {
 		m := e.Value.(*Meld)
-		if m.mt == mahjong.MeldType_enumMeldTypeSequence {
+		if m.mt != mahjong.MeldType_enumMeldTypeTriplet {
 			return false
 		}
 	}
 
 	return true
+}
+
+// isThirteenOrphans 十三幺
+func (pt *PlayerTiles) isThirteenOrphans() bool {
+	pt.hand2Slots()
+	return isAgariThirteenOrphans(pt.slots)
 }
 
 // exposedMeldCount 落地牌组中明牌示人的牌组数量

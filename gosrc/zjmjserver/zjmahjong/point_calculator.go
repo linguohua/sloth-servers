@@ -2,31 +2,29 @@ package zjmahjong
 
 import (
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // calcGreatWinTileType 计算跟行牌无关的牌型大胡
 // 1.清一色
-// 2.混一色
-// 3.碰碰胡
-// 4.七对
+// 2.碰碰胡
+// 3.七对，大七对
+// 4.十三幺
+// 5.全风子
 func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, int) {
 	var tiles = player.tiles
 	var points int
 	var winType = 0
-	if tiles.suitTypeCount() == 1 {
-		if tiles.honorTypeCount() > 0 {
+	roomConfig := s.room.config
 
-			//}
-		} else {
-			if tiles.exposedMeldCount() == 0 {
-				if tiles.flowerTileCount() == 0 {
-					// 清一色：一色牌组成的胡牌。
-					winType |= int(GreatWinType_PureSame)
-					var gp = 1
-					points += gp
-					s.cl.Println("GWT:PureSame:", gp)
-				}
-			}
+	if tiles.suitTypeCount() == 1 {
+		if tiles.honorTypeCount() == 0 {
+			// 清一色：一色牌组成的胡牌
+			winType |= int(GreatWinType_PureSame)
+			var gp = roomConfig.pureSamePoint()
+			points += gp
+			s.cl.Println("GWT:PureSame:", gp)
 		}
 	}
 
@@ -35,40 +33,54 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, int) {
 	switch st {
 	case GreatWinType_GreatSevenPair:
 		winType |= int(GreatWinType_GreatSevenPair)
-		var gp = 1
+		var gp = roomConfig.sevenPairPoint()
 		points += gp
 		s.cl.Println("GWT:GreatSevenPair:", gp)
 		break
 	case GreatWinType_SevenPair:
 		winType |= int(GreatWinType_SevenPair)
-		var gp = 1
+		var gp = roomConfig.greatSevenPairPoint()
 		points += gp
 		s.cl.Println("GWT:SevenPair:", gp)
 		break
+	}
+
+	// 碰碰胡：全部是碰牌牌组的胡牌
+	if tiles.isAllTriplet() {
+		winType |= int(GreatWinType_PongPong)
+		var gp = roomConfig.pongPongPoint()
+		points += gp
+		log.Println("GWT:PongKong, normal:", gp)
+	}
+
+	// 十三幺
+	if tiles.isThirteenOrphans() {
+		winType |= int(GreatWinType_Thirteen)
+		var gp = roomConfig.thirteenOrphansPoint()
+		points += gp
+		log.Println("GWT:, ThirteenOrphans:", gp)
+	}
+
+	// 全风子 : 全部由风牌组成的胡牌
+	if tiles.suitTypeCount() == 0 {
+		winType |= int(GreatWinType_AllWind)
+		var gp = roomConfig.allWinPoint()
+		points += gp
+		log.Println("GWT:, All Wind:", gp)
 	}
 
 	return winType, points
 }
 
 // calcGreatWinning 判断玩家的胡牌是否大胡（大丰：辣子胡）
-// 规则：
-// 独钓：吃碰杠一起12只，剩余1只，胡剩余的1只。
-// 海底捞月：摸牌池最后一张牌，并产生胡牌。
-// 碰碰胡：由4副刻子或杠，和1对相同的牌组成的胡牌。
-// 混一色：万条筒其中一种与风牌结合一起，且产生的胡牌。
-// 清一色：一色牌组成的胡牌。
-// 大门清：胡牌时，无吃碰杠，且没有抓过花。
-// 七对：7对不一样的牌组成的胡牌。
-// 豪华大七对：有4个同种牌，且胡的那只刚好是4只相同中的1只.
-// 天胡：庄家起手摸第14只牌，产生胡牌.
-// 暗杠胡：手牌里有3只一样的牌，同时胡第4只1样的牌。
-// 明杠胡：直杠名牌后，摸牌产生胡牌。
-// 起手报听胡牌：起手报听，报听后胡牌。
+// 先计算牌型倍数
+// 再计算行牌倍数
 func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	var points int
 	var winType = 0
 	var tiles = player.tiles
 	sc := player.sctx
+	roomConfig := s.room.config
 
 	if !tiles.winAble() {
 		s.cl.Panic("calcGreatWinning, not winable")
@@ -78,39 +90,43 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	// 计算牌型性质的大胡
 	winType, points = calcGreatWinTileType(s, player)
 
-	// var selfDrawn = s.lctx.isSelfDraw(player)
+	// 抢杠胡，抢续杠后胡牌
 	if !selfDrawn && s.lctx.isRobKong() {
 		// 如果是最后动作是加杠，则表明是抢杠胡
 		winType |= int(GreatWinType_RobKong)
-		var gp = 1
-		points += gp
-		s.cl.Println("GWT:RobKong:", gp)
+		s.cl.Println("GWT:RobKong")
 	}
 
-	// 天胡
+	// 天胡，庄家起手胡牌
 	if player == s.room.bankerPlayer() && player.hStatis.actionCounter == 1 && selfDrawn {
 		winType |= int(GreatWinType_Heaven)
-		var gp = 1
+		var gp = roomConfig.heavenPoint()
 		points += gp
 		s.cl.Println("GWT:Heaven:", gp)
 	}
 
-	// 暗杠胡：手牌里有3只一样的牌，同时胡第4只1样的牌。（必须自摸）
-	// 注意不是岭上开花
-	if selfDrawn && tiles.tileCountInHandOf(tiles.latestHandTile().tileID) == 4 {
-		winType |= int(GreatWinType_AfterConcealedKong)
-		var gp = 1
+	// 自杠胡：暗杠/续杠后，自摸胡牌
+	if selfDrawn && s.lctx.isSelfKong(player) {
+		winType |= int(GreatWinType_AfterConcealedKong | GreatWinType_AfterKong)
+		var gp = roomConfig.afterKongPint()
 		points += gp
 		s.cl.Println("GWT:AfterConcealedKong:", gp)
 	}
 
-	// 明杠胡：碰牌后，依然胡碰的那只牌。（必须自摸）
-	// 注意不是岭上开花
-	if selfDrawn && tiles.hasPongOf(tiles.latestHandTile().tileID) {
-		winType |= int(GreatWinType_AfterExposedKong)
-		var gp = 1
+	// 放杠胡：明杠，对手出牌放杠，自摸胡牌，对方全包
+	if selfDrawn && s.lctx.kongerOf(player, s.room) != nil {
+		winType |= int(GreatWinType_AfterExposedKong | GreatWinType_AfterKong)
+		var gp = roomConfig.afterKongPint()
 		points += gp
 		s.cl.Println("GWT:AfterExposedKong:", gp)
+	}
+
+	// 海底捞：自摸牌墙最后一张牌而胡牌
+	if s.tileMgr.wallEmpty() && selfDrawn {
+		winType |= int(GreatWinType_FinalDraw)
+		var gp = roomConfig.finalDrawPoint()
+		points += gp
+		log.Println("GWT:FinalDraw:", gp)
 	}
 
 	sc.greatWinType = winType
@@ -119,15 +135,13 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	s.cl.Printf("great win point:%d, type:%d\n", points, winType)
 }
 
-/**
-总分=N X单个输赢
-单个输赢 = 底分X (基础倍数 ）X 中马倍数
-其中：
-N表示需要付分玩家数量（有人全包时，该人付N份）；
-如果当前是2人，N最多等于1；当前3人，N最多等于2，当前4人，N最多等于3；
-基础倍数=牌型倍数之和；
-中马倍数=中马个数+1；
-*/
+// 总分=N X单个输赢
+// 单个输赢 = 底分X (基础倍数 ）X 中马倍数
+// 其中：
+// N表示需要付分玩家数量（有人全包时，该人付N份）；
+// 如果当前是2人，N最多等于1；当前3人，N最多等于2，当前4人，N最多等于3；
+// 基础倍数=牌型倍数之和；
+// 中马倍数=中马个数+1；
 func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple int) {
 	horseMultiple := (winner.sctx.horseCount + 1)
 	baseMutiple := winner.sctx.fGreatWinPoints

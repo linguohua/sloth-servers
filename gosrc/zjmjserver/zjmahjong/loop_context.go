@@ -3,8 +3,9 @@ package zjmahjong
 import (
 	"container/list"
 	"gconst"
-	log "github.com/sirupsen/logrus"
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 
 	"strings"
 	"time"
@@ -116,11 +117,6 @@ func (lc *LoopContext) kongerOf(me *PlayerHolder, room *Room) *PlayerHolder {
 		return nil
 	}
 
-	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
-		// 摸牌
-		return nil
-	}
-
 	if int(prepre.GetAction()) != int(mahjong.ActionType_enumActionType_KONG_Exposed) {
 		// 明杠
 		return nil
@@ -133,6 +129,46 @@ func (lc *LoopContext) kongerOf(me *PlayerHolder, room *Room) *PlayerHolder {
 
 	chairID := int(preprepre.GetChairID())
 	return room.getPlayerByChairID(chairID)
+}
+
+func (lc *LoopContext) isSelfKong(me *PlayerHolder) bool {
+	// 操作系列： 杠（续杠，暗杠）----摸牌----自摸胡牌
+	var cur = lc.current()
+	pre := lc.prev()
+	prepre := lc.prevprev()
+
+	if cur == nil || pre == nil || prepre == nil {
+		return false
+	}
+
+	if int(cur.GetChairID()) != me.chairID {
+		// 自己自摸
+		return false
+	}
+
+	if me.chairID != int(pre.GetChairID()) {
+		// 上一个，上上一个操作都应该是自己
+		return false
+	}
+
+	if me.chairID != int(prepre.GetChairID()) {
+		// 上一个，上上一个操作都应该是自己
+		return false
+	}
+
+	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
+		// 摸牌
+		return false
+	}
+
+	action := prepre.GetAction()
+	if int(action) != int(mahjong.ActionType_enumActionType_KONG_Concealed) &&
+		int(action) != int(mahjong.ActionType_enumActionType_KONG_Triplet2) {
+		// 续杠或者暗杠
+		return false
+	}
+
+	return true
 }
 
 func (lc *LoopContext) fetchNonUserReplyOnly(stepback int) *mahjong.SRAction {

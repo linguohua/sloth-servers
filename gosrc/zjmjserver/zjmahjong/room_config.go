@@ -2,6 +2,7 @@ package zjmahjong
 
 import (
 	"gconst"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
@@ -141,6 +142,81 @@ func newRoomConfigFromJSON(configJSON *RoomConfigJSON) *RoomConfig {
 	}
 
 	return rc
+}
+
+// 天胡倍数
+func (rc *RoomConfig) heavenPoint() int {
+	if rc.heavenX5 {
+		return 5
+	}
+
+	return 1
+}
+
+// 海底捞倍数
+func (rc *RoomConfig) finalDrawPoint() int {
+	if rc.finalDrawX2 {
+		return 2
+	}
+
+	return 1
+}
+
+// 杠爆倍数
+func (rc *RoomConfig) afterKongPint() int {
+	if rc.afterKongX2 {
+		return 2
+	}
+
+	return 1
+}
+
+func (rc *RoomConfig) pureSamePoint() int {
+	if rc.pureSameX2 {
+		return 2
+	}
+
+	return 1
+}
+
+func (rc *RoomConfig) sevenPairPoint() int {
+	if rc.sevenPairX2 {
+		return 2
+	}
+
+	return 1
+}
+
+func (rc *RoomConfig) greatSevenPairPoint() int {
+	if rc.greatSevenPairX4 {
+		return 4
+	}
+
+	return 2
+}
+
+func (rc *RoomConfig) pongPongPoint() int {
+	if rc.pongpongX2 {
+		return 2
+	}
+
+	return 1
+}
+
+func (rc *RoomConfig) thirteenOrphansPoint() int {
+	if rc.thirteenOrphanX10 {
+		return 10
+	}
+
+	return 5
+}
+
+func (rc *RoomConfig) allWinPoint() int {
+	if rc.allWindX2 {
+		return 2
+	}
+
+	return 1
 }
 
 // RoomConfigJSON 游戏房间配置

@@ -57,7 +57,8 @@ const (
 )
 
 var (
-	agariTable = make(map[int][]int)
+	agariTable      = make(map[int][]int)
+	thirteenOrphans = []int{MAN, MAN9, PIN, PIN9, SOU, SOU9, TON, NAN, SHA, PEI, HAK, HAT, CHU}
 )
 
 func calcKey(n []int, pos []int) int {
@@ -134,8 +135,28 @@ func calcKey(n []int, pos []int) int {
 	return x
 }
 
+// isAgariThirteenOrphans 国士无双（十三幺）
+func isAgariThirteenOrphans(slots []int) bool {
+	count := 0
+
+	for _, v := range thirteenOrphans {
+		if slots[v] == 0 {
+			return false
+		}
+
+		count += slots[v]
+	}
+
+	return count == 14
+}
+
 // isWinable 判断slot中包含的牌是否可以胡牌
 func isWinable(slots []int) bool {
+	// 如果是十三幺，则可以胡牌
+	if isAgariThirteenOrphans(slots) {
+		return true
+	}
+
 	key := calcKey(slots, nil)
 	_, ok := agariTable[key]
 	return ok

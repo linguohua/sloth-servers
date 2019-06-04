@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	log "github.com/sirupsen/logrus"
 	"mahjong"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/DisposaBoy/JsonConfigReader"
 )
@@ -395,7 +396,7 @@ func (mgr *MonkeyMgr) onUploadCfgs(body string) ([]*MonkeyCfg, error) {
 		}
 
 		var ttype = record[1]
-		if ttype != "大丰" {
+		if ttype != "湛江" {
 			continue
 		}
 

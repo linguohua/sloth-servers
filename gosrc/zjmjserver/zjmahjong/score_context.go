@@ -1,8 +1,9 @@
 package zjmahjong
 
 import (
-	log "github.com/sirupsen/logrus"
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ScoreContext 得分计算
@@ -25,7 +26,8 @@ type PlayerScoreContext struct {
 }
 
 func (sc *ScoreContext) isWin() bool {
-	return sc.winType == int(mahjong.HandOverType_enumHandOverType_Win_Chuck) || sc.winType == int(mahjong.HandOverType_enumHandOverType_Win_SelfDrawn)
+	return sc.winType == int(mahjong.HandOverType_enumHandOverType_Win_Chuck) ||
+		sc.winType == int(mahjong.HandOverType_enumHandOverType_Win_SelfDrawn)
 }
 
 func (sc *ScoreContext) initPlayerScoreContext(orderPlayers []*PlayerHolder) {
