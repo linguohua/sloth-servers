@@ -2,7 +2,7 @@ package zjmahjong
 
 import (
 	"container/list"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 )
 
@@ -58,9 +58,8 @@ func analyseTaskDiscardReaction(s *SPlaying, orderPlayers []*PlayerHolder, lates
 				action |= int(mahjong.ActionType_enumActionType_KONG_Exposed)
 			}
 
-			// 如果在再次摸牌/出牌之前已经不碰同一样牌，则现在也不能碰：
-			// 例如C打出B可以碰的牌，B不碰，然后D打出同样的牌，B此时不能碰
-			if latestDiscardedTile.tileID != player.hStatis.pongAbleTileLocked && tiles.pongAbleWith(latestDiscardedTile) {
+			// 是否可以碰
+			if tiles.pongAbleWith(latestDiscardedTile) {
 				action |= int(mahjong.ActionType_enumActionType_PONG)
 			}
 		}
@@ -68,16 +67,11 @@ func analyseTaskDiscardReaction(s *SPlaying, orderPlayers []*PlayerHolder, lates
 		player.expectedAction = action
 	}
 
-	// 只有下家才可以吃牌
-	// 报听后不能吃椪杠，只能胡和摸牌，打牌的话只能打摸到的牌
-	// 最后一次打出去的牌不能跟本次要吃的牌相同
-	// 如果在再次摸牌/出牌之前已经不吃同一样牌，则现在也不能吃：
-	// 例如A打出B可以吃的牌，B不吃，D碰，轮到A继续出同样的牌，B此时不能吃
-	// 需求变更：必须牌墙还有牌，才可以吃椪杠
-	var p = orderPlayers[0]
-	if !p.hStatis.isRichi && s.tileMgr.tileCountInWall() > 0 && p.tiles.chowAbleWith(latestDiscardedTile) {
-		p.expectedAction |= int(mahjong.ActionType_enumActionType_CHOW)
-	}
+	// 湛江麻将没有吃牌
+	// var p = orderPlayers[0]
+	// if !p.hStatis.isRichi && s.tileMgr.tileCountInWall() > 0 && p.tiles.chowAbleWith(latestDiscardedTile) {
+	// 	p.expectedAction |= int(mahjong.ActionType_enumActionType_CHOW)
+	// }
 
 	var found = false
 	for _, v := range orderPlayers {
@@ -309,12 +303,12 @@ func (tdr *TaskPlayerReAction) takeAction(player *PlayerHolder, action int, msgM
 			player.userID())
 	}
 
-	if 0 != (wi.actions&int(mahjong.ActionType_enumActionType_PONG)) &&
-		action == int(mahjong.ActionType_enumActionType_SKIP) {
-		// 只考虑过手碰/漏碰的情况，吃是不考虑的
-		// 可以碰却选择过的人，在本人重新出牌之前不可以再碰其他人的牌
-		player.hStatis.pongAbleTileLocked = tdr.actionTile.tileID
-	}
+	//if 0 != (wi.actions&int(mahjong.ActionType_enumActionType_PONG)) &&
+	// action == int(mahjong.ActionType_enumActionType_SKIP) {
+	// 只考虑过手碰/漏碰的情况，吃是不考虑的
+	// 可以碰却选择过的人，在本人重新出牌之前不可以再碰其他人的牌
+	// player.hStatis.pongAbleTileLocked = tdr.actionTile.tileID
+	// }
 
 	// 增加动作计数器
 	player.hStatis.actionCounter++

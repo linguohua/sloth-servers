@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 	"net/http"
 	"os"

@@ -3,7 +3,7 @@ package zjmahjong
 import (
 	"container/list"
 	"gconst"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 
 	"strings"
@@ -80,6 +80,61 @@ func (lc *LoopContext) isRobKong() bool {
 	return false
 }
 
+func (lc *LoopContext) kongerOf(me *PlayerHolder, room *Room) *PlayerHolder {
+	// 操作系列： 打牌---杠----摸牌----自摸胡牌
+	var cur = lc.current()
+	pre := lc.prev()
+	prepre := lc.prevprev()
+	preprepre := lc.fetchNonUserReplyOnly(3)
+
+	if cur == nil || pre == nil || prepre == nil || preprepre == nil {
+		return nil
+	}
+
+	if int(cur.GetChairID()) != me.chairID {
+		// 自己自摸
+		return nil
+	}
+
+	if me.chairID != int(pre.GetChairID()) {
+		// 上一个，上上一个操作都应该是自己
+		return nil
+	}
+
+	if me.chairID != int(prepre.GetChairID()) {
+		// 上一个，上上一个操作都应该是自己
+		return nil
+	}
+
+	if me.chairID == int(preprepre.GetChairID()) {
+		// 打牌者不能是自己
+		return nil
+	}
+
+	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
+		// 摸牌
+		return nil
+	}
+
+	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
+		// 摸牌
+		return nil
+	}
+
+	if int(prepre.GetAction()) != int(mahjong.ActionType_enumActionType_KONG_Exposed) {
+		// 明杠
+		return nil
+	}
+
+	if int(preprepre.GetAction()) != int(mahjong.ActionType_enumActionType_DISCARD) {
+		// 打牌
+		return nil
+	}
+
+	chairID := int(preprepre.GetChairID())
+	return room.getPlayerByChairID(chairID)
+}
+
 func (lc *LoopContext) fetchNonUserReplyOnly(stepback int) *mahjong.SRAction {
 	var step = 0
 	for e := lc.actionList.Back(); e != nil; e = e.Prev() {
@@ -117,208 +172,6 @@ func (lc *LoopContext) prev() *mahjong.SRAction {
 
 func (lc *LoopContext) prevprev() *mahjong.SRAction {
 	return lc.fetchNonUserReplyOnly(2)
-}
-
-// isMyKong2Discarded 我杠牌然后出牌
-func (lc *LoopContext) isMyKong2Discarded(me *PlayerHolder) bool {
-	cur := lc.fetchNonUserReplyOnly(0)    // 我出的牌
-	pre := lc.fetchNonUserReplyOnly(1)    // 我摸牌
-	prepre := lc.fetchNonUserReplyOnly(2) // 我杠牌
-
-	if cur == nil || pre == nil || prepre == nil {
-		return false
-	}
-
-	// 我 杠----摸牌----出牌
-	if int(cur.GetChairID()) != me.chairID {
-		// 这不是杠牌，因为杠牌后一定摸牌
-		return false
-	}
-
-	if cur.GetChairID() != pre.GetChairID() || cur.GetChairID() != prepre.GetChairID() {
-		return false
-	}
-
-	if int(cur.GetAction()) != int(mahjong.ActionType_enumActionType_DISCARD) {
-		return false
-	}
-
-	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
-		return false
-	}
-
-	kongFootprintAction := int(prepre.GetAction())
-	if kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Exposed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Concealed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Triplet2) {
-		return false
-	}
-
-	return true
-}
-
-func (lc *LoopContext) isMyDrawAndGotFlower2Discarded(me *PlayerHolder) bool {
-	cur := lc.fetchNonUserReplyOnly(0) // 我出的牌
-	pre := lc.fetchNonUserReplyOnly(1) // 我摸牌
-
-	if cur == nil || pre == nil {
-		return false
-	}
-
-	// 我 摸牌----出牌
-	if int(cur.GetChairID()) != me.chairID {
-		// 这不是我自己
-		return false
-	}
-
-	if cur.GetChairID() != pre.GetChairID() {
-		return false
-	}
-
-	if int(cur.GetAction()) != int(mahjong.ActionType_enumActionType_DISCARD) {
-		return false
-	}
-
-	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
-		return false
-	}
-
-	// 看看是否包含花牌
-	drawTileList := pre.Tiles
-	for _, tid := range drawTileList {
-		if lc.s.room.isFlowerTile(int(tid)) {
-			return true
-		}
-	}
-	return false
-}
-
-// isXKong2Discarded 用于小胡的杠冲x2，别人杠牌或者补花后摸牌并出牌，导致其他玩家胡牌
-func (lc *LoopContext) isXKong2Discarded(me *PlayerHolder) bool {
-	// 首先从动作队列尾部开始，往回跳过胡牌的动作
-	var stepback = 0
-	for e := lc.actionList.Back(); e != nil; e = e.Prev() {
-		a := e.Value.(*mahjong.SRAction)
-
-		if a.GetFlags()&int32(mahjong.SRFlags_SRUserReplyOnly) != 0 {
-			continue
-		}
-
-		if int(a.GetAction()) != int(mahjong.ActionType_enumActionType_WIN_Chuck) {
-			break
-		}
-		stepback++
-	}
-
-	cur := lc.fetchNonUserReplyOnly(stepback)        // 这个是放铳者出牌
-	pre := lc.fetchNonUserReplyOnly(stepback + 1)    // 这个是放铳者摸牌
-	prepre := lc.fetchNonUserReplyOnly(stepback + 2) // 这个是放铳者杠牌
-
-	if cur == nil || pre == nil {
-		return false
-	}
-
-	// 别人 杠----摸牌----出牌
-	if int(cur.GetChairID()) == me.chairID {
-		// 这是自摸，不是放铳
-		return false
-	}
-
-	if cur.GetChairID() != pre.GetChairID() {
-		return false
-	}
-
-	if int(cur.GetAction()) != int(mahjong.ActionType_enumActionType_DISCARD) {
-		return false
-	}
-
-	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
-		return false
-	}
-
-	// 看看是否包含花牌
-	drawTileList := pre.Tiles
-	for _, tid := range drawTileList {
-		if lc.s.room.isFlowerTile(int(tid)) {
-			return true
-		}
-	}
-
-	if prepre == nil {
-		return false
-	}
-
-	if cur.GetChairID() != prepre.GetChairID() {
-		// 不是同一个人
-		return false
-	}
-
-	kongFootprintAction := int(prepre.GetAction())
-	if kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Exposed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Concealed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Triplet2) {
-		return false
-	}
-
-	return true
-}
-
-// isXKong2SelfDraw 用于小胡的杠开X2，也即是自己杠牌后自摸胡牌，或者补花后胡牌，岭上开花
-func (lc *LoopContext) isXKong2SelfDraw(me *PlayerHolder) bool {
-	// 操作系列： 杠----摸牌----自摸胡牌
-	var cur = lc.current()
-	pre := lc.prev()
-	prepre := lc.prevprev()
-
-	if cur == nil || pre == nil {
-		return false
-	}
-
-	if int(cur.GetChairID()) != me.chairID {
-		// 自己自摸
-		return false
-	}
-
-	if cur.GetChairID() != pre.GetChairID() {
-		// 上一个，上上一个操作都应该是自己
-		return false
-	}
-
-	if int(cur.GetAction()) != int(mahjong.ActionType_enumActionType_WIN_SelfDrawn) {
-		// 自摸胡牌
-		return false
-	}
-
-	if int(pre.GetAction()) != int(mahjong.ActionType_enumActionType_DRAW) {
-		// 摸牌
-		return false
-	}
-
-	// 看看是否包含花牌
-	drawTileList := pre.Tiles
-	for _, tid := range drawTileList {
-		if lc.s.room.isFlowerTile(int(tid)) {
-			return true
-		}
-	}
-
-	if prepre == nil {
-		return false
-	}
-
-	if cur.GetChairID() != prepre.GetChairID() {
-		return false
-	}
-
-	kongFootprintAction := int(prepre.GetAction())
-	// 杠牌
-	if kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Exposed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Concealed) &&
-		kongFootprintAction != int(mahjong.ActionType_enumActionType_KONG_Triplet2) {
-		return false
-	}
-
-	return true
 }
 
 func unixTimeInMinutes() uint32 {

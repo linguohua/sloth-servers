@@ -1,5 +1,9 @@
 package zjmahjong
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 var (
 	// InvalidTile 无效的Tile对象
 	InvalidTile *Tile
@@ -54,6 +58,46 @@ func (t *Tile) suitType() int {
 		return SOU
 	}
 
+	return 0
+}
+
+/*
+1码：1、5、9、东
+2码：2、6、南、中
+3码：3、7、西、发
+4码：4、8、北、白
+*/
+func (t *Tile) horseType() int {
+	if t.isSuit() {
+		rank := t.tileID%9 + 1
+		switch rank {
+		case 1, 5, 9:
+			return 1
+		case 2, 6:
+			return 2
+		case 3, 7:
+			return 3
+		case 4, 8:
+			return 4
+		}
+	}
+
+	if t.isWind() {
+		switch t.tileID {
+		case TON:
+			return 1
+		case NAN, CHU:
+			return 2
+		case SHA, HAT:
+			return 3
+		case PEI, HAK:
+			return 4
+		}
+	}
+
+	log.Fatal("horseType failed, invalid tileID:", t.tileID)
+
+	// 无效的马类型
 	return 0
 }
 

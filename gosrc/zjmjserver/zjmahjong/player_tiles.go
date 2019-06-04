@@ -2,7 +2,7 @@ package zjmahjong
 
 import (
 	"container/list"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 )
 

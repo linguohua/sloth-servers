@@ -5,7 +5,6 @@ type HStatis struct {
 	// locked
 	latestDiscardedTileLocked *Tile // 用于锁定自己刚打出的牌不能立即吃进来、碰进来
 	latestChowPongTileLocked  *Tile // 用于锁定刚吃，碰进来的牌，不能立即打出同样的牌
-	pongAbleTileLocked        int   // 用于锁定可以碰但选择过则不能再次碰其他玩家同样的牌，实现过手碰
 	isWinAbleLocked           bool  // 用于锁定过手胡，例如玩家可胡3万，6万，他摸到3万可以胡可是他选择过并打出3万，其他人打6万他也不可以吃铳胡
 
 	isRichi bool
@@ -27,7 +26,6 @@ func (hs *HStatis) reset() {
 func (hs *HStatis) resetLocked() {
 	hs.latestChowPongTileLocked = InvalidTile
 	hs.latestDiscardedTileLocked = InvalidTile
-	hs.pongAbleTileLocked = TILEMAX
 	hs.isWinAbleLocked = false
 }
 

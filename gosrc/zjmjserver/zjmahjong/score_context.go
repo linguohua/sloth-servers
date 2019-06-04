@@ -1,7 +1,7 @@
 package zjmahjong
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 )
 
@@ -10,7 +10,8 @@ type ScoreContext struct {
 	winType int
 
 	greatWinType    int
-	fGreatWinPoints float32
+	fGreatWinPoints int
+	horseCount      int
 
 	isContinuousBanker bool
 	orderPlayerSctxs   []*PlayerScoreContext
@@ -19,8 +20,7 @@ type ScoreContext struct {
 // PlayerScoreContext 与每一个玩家的分数关系
 type PlayerScoreContext struct {
 	target        *PlayerHolder
-	totalWinScore int // 总分整数即可，不需要浮点数
-	fakeWinScore  int
+	totalWinScore int  // 总分整数即可，不需要浮点数
 	hasClear      bool // 是否两清了
 }
 
@@ -54,17 +54,6 @@ func (sc *ScoreContext) calcTotalWinScore() int {
 	for _, pc := range sc.orderPlayerSctxs {
 		if pc != nil {
 			sum += pc.totalWinScore
-		}
-	}
-
-	return sum
-}
-
-func (sc *ScoreContext) calcTotalFakeScore() int {
-	sum := 0
-	for _, pc := range sc.orderPlayerSctxs {
-		if pc != nil {
-			sum += pc.fakeWinScore
 		}
 	}
 

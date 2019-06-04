@@ -2,7 +2,7 @@ package zjmahjong
 
 import (
 	"gconst"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 
 	"github.com/garyburd/redigo/redis"

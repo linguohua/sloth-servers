@@ -1,15 +1,17 @@
 package zjmahjong
 
-import "mahjong"
+import (
+	"mahjong"
+)
 
 // calcGreatWinTileType 计算跟行牌无关的牌型大胡
 // 1.清一色
 // 2.混一色
 // 3.碰碰胡
 // 4.七对
-func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, float32) {
+func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, int) {
 	var tiles = player.tiles
-	var points float32
+	var points int
 	var winType = 0
 	if tiles.suitTypeCount() == 1 {
 		if tiles.honorTypeCount() > 0 {
@@ -20,7 +22,7 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, float32) {
 				if tiles.flowerTileCount() == 0 {
 					// 清一色：一色牌组成的胡牌。
 					winType |= int(GreatWinType_PureSame)
-					var gp = float32(1.0)
+					var gp = 1
 					points += gp
 					s.cl.Println("GWT:PureSame:", gp)
 				}
@@ -33,13 +35,13 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, float32) {
 	switch st {
 	case GreatWinType_GreatSevenPair:
 		winType |= int(GreatWinType_GreatSevenPair)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:GreatSevenPair:", gp)
 		break
 	case GreatWinType_SevenPair:
 		winType |= int(GreatWinType_SevenPair)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:SevenPair:", gp)
 		break
@@ -63,7 +65,7 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, float32) {
 // 明杠胡：直杠名牌后，摸牌产生胡牌。
 // 起手报听胡牌：起手报听，报听后胡牌。
 func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
-	var points float32
+	var points int
 	var winType = 0
 	var tiles = player.tiles
 	sc := player.sctx
@@ -80,7 +82,7 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	if !selfDrawn && s.lctx.isRobKong() {
 		// 如果是最后动作是加杠，则表明是抢杠胡
 		winType |= int(GreatWinType_RobKong)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:RobKong:", gp)
 	}
@@ -88,7 +90,7 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	// 天胡
 	if player == s.room.bankerPlayer() && player.hStatis.actionCounter == 1 && selfDrawn {
 		winType |= int(GreatWinType_Heaven)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:Heaven:", gp)
 	}
@@ -97,7 +99,7 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	// 注意不是岭上开花
 	if selfDrawn && tiles.tileCountInHandOf(tiles.latestHandTile().tileID) == 4 {
 		winType |= int(GreatWinType_AfterConcealedKong)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:AfterConcealedKong:", gp)
 	}
@@ -106,7 +108,7 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	// 注意不是岭上开花
 	if selfDrawn && tiles.hasPongOf(tiles.latestHandTile().tileID) {
 		winType |= int(GreatWinType_AfterExposedKong)
-		var gp = float32(1.0)
+		var gp = 1
 		points += gp
 		s.cl.Println("GWT:AfterExposedKong:", gp)
 	}
@@ -114,54 +116,31 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	sc.greatWinType = winType
 	sc.fGreatWinPoints = points
 
-	s.cl.Printf("great win point:%f, type:%d\n", points, winType)
+	s.cl.Printf("great win point:%d, type:%d\n", points, winType)
 }
 
-func calcPay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room) int {
-	room.cl.Printf("calcPay2Winner, loser %d, winner %d\n", loser.chairID, winner.chairID)
+/**
+总分=N X单个输赢
+单个输赢 = 底分X (基础倍数 ）X 中马倍数
+其中：
+N表示需要付分玩家数量（有人全包时，该人付N份）；
+如果当前是2人，N最多等于1；当前3人，N最多等于2，当前4人，N最多等于3；
+基础倍数=牌型倍数之和；
+中马倍数=中马个数+1；
+*/
+func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple int) {
+	horseMultiple := (winner.sctx.horseCount + 1)
+	baseMutiple := winner.sctx.fGreatWinPoints
 
-	score2Pay := 0
+	score2Pay := room.config.baseScore * baseMutiple * horseMultiple
 
-	return score2Pay
-}
-
-func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room) {
-
-	score2Pay := calcPay2Winner(loser, winner, room)
+	room.cl.Printf("pay2Winner, score2Pay:%d = baseScore:%d X baseMutiple:%d X horseMultiple:%d\n",
+		score2Pay, room.config.baseScore, baseMutiple, horseMultiple)
 
 	loser.sctx.getPayTarget(winner).totalWinScore -= score2Pay
 	winner.sctx.getPayTarget(loser).totalWinScore += score2Pay
 
 	room.cl.Printf("loser:%d pay score %d 2 winner %d\n", loser.chairID, score2Pay, winner.chairID)
-}
-
-// calcFinalResultSelfDraw 计算自摸胡牌时的得分结果
-func calcFinalResultSelfDraw(s *SPlaying, winner *PlayerHolder) {
-	s.cl.Printf("calcFinalResultSelfDraw, winner chairID:%d, userID:%s\n", winner.chairID, winner.userID())
-	for _, p := range s.players {
-		p.sctx = &ScoreContext{}
-		p.sctx.initPlayerScoreContext(s.tileMgr.getOrderPlayers(p))
-	}
-
-	// 自摸胡牌只有一个赢牌者
-	winner.sctx.winType = int(mahjong.HandOverType_enumHandOverType_Win_SelfDrawn)
-
-	// 计算大小胡
-	basicScoreCalc(s, winner, true)
-
-	// 其他人各自付分
-	for _, p := range s.players {
-		if p == winner {
-			continue
-		}
-
-		pay2Winner(p, winner, s.room)
-	}
-
-	orderPlayers := make([]*PlayerHolder, 0, len(s.players))
-	orderPlayers = append(orderPlayers, winner)
-	orderPlayers = append(orderPlayers, s.tileMgr.getOrderPlayers(winner)...)
-	doFinalPay(s, orderPlayers)
 }
 
 // collectMyEarn 直接地收取某个玩家所赢的钱，如果输家不够，输家就进入保护状态，而不为输家去收取其他人的钱
@@ -195,14 +174,6 @@ func loseProtectPay(s *SPlaying, winner *PlayerHolder, loser *PlayerHolder, pc *
 // doFinalPay 最终计分，orderPlayers赢家按照逆时针排在前端
 func doFinalPay(s *SPlaying, orderPlayers []*PlayerHolder) {
 	s.cl.Println("doFinalPay")
-	// 汇总包牌得失分
-	for _, p := range orderPlayers {
-		for _, pc := range p.sctx.orderPlayerSctxs {
-			if pc.fakeWinScore != 0 {
-				pc.totalWinScore += pc.fakeWinScore
-			}
-		}
-	}
 
 	// 检查玩家得分者
 	for _, p := range orderPlayers {
@@ -258,7 +229,7 @@ func calcFinalResultWithChucker(s *SPlaying, chucker *PlayerHolder) {
 		}
 
 		var winner = p
-		pay2Winner(chucker, winner, s.room)
+		pay2Winner(chucker, winner, s.room, 1)
 	}
 
 	orderPlayers := make([]*PlayerHolder, 0, len(s.players))
@@ -277,5 +248,68 @@ func calcFinalResultWithChucker(s *SPlaying, chucker *PlayerHolder) {
 
 	orderPlayers = append(orderPlayers, chucker)
 
+	doFinalPay(s, orderPlayers)
+}
+
+// 计算中马
+func calcHorse(winner *PlayerHolder, s *SPlaying) {
+	lastTile := winner.tiles.latestHandTile()
+	horseType := lastTile.horseType()
+	horseCount := s.room.config.horseCount
+
+	horseTileMatchCount := 0
+	horseTiles := s.tileMgr.drawHorseTiles(horseCount)
+
+	for _, ht := range horseTiles {
+		if ht.horseType() == horseType {
+			horseTileMatchCount++
+		}
+	}
+
+	// 保存中马个数
+	winner.sctx.horseCount = horseTileMatchCount
+	s.cl.Printf("winner:%s, horseTileMatchCount:%d", winner.userID(), horseTileMatchCount)
+}
+
+// calcFinalResultSelfDraw 计算自摸胡牌时的得分结果
+func calcFinalResultSelfDraw(s *SPlaying, winner *PlayerHolder) {
+	s.cl.Printf("calcFinalResultSelfDraw, winner chairID:%d, userID:%s\n", winner.chairID, winner.userID())
+	for _, p := range s.players {
+		p.sctx = &ScoreContext{}
+		p.sctx.initPlayerScoreContext(s.tileMgr.getOrderPlayers(p))
+	}
+
+	// 自摸胡牌只有一个赢牌者
+	winner.sctx.winType = int(mahjong.HandOverType_enumHandOverType_Win_SelfDrawn)
+	sctx := winner.sctx
+	roomConfig := s.room.config
+
+	// 计算大小胡
+	basicScoreCalc(s, winner, true)
+
+	isAfterExposedKong := (sctx.greatWinType&(int(GreatWinType_AfterExposedKong)) != 0)
+	isKongerPayForAll := isAfterExposedKong && roomConfig.afterKongChuckerPayForAll
+
+	// 计算中马
+	calcHorse(winner, s)
+
+	if isKongerPayForAll {
+		// 一人支付
+		konger := s.lctx.kongerOf(winner, s.room)
+		pay2Winner(konger, winner, s.room, len(s.players)-1)
+	} else {
+		// 其他人各自付分
+		for _, p := range s.players {
+			if p == winner {
+				continue
+			}
+
+			pay2Winner(p, winner, s.room, 1)
+		}
+	}
+
+	orderPlayers := make([]*PlayerHolder, 0, len(s.players))
+	orderPlayers = append(orderPlayers, winner)
+	orderPlayers = append(orderPlayers, s.tileMgr.getOrderPlayers(winner)...)
 	doFinalPay(s, orderPlayers)
 }

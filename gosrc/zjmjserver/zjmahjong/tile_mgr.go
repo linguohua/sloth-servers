@@ -649,6 +649,25 @@ func (tm *TileMgr) drawForMonkeys() {
 	}
 }
 
+// 抽取马牌
+func (tm *TileMgr) drawHorseTiles(horseTileCount int) []*Tile {
+	tiles := make([]*Tile, 0, horseTileCount)
+
+	remain := tm.tileCountInWall()
+	if horseTileCount > remain {
+		horseTileCount = remain
+	}
+
+	for i := 0; i < horseTileCount; i++ {
+		var t = tm.drawOne()
+		nt := &Tile{drawBy: "", tileID: t.tileID}
+
+		tiles = append(tiles, nt)
+	}
+
+	return tiles
+}
+
 // padPlayerTiles 如果玩家的手牌不足够13张则为其抽牌补足
 func (tm *TileMgr) padPlayerTiles(player *PlayerHolder) {
 	var total = 13

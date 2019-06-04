@@ -1,6 +1,6 @@
 package zjmahjong
 
-import "log"
+import log "github.com/sirupsen/logrus"
 
 // MonkeyCfg 测试用
 type MonkeyCfg struct {

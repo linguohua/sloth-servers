@@ -1,7 +1,7 @@
 package zjmahjong
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"mahjong"
 )
 
@@ -510,7 +510,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 		msgPlayerScore.Score = &score32
 		var specialScore32 = int32(0) // 湛江麻将不用
 		msgPlayerScore.SpecialScore = &specialScore32
-		var fakeWinScore32 = int32(sc.calcTotalFakeScore())
+		var fakeWinScore32 = int32(0)
 		msgPlayerScore.FakeWinScore = &fakeWinScore32
 
 		msgPlayerScore.IsContinuousBanker = &sc.isContinuousBanker

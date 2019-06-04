@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"gscfg"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"runtime/pprof"

@@ -1,7 +1,7 @@
 package zjmahjong
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"runtime/debug"
 	"time"
 )

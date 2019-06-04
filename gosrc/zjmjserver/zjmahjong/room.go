@@ -5,7 +5,7 @@ import (
 	"gconst"
 	"gpubsub"
 	"gscfg"
-	"log"
+	"github.com/sirupsen/logrus"
 	"mahjong"
 	"math/rand"
 	"sort"
@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/sirupsen/logrus"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
@@ -1032,7 +1031,7 @@ func sendEnterRoomError(ws *websocket.Conn, userID string, status mahjong.EnterR
 	if ws != nil {
 		ws.WriteMessage(websocket.BinaryMessage, buf)
 	} else {
-		log.Println("sendEnterRoomError, ws == nil")
+		logrus.Println("sendEnterRoomError, ws == nil")
 	}
 }
 
