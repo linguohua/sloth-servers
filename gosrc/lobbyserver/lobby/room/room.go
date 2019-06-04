@@ -36,6 +36,6 @@ func InitWith() {
 	// lobby.AccUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo // 拉取用户最后所在的房间
 	lobby.RegHTTPHandle("GET", "/deleteRoom", handlerDeleteRoom)          // 删除房间
 	lobby.RegHTTPHandle("POST", "/createClubRoom", handlerCreateClubRoom) // 创建牌友圈房间
-	lobby.RegHTTPHandle("POST", "/loadClubRooms", handlerLoadClubRooms)   // 拉取牌友圈房间
-	lobby.RegHTTPHandle("POST", "/deleteClubRoom", handlerDeleteClubRoom) // 删除牌友圈房间
+	lobby.RegHTTPHandle("GET", "/loadClubRooms", handlerLoadClubRooms)   // 拉取牌友圈房间
+	lobby.RegHTTPHandle("GET", "/deleteClubRoom", handlerDeleteClubRoom) // 删除牌友圈房间
 }
