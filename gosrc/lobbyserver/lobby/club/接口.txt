@@ -96,3 +96,9 @@ tk 是token
 clubID 是牌友圈ID
 
 返回：lobby.MsgDeleteRoomReply
+
+12. 拉取自己的申请记录
+url: /lobby/uuid/loadMyApplyEvent?tk=xxx&
+tk 是token
+
+返回：MsgClubLoadEventsReply

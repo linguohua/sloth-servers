@@ -32,7 +32,7 @@ func (*myRoomUtil) ForceDeleteRoom(roomID string) (errCode int32) {
 func InitWith() {
 	lobby.SetRoomUtil(roomUtil)
 	lobby.RegHTTPHandle("POST", "/createRoom", handlerCreateRoom)
-	lobby.RegHTTPHandle("POST", "/requestRoomInfo", handlerRequestRoomInfo)
+	lobby.RegHTTPHandle("GET", "/requestRoomInfo", handlerRequestRoomInfo)
 	// lobby.AccUserIDHTTPHandlers["/loadLastRoomInfo"] = handlerLoadLastRoomInfo // 拉取用户最后所在的房间
 	lobby.RegHTTPHandle("GET", "/deleteRoom", handlerDeleteRoom)          // 删除房间
 	lobby.RegHTTPHandle("POST", "/createClubRoom", handlerCreateClubRoom) // 创建牌友圈房间
