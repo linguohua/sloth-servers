@@ -61,42 +61,13 @@ func weiXinPlusUserInfo2UserInof(wxUserInfo *wechat.WeiXinUserPlusInfo) *lobby.U
 }
 
 func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	loginReply := &lobby.MsgLoginReply{}
-
-	// wechatCode := r.URL.Query().Get("code")
-	// encrypteddata := r.URL.Query().Get("encrypteddata")
-	// iv := r.URL.Query().Get("iv")
-
-	// if wechatCode == "" {
-	// 	errCode := int32(lobby.LoginError_ErrParamInvalidCode)
-	// 	loginReply.Result = &errCode
-	// 	replyWxLogin(w, loginReply)
-
-	// 	return
-	// }
-
-	// if encrypteddata == "" {
-	// 	errCode := int32(lobby.LoginError_ErrParamInvalidEncrypteddata)
-	// 	loginReply.Result = &errCode
-	// 	replyWxLogin(w, loginReply)
-
-	// 	return
-	// }
-
-	// if iv == "" {
-	// 	errCode := int32(lobby.LoginError_ErrParamInvalidIv)
-	// 	loginReply.Result = &errCode
-	// 	replyWxLogin(w, loginReply)
-
-	// 	return
-	// }
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println("handlerCreateRoom error:", err)
 		return
 	}
 
+	loginReply := &lobby.MsgLoginReply{}
 	wxLogin := &lobby.MsgWxLogin{}
 	err = proto.Unmarshal(body, wxLogin)
 	if err != nil {
