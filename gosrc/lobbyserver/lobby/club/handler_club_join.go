@@ -117,7 +117,7 @@ func newApplicateEvent(clubID string, applicantUserID string, owner string) {
 	evtType32 := int32(ClubEventType_CEVT_NewApplicant)
 	clubEvent.EvtType = &evtType32
 	clubEvent.To = &owner
-	generatedTime32 := uint32(time.Since(time2010).Seconds())
+	generatedTime32 := uint32(time.Now().Unix()) //uint32(time.Since(time2010).Seconds())
 	clubEvent.GeneratedTime = &generatedTime32
 	needHandle := true // 申请事件是需要处理的
 	clubEvent.NeedHandle = &needHandle
