@@ -3,10 +3,12 @@ package auth
 import (
 	"fmt"
 	"gconst"
+	"io/ioutil"
 	"lobbyserver/lobby"
 	"lobbyserver/wechat"
 	"net/http"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,68 +49,116 @@ func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {
 	saveUserInfo2Redis(userInfo)
 }
 
-func loadUserInfoFromWeChatServer(wechatCode string) (*lobby.UserInfo, error) {
-	// 根据code去微信服务器拉取access_token和openID
-	accessTokenReply, err := wechat.LoadAccessTokenFromWeChatServer(wechatCode)
-	if err != nil {
-		log.Panicln("loadAccessTokenFromWeChatServer err:", err)
-		return nil, err
-	}
-
-	// 检查结果
-	if accessTokenReply.ErrorCode != 0 {
-		log.Panicf("loadAccessTokenFromWeChatServer, wechat server reply error code:%d, msg:%s\n",
-			accessTokenReply.ErrorCode, accessTokenReply.ErrorMsg)
-		return nil, fmt.Errorf("load access token from wechat server failed, error code:%d", accessTokenReply.ErrorCode)
-	}
-
-	// 根据access token拉取用户信息
-	userInfoReply, err := wechat.LoadUserInfoFromWeChatServer(accessTokenReply.AcessToken, accessTokenReply.OpenID)
-	if err != nil {
-		log.Panicln("loadUserInfoFromWeChatServer err:", err)
-		return nil, err
-	}
-
-	// 检查结果
-	if userInfoReply.ErrorCode != 0 {
-		log.Panicf("loadUserInfoFromWeChatServer, wechat server reply error code:%d, msg:%s\n",
-			userInfoReply.ErrorCode, userInfoReply.ErrorMsg)
-		return nil, fmt.Errorf("load userInfo from wechat server failed, error code:%d", accessTokenReply.ErrorCode)
-	}
-
+func weiXinPlusUserInfo2UserInof(wxUserInfo *wechat.WeiXinUserPlusInfo) *lobby.UserInfo {
 	userInfo := &lobby.UserInfo{}
-	userInfo.OpenID = &userInfoReply.OpenID
-	userInfo.NickName = &userInfoReply.NickName
-	sexUint32 := uint32(userInfoReply.Gender)
-	userInfo.Gender = &sexUint32
-	userInfo.Province = &userInfoReply.Province
-	userInfo.City = &userInfoReply.City
-	userInfo.Country = &userInfoReply.Country
-	userInfo.HeadImgUrl = &userInfoReply.HeadImgURL
+	userInfo.OpenID = &wxUserInfo.OpenID
+	userInfo.NickName = &wxUserInfo.NickName
+	gender := uint32(wxUserInfo.Gender)
+	userInfo.Gender = &gender
+	userInfo.HeadImgUrl = &wxUserInfo.AvatarURL
 
-	return userInfo, nil
+	return userInfo
 }
 
 func handlerWxLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	loginReply := &lobby.MsgLoginReply{}
 
-	wechatCode := r.URL.Query().Get("code")
-	if wechatCode == "" {
-		errCode := int32(lobby.LoginError_ErrParamWechatCodeIsEmpty)
-		loginReply.Result = &errCode
-		replyWxLogin(w, loginReply)
+	// wechatCode := r.URL.Query().Get("code")
+	// encrypteddata := r.URL.Query().Get("encrypteddata")
+	// iv := r.URL.Query().Get("iv")
 
-		return
-	}
+	// if wechatCode == "" {
+	// 	errCode := int32(lobby.LoginError_ErrParamInvalidCode)
+	// 	loginReply.Result = &errCode
+	// 	replyWxLogin(w, loginReply)
 
-	userInfo, err := loadUserInfoFromWeChatServer(wechatCode)
+	// 	return
+	// }
+
+	// if encrypteddata == "" {
+	// 	errCode := int32(lobby.LoginError_ErrParamInvalidEncrypteddata)
+	// 	loginReply.Result = &errCode
+	// 	replyWxLogin(w, loginReply)
+
+	// 	return
+	// }
+
+	// if iv == "" {
+	// 	errCode := int32(lobby.LoginError_ErrParamInvalidIv)
+	// 	loginReply.Result = &errCode
+	// 	replyWxLogin(w, loginReply)
+
+	// 	return
+	// }
+
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		errCode := int32(lobby.LoginError_ErrLoadWechatUserInfoFailed)
+		log.Println("handlerCreateRoom error:", err)
+		return
+	}
+
+	wxLogin := &lobby.MsgWxLogin{}
+	err = proto.Unmarshal(body, wxLogin)
+	if err != nil {
+		log.Println("handlerWxLogin, Unmarshal err:", err)
+		errCode := int32(lobby.LoginError_ErrParamDecode)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+		return
+	}
+
+	if wxLogin.GetCode() == "" {
+		errCode := int32(lobby.LoginError_ErrParamInvalidCode)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+		return
+	}
+
+	if wxLogin.GetEncrypteddata() == "" {
+		errCode := int32(lobby.LoginError_ErrParamInvalidEncrypteddata)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+		return
+	}
+
+	if wxLogin.GetIv() == "" {
+		errCode := int32(lobby.LoginError_ErrParamInvalidIv)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+		return
+	}
+
+	accessTokenReply, err := wechat.LoadAccessTokenFromWeChatServer(wxLogin.GetCode())
+	if err != nil {
+		log.Panicln("handlerWxLogin loadAccessTokenFromWeChatServer err:", err)
+		errCode := int32(lobby.LoginError_ErrWxAuthFailed)
 		loginReply.Result = &errCode
 		replyWxLogin(w, loginReply)
 
 		return
 	}
+
+	// 检查结果
+	if accessTokenReply.ErrorCode != 0 {
+		log.Errorf("loadAccessTokenFromWeChatServer, wechat server reply error code:%d, msg:%s\n", accessTokenReply.ErrorCode, accessTokenReply.ErrorMsg)
+		errCode := int32(lobby.LoginError_ErrWxAuthFailed)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+
+		return
+	}
+
+	userInfoReply, err := wechat.GetWeiXinPlusUserInfo(accessTokenReply.SessionKey, wxLogin.GetEncrypteddata(), wxLogin.GetIv())
+	if err != nil {
+		log.Error("loadUserInfoFromWeChatServer err:", err)
+		errCode := int32(lobby.LoginError_ErrDecodeUserInfoFailed)
+		loginReply.Result = &errCode
+		replyWxLogin(w, loginReply)
+
+		return
+	}
+
+	userInfo := weiXinPlusUserInfo2UserInof(userInfoReply)
 
 	qMod := r.URL.Query().Get("qMod")
 	modV := r.URL.Query().Get("modV")

@@ -349,14 +349,25 @@ message UserInfo
 
 enum LoginError
 {
-	ErrLoginSuccess = 0; // 成功
-	ErrParamWechatCodeIsEmpty = 1;   // 微信登录，参数微信code为空
-	ErrLoadWechatUserInfoFailed = 2; // 微信登录，拉取微信用户信息失败
-	ErrParamAccountIsEmpty = 3;      // 账号登录，参数手机号为空
-	ErrParamPasswordIsEmpty = 4;     // 账号登录，参数密码为空
-	ErrAccountNotExist = 5;          // 账号登录，手机号不存在
-	ErrAccountNotSetPassword = 6;    // 账号登录，密码没设置
-	ErrPasswordNotMatch = 7;         // 账号登录，密码不匹配
+	ErrLoginSuccess = 0; 				// 成功
+	ErrParamDecode = 1;                 // 微信登录  参数解码失败
+	ErrParamInvalidCode = 2;   			// 微信登录，无效的code
+	ErrParamInvalidEncrypteddata = 3;   // 微信登录，无效的encrypteddata
+	ErrParamInvalidIv = 4;              // 微信登录，无效的Iv
+	ErrWxAuthFailed= 5;                 // 微信登录，code认证失败
+	ErrDecodeUserInfoFailed = 6;     // 微信登录，解码户信息失败
+	ErrParamAccountIsEmpty = 7;      // 账号登录，参数手机号为空
+	ErrParamPasswordIsEmpty = 8;     // 账号登录，参数密码为空
+	ErrAccountNotExist = 9;          // 账号登录，手机号不存在
+	ErrAccountNotSetPassword = 10;    // 账号登录，密码没设置
+	ErrPasswordNotMatch = 11;         // 账号登录，密码不匹配
+}
+
+message MsgWxLogin
+{
+	required string code = 1;           // 微信code
+	required string encrypteddata = 2;  // 微信参数
+	required string iv = 3;             // 微信参数
 }
 
 // 微信登录返回结果
