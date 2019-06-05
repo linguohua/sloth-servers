@@ -355,7 +355,7 @@ enum LoginError
 	ErrParamInvalidEncrypteddata = 3;   // 微信登录，无效的encrypteddata
 	ErrParamInvalidIv = 4;              // 微信登录，无效的Iv
 	ErrWxAuthFailed= 5;                 // 微信登录，code认证失败
-	ErrDecodeUserInfoFailed = 6;     // 微信登录，解码户信息失败
+	ErrDecodeUserInfoFailed = 6;     // 微信登录，获取户信息失败
 	ErrParamAccountIsEmpty = 7;      // 账号登录，参数手机号为空
 	ErrParamPasswordIsEmpty = 8;     // 账号登录，参数密码为空
 	ErrAccountNotExist = 9;          // 账号登录，手机号不存在
