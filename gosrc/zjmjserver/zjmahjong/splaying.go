@@ -2,17 +2,18 @@ package zjmahjong
 
 import (
 	"mahjong"
-	"github.com/sirupsen/logrus"
 	"runtime/debug"
+
 	"github.com/golang/protobuf/proto"
+	"github.com/sirupsen/logrus"
 )
 
 // SPlaying 正在游戏状态
 type SPlaying struct {
 	taskDiscardReAction *TaskPlayerReAction
 	taskPlayerAction    *TaskPlayerAction
-	taskFirstReadyHand  *TaskFirstReadyHand
-	tileMgr             *TileMgr
+
+	tileMgr *TileMgr
 
 	players []*PlayerHolder
 	room    *Room
@@ -63,9 +64,7 @@ func (s *SPlaying) onPlayerReEnter(player *PlayerHolder) {
 	player.sendMsg(msgRestore, int32(mahjong.MessageCode_OPRestore))
 
 	// 根据当前的gameLoop的等待状态，给玩家重新发送最近一个消息
-	if s.taskFirstReadyHand != nil {
-		s.taskFirstReadyHand.onPlayerRestore(player)
-	} else if s.taskPlayerAction != nil {
+	if s.taskPlayerAction != nil {
 		s.taskPlayerAction.onPlayerRestore(player)
 	} else if s.taskDiscardReAction != nil {
 		s.taskDiscardReAction.onPlayerRestore(player)
@@ -103,9 +102,6 @@ func (s *SPlaying) onStateLeave() {
 	// 需要把所有正在等待的Task cancel掉
 	// 否则gameLoop的go routine不能退出
 	s.cl.Println("SPlaying leave")
-	if s.taskFirstReadyHand != nil {
-		s.taskFirstReadyHand.cancel()
-	}
 
 	if s.taskPlayerAction != nil {
 		s.taskPlayerAction.cancel()
@@ -245,12 +241,6 @@ func (s *SPlaying) gameLoop() {
 	// 保存发牌数据
 	s.lctx.snapshootDealActions()
 
-	// 起手听牌处理
-	loopKeep := s.firstReadyHand()
-	if !loopKeep {
-		return
-	}
-
 	currentDiscardPlayer := s.room.bankerPlayer()
 	bankerFirstAction := true
 	for {
@@ -326,65 +316,6 @@ func (s *SPlaying) gameLoop() {
 	}
 
 	s.lctx = nil
-}
-
-// firstReadyHand 处理起手听牌
-// 这个函数相当于把庄家过滤掉，因为readyHandAble要求牌数一定是13
-// 由于庄家发牌的那一刻是发了14张牌，因此，庄家不可能readyHandAble
-func (s *SPlaying) firstReadyHand() bool {
-	count := 0
-	for _, p := range s.players {
-		tiles := p.tiles
-		if tiles.readyHandAble() {
-			count++
-		}
-	}
-
-	if count < 1 {
-		// 没有起手听牌
-		return true
-	}
-
-	readyHandPlayers := make([]*PlayerHolder, 0, count)
-	qaIndex := s.room.nextQAIndex()
-
-	for _, p := range s.players {
-		if !p.tiles.readyHandAble() {
-			continue
-		}
-		msgAllowedAction := serializeMsgAllowedForRichi(s, p, qaIndex)
-		p.expectedAction = int(msgAllowedAction.GetAllowedActions())
-		p.sendActoinAllowedMsg(msgAllowedAction)
-
-		if s.room.isForceConsistent() {
-			s.sendMonkeyTips(p)
-		}
-
-		readyHandPlayers = append(readyHandPlayers, p)
-	}
-
-	s.taskFirstReadyHand = newTaskFirstReadyHand(readyHandPlayers)
-	s.taskFirstReadyHand.s = s
-
-	// 发送一个tips给庄家
-	// sendTips2Player(s.room.bankerPlayer(), TipCode_TCWaitOpponentsAction)
-
-	result := s.taskFirstReadyHand.wait()
-
-	actions := mahjong.ActionType_enumActionType_FirstReadyHand | mahjong.ActionType_enumActionType_SKIP
-	// 记录动作
-	for _, wi := range s.taskFirstReadyHand.waitQueue {
-		flags := mahjong.SRFlags_SRNone
-		if wi.isReply && wi.isRichi {
-			flags = mahjong.SRFlags_SRRichi
-		}
-
-		s.lctx.addActionWithTile(wi.player, InvalidTile.tileID, 0, mahjong.ActionType_enumActionType_FirstReadyHand, qaIndex, flags,
-			int(actions))
-	}
-
-	s.taskFirstReadyHand = nil
-	return result
 }
 
 // drawForPlayer 为玩家抽取一张非花牌的手牌，如果没牌可抽了就返回false
@@ -570,7 +501,6 @@ func (s *SPlaying) waitPlayerAction(curPlayer *PlayerHolder, newDraw bool) (loop
 
 	// var tile = s.taskPlayerAction.tile
 	var tileID = s.taskPlayerAction.tileID
-	var xflags = s.taskPlayerAction.flags
 	action = s.taskPlayerAction.action
 	s.taskPlayerAction = nil
 
@@ -590,19 +520,6 @@ func (s *SPlaying) waitPlayerAction(curPlayer *PlayerHolder, newDraw bool) (loop
 		curPlayer.hStatis.latestDiscardedTileLocked = discardedTile
 
 		flags := mahjong.SRFlags_SRNone
-
-		// 处理庄家起手听
-		if curPlayer == s.room.bankerPlayer() && curPlayer.hStatis.actionCounter == 1 {
-			if xflags == 1 && curPlayer.tiles.readyHandAble() {
-				curPlayer.hStatis.isRichi = true
-
-				flags = mahjong.SRFlags_SRRichi
-				var msgActionResultNotify = serializeMsgActionResultNotifyForNoTile(int(mahjong.ActionType_enumActionType_FirstReadyHand), curPlayer)
-				for _, p := range s.players {
-					p.sendActionResultNotify(msgActionResultNotify)
-				}
-			}
-		}
 
 		// 记录动作
 		s.lctx.addActionWithTile(curPlayer, discardedTile.tileID, 0, mahjong.ActionType_enumActionType_DISCARD, qaIndex, flags, actions)

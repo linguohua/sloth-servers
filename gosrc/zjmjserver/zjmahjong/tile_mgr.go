@@ -443,11 +443,7 @@ func (tm *TileMgr) actionForDiscardPlayer(discarder *PlayerHolder, newDraw bool)
 	}
 
 	if discarder.hStatis.actionCounter == 0 && discarder == tm.room.bankerPlayer() {
-		// 庄家出牌，允许起手听
-		// 如果庄家没牌可以听，serializeMsgAllowedForDiscard函数会把听牌动作移除
-		if action&(mahjong.ActionType_enumActionType_WIN_SelfDrawn) == 0 {
-			action |= (mahjong.ActionType_enumActionType_FirstReadyHand)
-		} else {
+		if action&(mahjong.ActionType_enumActionType_WIN_SelfDrawn) != 0 {
 			// 需求更正：天胡，只允许胡，不允许起手听和过
 			action = (mahjong.ActionType_enumActionType_WIN_SelfDrawn)
 			return int(action)

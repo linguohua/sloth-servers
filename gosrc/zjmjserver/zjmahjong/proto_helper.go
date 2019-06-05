@@ -145,28 +145,6 @@ func serializeTileListForOpponent(player *PlayerHolder) *mahjong.MsgPlayerTileLi
 	return playerTileList
 }
 
-// serializeMsgAllowedForRichi 序列化允许起手听消息，给那些可以起手听的玩家
-func serializeMsgAllowedForRichi(s *SPlaying, player *PlayerHolder, qaIndex int) *mahjong.MsgAllowPlayerAction {
-	var msg = &mahjong.MsgAllowPlayerAction{}
-	var qaIndex32 = int32(qaIndex)
-	msg.QaIndex = &qaIndex32
-	var allowedActions32 = int32(mahjong.ActionType_enumActionType_FirstReadyHand | mahjong.ActionType_enumActionType_SKIP)
-	msg.AllowedActions = &allowedActions32
-	var chairID32 = int32(player.chairID)
-	msg.ActionChairID = &chairID32
-	var timeout32 = int32(15)
-	msg.TimeoutInSeconds = &timeout32
-
-	// 听牌提示，也即是听什么牌，还剩下多少张之类的
-	var msgReadyHandTip = &mahjong.MsgReadyHandTips{}
-	var targetTile32 = int32(0)
-	msgReadyHandTip.TargetTile = &targetTile32
-	msgReadyHandTip.ReadyHandList = player.tiles.readyHandTilesWhenThrow(TILEMAX, s.tileMgr)
-
-	msg.TipsForAction = []*mahjong.MsgReadyHandTips{msgReadyHandTip}
-	return msg
-}
-
 // serializeMsgActionResultNotifyForDraw 序列化抽牌结果给其他玩家
 func serializeMsgActionResultNotifyForDraw(player *PlayerHolder, tileID int, flowers []*Tile, tileCountInWall int) *mahjong.MsgActionResultNotify {
 	var msg = &mahjong.MsgActionResultNotify{}
@@ -285,15 +263,6 @@ func serializeMsgAllowedForDiscard(s *SPlaying, player *PlayerHolder, actions in
 
 	// 可以加杠，加上加杠牌型
 	if actions&int(mahjong.ActionType_enumActionType_KONG_Triplet2) != 0 {
-		// msgMeld := &MsgMeldTile{}
-		// var meldType32 = int32(MeldType_enumMeldTypeTriplet2Kong)
-		// msgMeld.MeldType = &meldType32
-		// var tile132 = int32(player.tiles.latestHandTile().tileID)
-		// msgMeld.Tile1 = &tile132
-		// msgMeld.Contributor = &chairID32
-
-		// msgMelds = append(msgMelds, msgMeld)
-
 		triplet2KongIDList := player.tiles.triplet2KongAble2IDList()
 		for _, id := range triplet2KongIDList {
 			msgMeld := &mahjong.MsgMeldTile{}
@@ -312,23 +281,6 @@ func serializeMsgAllowedForDiscard(s *SPlaying, player *PlayerHolder, actions in
 	}
 
 	if discardAble {
-		// 如果处于听牌状态
-		// 则只允许打出刚摸到的牌
-		selfDraw := s.lctx.isSelfDraw(player)
-		if player.hStatis.isRichi || (selfDraw && s.tileMgr.tileCountInWall() == 0) {
-			tid := player.tiles.latestHandTile().tileID
-			msgReadyHandTip := &mahjong.MsgReadyHandTips{}
-			tid32 := int32(tid)
-			msgReadyHandTip.TargetTile = &tid32
-			msgReadyHandTip.ReadyHandList = player.tiles.readyHandTilesWhenThrow(tid, s.tileMgr)
-			msg.TipsForAction = []*mahjong.MsgReadyHandTips{msgReadyHandTip}
-
-			if allowedActions32 == int32(mahjong.ActionType_enumActionType_SKIP|mahjong.ActionType_enumActionType_DISCARD) {
-				allowedActions32 &= ^int32(mahjong.ActionType_enumActionType_SKIP)
-			}
-			return msg
-		}
-
 		// 构建可以打出的牌列表，每一个可以打出的牌，如果有牌可听也一并发给客户端
 		tidsHand := int32Distinct(player.tiles.hand2IDList())
 		if player.hStatis.latestChowPongTileLocked != InvalidTile && player.tiles.tileCountInHand() > 2 {
@@ -352,13 +304,6 @@ func serializeMsgAllowedForDiscard(s *SPlaying, player *PlayerHolder, actions in
 				msgReadyHandTips.ReadyHandList = readyHandList
 			}
 			tipsArray[i] = msgReadyHandTips
-		}
-
-		if n == 0 && (actions&int(mahjong.ActionType_enumActionType_FirstReadyHand) != 0) {
-			// 没牌可听，去掉听牌允许
-			actions &= ^int(mahjong.ActionType_enumActionType_FirstReadyHand)
-			player.expectedAction = actions
-			allowedActions32 = int32(actions)
 		}
 
 		msg.TipsForAction = tipsArray
