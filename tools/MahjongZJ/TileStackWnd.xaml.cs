@@ -1206,7 +1206,7 @@ namespace MahjongTest
             }
         }
 
-        private static string FormatScore(MsgHandOver msg)
+        private string FormatScore(MsgHandOver msg)
         {
             var sb = new StringBuilder();
 
@@ -1229,6 +1229,21 @@ namespace MahjongTest
                 sb.AppendLine();
             }
 
+            foreach (var playerScore in handScore.playerScores)
+            {
+                if (playerScore.fakeList.Count > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("马牌：");
+                    foreach(var t in playerScore.fakeList)
+                    {
+                        sb.Append($"{MyOwner.IdNames[t]},");
+                    }
+                    sb.AppendLine();
+                    break;
+                }
+            }
+
             // 每个玩家得分详细信息
             sb.AppendLine("------------------Details:---------------------");
             foreach (var playerScore in handScore.playerScores)
@@ -1236,7 +1251,6 @@ namespace MahjongTest
                 sb.AppendLine($"名字：{Enum2StrHelper.ChairId2Name(playerScore.targetChairID)}");
                 sb.AppendLine($"得分：{playerScore.score}");
                 sb.AppendLine($"得分类型：{Enum2StrHelper.WinType2String(playerScore.winType)}");
-                sb.AppendLine($"墩子分：{playerScore.specialScore}");
 
                 if (playerScore.winType != (int) HandOverType.enumHandOverType_None
                     && playerScore.winType != (int)HandOverType.enumHandOverType_Chucker)
@@ -1244,37 +1258,10 @@ namespace MahjongTest
                     if (playerScore.greatWin != null)
                     {
                         var greatWin = playerScore.greatWin;
-                        sb.AppendLine($"胡牌类型：大胡");
-                        sb.AppendLine($"辣子数：{greatWin.greatWinPoints}");
-                        sb.AppendLine($"包含辣子：{Enum2StrHelper.GreatWinType2String(greatWin.greatWinType)}");
-                        sb.AppendLine($"限制后辣子数：{greatWin.trimGreatWinPoints}");
                         sb.AppendLine($"应得分数：{greatWin.baseWinScore}");
+                        sb.AppendLine($"牌型倍数：{greatWin.greatWinPoints}");
+                        sb.AppendLine($"中马个数：{playerScore.specialScore}");
                     }
-                    else
-                    {
-                        var miniWin = playerScore.miniWin;
-                        sb.AppendLine($"胡牌类型：小胡");
-                        sb.AppendLine($"倍数：{miniWin.miniMultiple}");
-                        sb.AppendLine($"包含翻倍：{Enum2StrHelper.MiniWinType2String(miniWin.miniWinType)}");
-                        sb.AppendLine($"花分：{miniWin.miniWinFlowerScore}");
-                        sb.AppendLine($"底分：{miniWin.miniWinBasicScore}");
-                        sb.AppendLine($"限制后分数：{miniWin.miniWinTrimScore}");
-
-                        sb.AppendLine($"连庄得失分：{miniWin.continuousBankerExtra}");
-                    }
-                }
-
-                // 包牌
-                sb.AppendLine($"包牌得失分：{playerScore.fakeWinScore}");
-                if (playerScore.fakeList.Count > 0)
-                {
-                    sb.Append("包牌关系：");
-                    foreach (var chairId in playerScore.fakeList)
-                    {
-                        sb.Append(Enum2StrHelper.ChairId2Name(chairId));
-                        sb.Append(",");
-                    }
-                    sb.AppendLine();
                 }
 
                 sb.AppendLine();
