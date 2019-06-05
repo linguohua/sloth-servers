@@ -146,6 +146,10 @@ func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple i
 	horseMultiple := (winner.sctx.horseCount + 1)
 	baseMutiple := winner.sctx.greatWinPoints
 
+	if baseMutiple == 0 {
+		baseMutiple = 1
+	}
+
 	trimMultiple := baseMutiple * horseMultiple
 	if room.config.trimMultiple > 0 {
 		if trimMultiple > room.config.trimMultiple {

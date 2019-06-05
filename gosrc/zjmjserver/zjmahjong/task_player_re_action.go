@@ -2,8 +2,9 @@ package zjmahjong
 
 import (
 	"container/list"
-	log "github.com/sirupsen/logrus"
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // TaskPlayerReAction 等待其他玩家完成操作
@@ -37,19 +38,7 @@ func analyseTaskDiscardReaction(s *SPlaying, orderPlayers []*PlayerHolder, lates
 		var action = 0
 		var tiles = player.tiles
 
-		if tiles.winAbleWith(latestDiscardedTile) {
-
-			// 如果玩家处于过手胡锁定状态，则不允许胡牌
-			// 如果玩家处于听牌状态，且错过了一次胡牌机会，只能自摸胡牌而不能吃铳胡牌
-			winLocked := (player.hStatis.isWinAbleLocked)
-
-			if !winLocked {
-				action |= int(mahjong.ActionType_enumActionType_WIN_Chuck)
-			} else {
-				log.Printf("player %s can win, but in winlocked\n",
-					player.userID())
-			}
-		}
+		// 湛江麻将不能吃铳胡
 
 		// 报听后不能吃椪杠，只能胡和摸牌，打牌的话只能打摸到的牌
 		// 需求变更：必须牌墙还有牌，才可以吃椪杠
@@ -114,7 +103,8 @@ func analyseTaskDiscardReaction(s *SPlaying, orderPlayers []*PlayerHolder, lates
 }
 
 // analyseTaskTriplet2KongReaction 加杠后看其他玩家是否可以抢杠
-func analyseTaskTriplet2KongReaction(s *SPlaying, orderPlayers []*PlayerHolder, latestDiscardedTile *Tile, discardPlayer *PlayerHolder) *TaskPlayerReAction {
+func analyseTaskTriplet2KongReaction(s *SPlaying, orderPlayers []*PlayerHolder,
+	latestDiscardedTile *Tile, discardPlayer *PlayerHolder) *TaskPlayerReAction {
 	for _, player := range orderPlayers {
 		var action = 0
 		var tiles = player.tiles
