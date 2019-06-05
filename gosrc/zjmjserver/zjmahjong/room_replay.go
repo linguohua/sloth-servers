@@ -79,10 +79,12 @@ func (lc *LoopContext) dump2Redis(s *SPlaying) {
 		conn.Send("MULTI")
 		conn.Send("RPUSH", gconst.GameServerMJReplayRoomListPrefix+userID, roomID)
 		// 确保最多50个
-		conn.Send("LTRIM", gconst.GameServerMJReplayRoomListPrefix+userID, -1, -50)
+		conn.Send("LTRIM", gconst.GameServerMJReplayRoomListPrefix+userID, -50, -1)
 
 		conn.Send("SADD", gconst.GameServerReplayRoomsReferenceSetPrefix+roomID, userID)
 		conn.Do("EXEC")
+
+		log.Printf("add replay room:%s to user:%s\n", roomID, userID)
 	}
 
 	// key 48小时后过期

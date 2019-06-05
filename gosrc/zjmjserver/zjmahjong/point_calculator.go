@@ -300,6 +300,9 @@ func calcHorse(winner *PlayerHolder, s *SPlaying) {
 		}
 
 		s.cl.Printf("calcHorse, winner:%s, horseTiles:%+v", winner.userID(), horseTileIDs)
+
+		// 记录马牌列表
+		s.lctx.addActionWithTiles(nil, horseTileIDs, mahjong.ActionType_enumActionType_CustomA, 0, mahjong.SRFlags_SRNone, 0)
 	}
 
 	for _, ht := range s.horseTiles {

@@ -178,7 +178,7 @@ func newRoomForMonkey(ownerID string, ID string, roomConfig *RoomConfig) *Room {
 	r := newBaseRoom(ownerID, "", ID, ID)
 	r.isForMonkey = true
 	// 测试用
-	r.isUlimitRound = true
+	r.isUlimitRound = false
 	r.config = roomConfig
 	r.initChair()
 	r.configID = ""

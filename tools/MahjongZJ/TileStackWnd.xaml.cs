@@ -309,9 +309,6 @@ namespace MahjongTest
                 case (int)ActionType.enumActionType_WIN_Chuck:
                     OnTakeActionWinChuck();
                     break;
-                case (int)ActionType.enumActionType_AccumulateWin:
-                    OnTakeActionFinalDraw();
-                    break;
             }
 
             HideAllActionButtons();
@@ -336,7 +333,7 @@ namespace MahjongTest
             var msgAction = new MsgPlayerAction
             {
                 qaIndex = CurrentAllowPlayerAction.qaIndex,
-                action = (int)ActionType.enumActionType_AccumulateWin,
+                //action = (int)ActionType.enumActionType_AccumulateWin,
             };
 
             MyPlayer.SendMessage((int)MessageCode.OPAction, msgAction.ToBytes());
@@ -798,12 +795,12 @@ namespace MahjongTest
                 BtnAction4.Tag = (int)ActionType.enumActionType_SKIP;
             }
 
-            if ((actions & (int)ActionType.enumActionType_AccumulateWin) != 0)
-            {
-                BtnAction5.Visibility = Visibility.Visible;
-                BtnAction5.Content = "抓";
-                BtnAction5.Tag = (int)ActionType.enumActionType_AccumulateWin;
-            }
+            //if ((actions & (int)ActionType.enumActionType_AccumulateWin) != 0)
+            //{
+            //    BtnAction5.Visibility = Visibility.Visible;
+            //    BtnAction5.Content = "抓";
+            //    BtnAction5.Tag = (int)ActionType.enumActionType_AccumulateWin;
+            //}
 
             expectedReadyHandFlags = 0;
             if ((actions & (int)ActionType.enumActionType_ReadyHand) != 0 || (actions & (int)ActionType.enumActionType_FirstReadyHand) != 0)
@@ -811,10 +808,10 @@ namespace MahjongTest
                 expectedReadyHandFlags = 1;
             }
 
-            if ((actions & (int)ActionType.enumActionType_FlyReadyHand) != 0)
-            {
-                expectedReadyHandFlags |= 2;
-            }
+            //if ((actions & (int)ActionType.enumActionType_FlyReadyHand) != 0)
+            //{
+            //    expectedReadyHandFlags |= 2;
+            //}
 
             if ((actions & (int)ActionType.enumActionType_DISCARD) != 0)
             {

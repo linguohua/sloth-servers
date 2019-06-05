@@ -39,13 +39,13 @@ namespace mahjong
       set { _nick = value; }
     }
 
-    private uint _sex = default(uint);
-    [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"sex", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    private uint _gender = default(uint);
+    [global::ProtoBuf.ProtoMember(4, IsRequired = false, Name=@"gender", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
     [global::System.ComponentModel.DefaultValue(default(uint))]
-    public uint sex
+    public uint gender
     {
-      get { return _sex; }
-      set { _sex = value; }
+      get { return _gender; }
+      set { _gender = value; }
     }
 
     private string _headIconURI = "";
@@ -55,6 +55,15 @@ namespace mahjong
     {
       get { return _headIconURI; }
       set { _headIconURI = value; }
+    }
+
+    private int _avatarID = default(int);
+    [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"avatarID", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    [global::System.ComponentModel.DefaultValue(default(int))]
+    public int avatarID
+    {
+      get { return _avatarID; }
+      set { _avatarID = value; }
     }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -132,6 +141,15 @@ namespace mahjong
       get { return _flags; }
       set { _flags = value; }
     }
+
+    private int _allowActions = default(int);
+    [global::ProtoBuf.ProtoMember(6, IsRequired = false, Name=@"allowActions", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    [global::System.ComponentModel.DefaultValue(default(int))]
+    public int allowActions
+    {
+      get { return _allowActions; }
+      set { _allowActions = value; }
+    }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
@@ -150,6 +168,15 @@ namespace mahjong
     {
       get { return _markup; }
       set { _markup = value; }
+    }
+
+    private string _ownerUserID = "";
+    [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"ownerUserID", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue("")]
+    public string ownerUserID
+    {
+      get { return _ownerUserID; }
+      set { _ownerUserID = value; }
     }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -249,17 +276,8 @@ namespace mahjong
       set { _handNum = value; }
     }
 
-    private string _shareAbleID = "";
-    [global::ProtoBuf.ProtoMember(12, IsRequired = false, Name=@"shareAbleID", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string shareAbleID
-    {
-      get { return _shareAbleID; }
-      set { _shareAbleID = value; }
-    }
-
     private bool _isContinuousBanker = default(bool);
-    [global::ProtoBuf.ProtoMember(13, IsRequired = false, Name=@"isContinuousBanker", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::ProtoBuf.ProtoMember(12, IsRequired = false, Name=@"isContinuousBanker", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue(default(bool))]
     public bool isContinuousBanker
     {
@@ -268,7 +286,7 @@ namespace mahjong
     }
 
     private string _roomNumber = "";
-    [global::ProtoBuf.ProtoMember(14, IsRequired = false, Name=@"roomNumber", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::ProtoBuf.ProtoMember(13, IsRequired = false, Name=@"roomNumber", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue("")]
     public string roomNumber
     {
@@ -277,7 +295,7 @@ namespace mahjong
     }
 
     private int _roomType = default(int);
-    [global::ProtoBuf.ProtoMember(15, IsRequired = false, Name=@"roomType", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
+    [global::ProtoBuf.ProtoMember(14, IsRequired = false, Name=@"roomType", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
     [global::System.ComponentModel.DefaultValue(default(int))]
     public int roomType
     {
@@ -286,7 +304,7 @@ namespace mahjong
     }
 
     private mahjong.SRMsgHandRecorderExtra _extra = null;
-    [global::ProtoBuf.ProtoMember(16, IsRequired = false, Name=@"extra", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::ProtoBuf.ProtoMember(15, IsRequired = false, Name=@"extra", DataFormat = global::ProtoBuf.DataFormat.Default)]
     [global::System.ComponentModel.DefaultValue(null)]
     public mahjong.SRMsgHandRecorderExtra extra
     {

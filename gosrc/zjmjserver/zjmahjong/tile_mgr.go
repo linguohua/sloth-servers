@@ -444,7 +444,7 @@ func (tm *TileMgr) actionForDiscardPlayer(discarder *PlayerHolder, newDraw bool)
 
 	if discarder.hStatis.actionCounter == 0 && discarder == tm.room.bankerPlayer() {
 		if action&(mahjong.ActionType_enumActionType_WIN_SelfDrawn) != 0 {
-			// 需求更正：天胡，只允许胡，不允许起手听和过
+			// 天胡，不允许过，客户端只能胡
 			action = (mahjong.ActionType_enumActionType_WIN_SelfDrawn)
 			return int(action)
 		}

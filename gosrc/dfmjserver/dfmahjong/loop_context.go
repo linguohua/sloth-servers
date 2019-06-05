@@ -6,7 +6,6 @@ import (
 	"log"
 	"mahjong"
 
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -584,20 +583,33 @@ func strArray2Comma(ss []string) string {
 
 func loadMJLastRecordForRoom(conn redis.Conn, roomID string) []byte {
 	// 加载回播房间记录
-	recordsStr, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "d"))
 	if err != nil {
-		recordsStr = ""
-	}
-
-	log.Println("recordsStr:", recordsStr)
-	records := strings.Split(recordsStr, ",")
-	if len(records) < 1 {
-		log.Println("user has replay room, but no hand record")
+		log.Println("loadMJLastRecordForRoom, err:", err)
 		return nil
 	}
 
-	recordID := records[len(records)-1]
-	return loadMJRecord(conn, recordID)
+	if bytes == nil {
+		log.Println("loadMJLastRecordForRoom, bytes is nil, roomID:", roomID)
+		return nil
+	}
+
+	var replayRoom = mahjong.MsgReplayRoom{}
+	err = proto.Unmarshal(bytes, &replayRoom)
+	if err != nil {
+		log.Println("loadMJLastRecordForRoom, err:", err)
+		return nil
+	}
+
+	records := replayRoom.GetRecords()
+	if len(records) > 0 {
+		recordID := records[len(records)-1].GetRecordUUID()
+
+		return loadMJRecord(conn, recordID)
+	}
+
+	log.Println("loadMJLastRecordForRoom, no record found for room number:", replayRoom.RoomNumber)
+	return nil
 }
 
 func loadMJRecord(conn redis.Conn, recordID string) []byte {
@@ -638,20 +650,12 @@ func loadMJLastRecordForUser(userID string) []byte {
 	conn := pool.Get()
 	defer conn.Close()
 
-	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+userID, "rr"))
+	replayRoomID, err := redis.String(conn.Do("LINDEX", gconst.GameServerMJReplayRoomListPrefix+userID, -1))
+
 	if err != nil {
-		log.Println(err)
+		log.Println("loadMJLastRecordForUser failed:", err)
 		return nil
 	}
 
-	replayRooms := strings.Split(replayRoomsStr, ",")
-	if len(replayRooms) < 1 {
-		// 没有数据
-		log.Println("user has no mj replay room, userID:", userID)
-		return nil
-	}
-
-	replayRoom := replayRooms[len(replayRooms)-1]
-
-	return loadMJLastRecordForRoom(conn, replayRoom)
+	return loadMJLastRecordForRoom(conn, replayRoomID)
 }

@@ -194,7 +194,6 @@ namespace MahjongTest
 
             List<PlayerData> players = FromRecorder(recorder);
             string drawSequnece = ExtractDrawSequence(recorder);
-            var windId = recorder.windFlowerID;
             var bankerPlayer = players.Find((p) => p.ChairId == recorder.bankerChairID);
             var bankderUserId = bankerPlayer.UserId;
             players = sortPlayers(players, bankderUserId);
@@ -243,11 +242,8 @@ namespace MahjongTest
                     }
                     csv.WriteField(drawSequnece);
 
-                    csv.WriteField(_myWindow.IdNames[windId]);
-
                     csv.WriteField(1); // 强制一致
                     csv.WriteField(recorder.roomConfigID);
-
                     csv.WriteField(recorder.isContinuousBanker ? "1" : "0");
 
                     csv.NextRecord();
@@ -325,6 +321,19 @@ namespace MahjongTest
                 }
             }
 
+            drawActions = recorder.actions.Where((x) => x.action == (int)ActionType.enumActionType_CustomA);
+            foreach (var drawAction in drawActions)
+            {
+                foreach (var tile in drawAction.tiles)
+                {
+                    if (tile < (int)TileID.enumTid_MAX)
+                    {
+                        sb.Append(_myWindow.IdNames[tile]);
+                        sb.Append(",");
+                    }
+                }
+            }
+
             return sb.ToString();
         }
 
@@ -371,10 +380,7 @@ namespace MahjongTest
 
                 var handStr = ToHandString();
                 csv.WriteField(handStr);
-
-                var flowerStr = ToFlowerString();
-                csv.WriteField(flowerStr);
-
+                
                 var actionTips = ActionTips();
                 csv.WriteField(actionTips);
             }
@@ -386,18 +392,6 @@ namespace MahjongTest
                 foreach (var hand in hands)
                 {
                     sb.Append(MyWindow.IdNames[hand]);
-                    sb.Append(",");
-                }
-                return sb.ToString();
-            }
-
-            public string ToFlowerString()
-            {
-                var flowers = Deal.tilesFlower;
-                var sb = new StringBuilder();
-                foreach (var flower in flowers)
-                {
-                    sb.Append(MyWindow.IdNames[flower]);
                     sb.Append(",");
                 }
                 return sb.ToString();
@@ -481,10 +475,10 @@ namespace MahjongTest
                                 sb.Append(
                                     $"[winSelf],");
                             break;
-                            case ActionType.enumActionType_AccumulateWin:
-                                sb.Append(
-                                    $"[finalDraw],");
-                            break;
+                            //case ActionType.enumActionType_AccumulateWin:
+                            //    sb.Append(
+                            //        $"[finalDraw],");
+                            //break;
                         default:
                                 sb.Append(
                                     $"[skip],");

@@ -7,7 +7,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -314,7 +313,8 @@ func (lc *LoopContext) addDrawAction(who *PlayerHolder, tileIDHand int, tileIDsF
 }
 
 // addActionWithTile 记录关于牌的动作，例如吃椪杠，注意虽然操作的是面子牌组，但只需要保存牌组第一张牌即可
-func (lc *LoopContext) addActionWithTile(who *PlayerHolder, tileID int, chowTile int, action mahjong.ActionType, qaIndex int, flags mahjong.SRFlags,
+func (lc *LoopContext) addActionWithTile(who *PlayerHolder, tileID int,
+	chowTile int, action mahjong.ActionType, qaIndex int, flags mahjong.SRFlags,
 	allowActions int) {
 	var msgSRAction = &mahjong.SRAction{}
 	var action32 = int32(action)
@@ -337,6 +337,40 @@ func (lc *LoopContext) addActionWithTile(who *PlayerHolder, tileID int, chowTile
 
 		msgSRAction.Tiles = tiles
 	}
+
+	lc.actionList.PushBack(msgSRAction)
+
+	//if flags == 0 {
+	//	lc.actionCount++
+	//}
+}
+
+func (lc *LoopContext) addActionWithTiles(who *PlayerHolder, tileIDs []int,
+	action mahjong.ActionType, qaIndex int, flags mahjong.SRFlags,
+	allowActions int) {
+
+	var msgSRAction = &mahjong.SRAction{}
+	var action32 = int32(action)
+	msgSRAction.Action = &action32
+	var chairID32 int32
+	if who != nil {
+		chairID32 = int32(who.chairID)
+	}
+	msgSRAction.ChairID = &chairID32
+	var qaIndex32 = int32(qaIndex)
+	msgSRAction.QaIndex = &qaIndex32
+	var flags32 = int32(flags)
+	msgSRAction.Flags = &flags32
+
+	allowActions32 := int32(allowActions)
+	msgSRAction.AllowActions = &allowActions32
+
+	tilesID32 := make([]int32, len(tileIDs))
+	for i, tid := range tileIDs {
+		tilesID32[i] = int32(tid)
+	}
+
+	msgSRAction.Tiles = tilesID32
 
 	lc.actionList.PushBack(msgSRAction)
 
@@ -473,20 +507,33 @@ func strArray2Comma(ss []string) string {
 
 func loadMJLastRecordForRoom(conn redis.Conn, roomID string) []byte {
 	// 加载回播房间记录
-	recordsStr, err := redis.String(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "hr"))
+	bytes, err := redis.Bytes(conn.Do("HGET", gconst.GameServerMJReplayRoomTablePrefix+roomID, "d"))
 	if err != nil {
-		recordsStr = ""
-	}
-
-	log.Println("recordsStr:", recordsStr)
-	records := strings.Split(recordsStr, ",")
-	if len(records) < 1 {
-		log.Println("user has replay room, but no hand record")
+		log.Println("loadMJLastRecordForRoom, err:", err)
 		return nil
 	}
 
-	recordID := records[len(records)-1]
-	return loadMJRecord(conn, recordID)
+	if bytes == nil {
+		log.Println("loadMJLastRecordForRoom, bytes is nil, roomID:", roomID)
+		return nil
+	}
+
+	var replayRoom = mahjong.MsgReplayRoom{}
+	err = proto.Unmarshal(bytes, &replayRoom)
+	if err != nil {
+		log.Println("loadMJLastRecordForRoom, err:", err)
+		return nil
+	}
+
+	records := replayRoom.GetRecords()
+	if len(records) > 0 {
+		recordID := records[len(records)-1].GetRecordUUID()
+
+		return loadMJRecord(conn, recordID)
+	}
+
+	log.Println("loadMJLastRecordForRoom, no record found for room number:", replayRoom.RoomNumber)
+	return nil
 }
 
 func loadMJRecord(conn redis.Conn, recordID string) []byte {
@@ -527,20 +574,12 @@ func loadMJLastRecordForUser(userID string) []byte {
 	conn := pool.Get()
 	defer conn.Close()
 
-	replayRoomsStr, err := redis.String(conn.Do("HGET", gconst.LobbyPlayerTablePrefix+userID, "rr"))
+	replayRoomID, err := redis.String(conn.Do("LINDEX", gconst.GameServerMJReplayRoomListPrefix+userID, -1))
+
 	if err != nil {
-		log.Println(err)
+		log.Println("loadMJLastRecordForUser failed:", err)
 		return nil
 	}
 
-	replayRooms := strings.Split(replayRoomsStr, ",")
-	if len(replayRooms) < 1 {
-		// 没有数据
-		log.Println("user has no mj replay room, userID:", userID)
-		return nil
-	}
-
-	replayRoom := replayRooms[len(replayRooms)-1]
-
-	return loadMJLastRecordForRoom(conn, replayRoom)
+	return loadMJLastRecordForRoom(conn, replayRoomID)
 }

@@ -523,6 +523,15 @@ namespace mahjong
       get { return _flyReadyHandChairs; }
     }
   
+
+    private byte[] _extra = null;
+    [global::ProtoBuf.ProtoMember(7, IsRequired = false, Name=@"extra", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue(null)]
+    public byte[] extra
+    {
+      get { return _extra; }
+      set { _extra = value; }
+    }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
@@ -778,6 +787,47 @@ namespace mahjong
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
   }
   
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"MsgUpdateLocation")]
+  public partial class MsgUpdateLocation : global::ProtoBuf.IExtensible
+  {
+    public MsgUpdateLocation() {}
+    
+    private string _userID;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = true, Name=@"userID", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string userID
+    {
+      get { return _userID; }
+      set { _userID = value; }
+    }
+    private string _location;
+    [global::ProtoBuf.ProtoMember(2, IsRequired = true, Name=@"location", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string location
+    {
+      get { return _location; }
+      set { _location = value; }
+    }
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"MsgUpdatePropCfg")]
+  public partial class MsgUpdatePropCfg : global::ProtoBuf.IExtensible
+  {
+    public MsgUpdatePropCfg() {}
+    
+    private string _propCfg;
+    [global::ProtoBuf.ProtoMember(1, IsRequired = true, Name=@"propCfg", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public string propCfg
+    {
+      get { return _propCfg; }
+      set { _propCfg = value; }
+    }
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
     [global::ProtoBuf.ProtoContract(Name=@"TileID")]
     public enum TileID
     {
@@ -974,7 +1024,22 @@ namespace mahjong
       OPKickout = 19,
             
       [global::ProtoBuf.ProtoEnum(Name=@"OPDonate", Value=20)]
-      OPDonate = 20
+      OPDonate = 20,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"OPUpdateLocation", Value=21)]
+      OPUpdateLocation = 21,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"OP2Lobby", Value=22)]
+      OP2Lobby = 22,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"OPUpdatePropCfg", Value=23)]
+      OPUpdatePropCfg = 23,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"OPPing", Value=100)]
+      OPPing = 100,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"OPPong", Value=101)]
+      OPPong = 101
     }
   
     [global::ProtoBuf.ProtoContract(Name=@"MeldType")]
@@ -994,7 +1059,22 @@ namespace mahjong
       enumMeldTypeTriplet2Kong = 3,
             
       [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypeConcealedKong", Value=4)]
-      enumMeldTypeConcealedKong = 4
+      enumMeldTypeConcealedKong = 4,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypeSelfMeld", Value=5)]
+      enumMeldTypeSelfMeld = 5,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypeChuHH", Value=6)]
+      enumMeldTypeChuHH = 6,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypeChuHH1", Value=7)]
+      enumMeldTypeChuHH1 = 7,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypeWind", Value=8)]
+      enumMeldTypeWind = 8,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumMeldTypePairKong", Value=9)]
+      enumMeldTypePairKong = 9
     }
   
     [global::ProtoBuf.ProtoContract(Name=@"ActionType")]
@@ -1037,11 +1117,17 @@ namespace mahjong
       [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_ReadyHand", Value=2048)]
       enumActionType_ReadyHand = 2048,
             
-      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_FlyReadyHand", Value=4096)]
-      enumActionType_FlyReadyHand = 4096,
+      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_CustomA", Value=4096)]
+      enumActionType_CustomA = 4096,
             
-      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_AccumulateWin", Value=8192)]
-      enumActionType_AccumulateWin = 8192
+      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_CustomB", Value=8192)]
+      enumActionType_CustomB = 8192,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_CustomC", Value=16384)]
+      enumActionType_CustomC = 16384,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumActionType_CustomD", Value=32768)]
+      enumActionType_CustomD = 32768
     }
   
     [global::ProtoBuf.ProtoContract(Name=@"HandOverType")]

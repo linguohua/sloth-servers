@@ -311,7 +311,7 @@ func (s *SPlaying) gameLoop() {
 		s.cl.Panic("game loop should not be here\n")
 	}
 
-	if !s.room.isForMonkey && s.lctx.recorder.GetIsHandOver() {
+	if /*!s.room.isForMonkey && */ s.lctx.recorder.GetIsHandOver() {
 		s.lctx.dump2Redis(s)
 	}
 

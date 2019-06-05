@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 // Generated from: game_mahjong_df.proto
-namespace mahjong
+namespace dfmahjong
 {
     [global::ProtoBuf.ProtoContract(Name=@"GreatWinType")]
     public enum GreatWinType
@@ -69,7 +69,10 @@ namespace mahjong
       enumGreatWinType_MixSameWithMeld = 65536,
             
       [global::ProtoBuf.ProtoEnum(Name=@"enumGreatWinType_RobKong", Value=131072)]
-      enumGreatWinType_RobKong = 131072
+      enumGreatWinType_RobKong = 131072,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"enumGreatWinType_OpponentsRichi", Value=262144)]
+      enumGreatWinType_OpponentsRichi = 262144
     }
   
     [global::ProtoBuf.ProtoContract(Name=@"MiniWinType")]
