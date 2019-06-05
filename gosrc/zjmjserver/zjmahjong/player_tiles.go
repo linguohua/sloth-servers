@@ -530,11 +530,6 @@ func (pt *PlayerTiles) readyHandAble() bool {
 	found := false
 
 	for i := MAN; i < FlowerBegin; i++ {
-		// 跳过当做花牌的风牌
-		if i == pt.host.room.pseudoFlowerTileID {
-			continue
-		}
-
 		pt.slots[i]++
 		if isWinable(pt.slots) {
 			found = true
@@ -797,16 +792,19 @@ func (pt *PlayerTiles) calc7Pair() GreatWinType {
 	}
 
 	// 不管是自摸，还是胡别人的牌，一定是放在最后一张
-	var lastTile = pt.hand.Back().Value.(*Tile)
+	// var lastTile = pt.hand.Back().Value.(*Tile)
 	// 检查手牌中的有没有4只同样牌，如果有而且等于最后一张牌
 	// 那么就是豪华大七对
-	for i, v := range pt.slots {
+	for _, v := range pt.slots {
 		if v != 4 {
 			continue
 		}
-		if i == lastTile.tileID {
-			return GreatWinType_GreatSevenPair
-		}
+		// if i == lastTile.tileID {
+		// 	return GreatWinType_GreatSevenPair
+		// }
+
+		// 湛江麻将只需要有4张，不要求必须是最后那张牌的类型
+		return GreatWinType_GreatSevenPair
 	}
 
 	return GreatWinType_SevenPair
@@ -998,10 +996,6 @@ func (pt *PlayerTiles) readyHandTilesWhenThrow(tileID int, tm *TileMgr) []int32 
 	var idlist = make([]int32, 34*2)
 	cnt := 0
 	for i := MAN; i < FlowerBegin; i++ {
-		if i == pt.host.room.pseudoFlowerTileID {
-			continue
-		}
-
 		var remain = remainSlots[i] - pt.slots[i]
 		if i == tileID {
 			remain--

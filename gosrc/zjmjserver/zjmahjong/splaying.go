@@ -2,10 +2,8 @@ package zjmahjong
 
 import (
 	"mahjong"
-	"runtime/debug"
-
 	"github.com/sirupsen/logrus"
-
+	"runtime/debug"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -20,6 +18,8 @@ type SPlaying struct {
 	room    *Room
 	lctx    *LoopContext
 	cl      *logrus.Entry
+
+	horseTiles []*Tile
 }
 
 // newSPlaying 新建playing 状态机
@@ -186,14 +186,8 @@ func (s *SPlaying) onActionMessage(iu IUser, msg *mahjong.MsgPlayerAction) {
 	case mahjong.ActionType_enumActionType_DRAW:
 		s.cl.Println("OnActionMessage unsupported DRAW from client")
 		break
-	case mahjong.ActionType_enumActionType_FirstReadyHand:
-		onMessageFirstReadyHand(s, player, msg)
-		break
 	case mahjong.ActionType_enumActionType_KONG_Triplet2:
 		onMessageTriplet2Kong(s, player, msg)
-		break
-	case mahjong.ActionType_enumActionType_CustomB:
-		onMessageShouldFinalDraw(s, player, msg)
 		break
 	default:
 		s.cl.Panic("OnMessageAction unsupported action code")
@@ -269,17 +263,7 @@ func (s *SPlaying) gameLoop() {
 		// 玩家抽牌
 		if needDraw {
 			// drawForPlayer以参数true调用表示保留最后一张
-			drawOK := s.drawForPlayer(currentDiscardPlayer, true)
-			if !drawOK && s.tileMgr.tileCountInWall() == 1 {
-				loopKeep := s.waitFinalDrawQuery(currentDiscardPlayer)
-				if !loopKeep {
-					break
-				}
-
-				// drawForPlayer以参数true调用表示不再保留最后一张
-				drawOK = s.drawForPlayer(currentDiscardPlayer, false)
-			}
-
+			drawOK := s.drawForPlayer(currentDiscardPlayer, false)
 			if !drawOK {
 				// 流局
 				s.onHandWashout()
@@ -542,47 +526,6 @@ func (s *SPlaying) chooseBanker(washout bool) {
 
 	// curBanker.hStatis.isContinuousBanker = false
 	s.room.bankerChange2(newBanker)
-}
-
-// waitFinalDrawQuery 等待玩家选择是否开最后一张牌
-func (s *SPlaying) waitFinalDrawQuery(curPlayer *PlayerHolder) bool {
-	var qaIndex = s.room.nextQAIndex()
-
-	actions := int(mahjong.ActionType_enumActionType_CustomB | mahjong.ActionType_enumActionType_SKIP)
-
-	curPlayer.expectedAction = actions
-	s.taskPlayerAction = newTaskPlayerAction(curPlayer, actions)
-	s.taskPlayerAction.s = s
-	s.taskPlayerAction.isForFinalDraw = true
-
-	msgAllowPlayerAction2 := serializeMsgAllowedForDiscard2Opponent(curPlayer, qaIndex, curPlayer.expectedAction)
-	for _, p := range s.players {
-		p.sendActoinAllowedMsg(msgAllowPlayerAction2)
-	}
-
-	result := s.taskPlayerAction.wait()
-	if !result {
-		return false
-	}
-
-	action := s.taskPlayerAction.action
-	s.taskPlayerAction = nil
-
-	flags := mahjong.SRFlags_SRNone
-	s.lctx.addActionWithTile(curPlayer, InvalidTile.tileID, 0, mahjong.ActionType(action), qaIndex, flags, actions)
-
-	if action == int(mahjong.ActionType_enumActionType_SKIP) {
-		s.onHandWashout()
-		return false
-	}
-
-	msgActionResultNotify := serializeMsgActionResultNotifyForNoTile(int(mahjong.ActionType_enumActionType_CustomB),
-		curPlayer)
-	for _, p := range s.players {
-		p.sendActionResultNotify(msgActionResultNotify)
-	}
-
-	return true
 }
 
 // waitPlayerAction 等待当前玩家出牌，或者加杠，暗杠，自摸胡牌

@@ -7,10 +7,9 @@ var (
 
 // MonkeyUserTilesCfg 用来测试
 type MonkeyUserTilesCfg struct {
-	handTiles   []int
-	flowerTiles []int
-	actionTips  []string
-	userID      string
+	handTiles  []int
+	actionTips []string
+	userID     string
 
 	isBanker bool
 	index    int
@@ -57,21 +56,6 @@ func (tuc *MonkeyUserTilesCfg) setHandTiles(hands []string) {
 	}
 
 	tuc.handTiles = hl[0:index]
-}
-
-// setFlowerTiles 设置发牌时的花牌序列
-func (tuc *MonkeyUserTilesCfg) setFlowerTiles(flowers []string) {
-
-	var index = 0
-	fl := make([]int, len(flowers))
-	for _, flower := range flowers {
-		if flower != "" {
-			fl[index] = dict[flower]
-			index++
-		}
-	}
-
-	tuc.flowerTiles = fl[0:index]
 }
 
 // setActionTips 设置动作提示，用于提示客户端下一步动作是什么

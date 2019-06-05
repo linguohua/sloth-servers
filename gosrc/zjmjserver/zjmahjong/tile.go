@@ -82,7 +82,7 @@ func (t *Tile) horseType() int {
 		}
 	}
 
-	if t.isWind() {
+	if t.isHonor() {
 		switch t.tileID {
 		case TON:
 			return 1
@@ -95,7 +95,7 @@ func (t *Tile) horseType() int {
 		}
 	}
 
-	log.Fatal("horseType failed, invalid tileID:", t.tileID)
+	log.Panicln("horseType failed, invalid tileID:", t.tileID)
 
 	// 无效的马类型
 	return 0

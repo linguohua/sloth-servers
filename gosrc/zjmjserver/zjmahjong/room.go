@@ -5,12 +5,13 @@ import (
 	"gconst"
 	"gpubsub"
 	"gscfg"
-	"github.com/sirupsen/logrus"
 	"mahjong"
 	"math/rand"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -37,12 +38,12 @@ var (
 // 是不一样的，状态机主要是用于和客户端消息交互的控制，逻辑上的牌局开始则是通过handRoundFinished
 // 以及handRoundStarted判断
 type Room struct {
-	isUlimitRound      bool   // 无限局数，主要用于客户端做长时间测试
-	isForMonkey        bool   // 是否用于测试
-	pseudoFlowerTileID int    // 当前的当做花牌的风牌
-	bankerUserID       string // 庄家的ID
-	bankerSwitchCount  int    // 庄家切换次数，用于切换风圈（风圈切换了后pseudoFlowerTileID也会跟着变化）
-	qaIndex            int    // 流水号，注意每一手牌开始流水号都会重置
+	isUlimitRound bool // 无限局数，主要用于客户端做长时间测试
+	isForMonkey   bool // 是否用于测试
+
+	bankerUserID      string // 庄家的ID
+	bankerSwitchCount int    // 庄家切换次数，用于切换风圈（风圈切换了后pseudoFlowerTileID也会跟着变化）
+	qaIndex           int    // 流水号，注意每一手牌开始流水号都会重置
 
 	config    *RoomConfig // 房间的配置对象
 	configID  string
@@ -61,7 +62,6 @@ type Room struct {
 
 	handRoundFinished int // 已经完成的手牌轮数
 	handRoundStarted  int // 已经开始的手牌轮数，可能和handRoundFinished相等，也可能大1
-	markup            int // 家家庄,大于0表示处于家家庄
 
 	disband          *RoomDisband // 解散控制数据结构，当玩家申请解散时生成，解散状态完结后删除
 	lastReceivedTime time.Time    // 最后一次消息接收时间，用于判断房间空闲了多长时间
@@ -87,7 +87,6 @@ type Room struct {
 // newBaseRoom 新建room对象并做一些基本初始化
 func newBaseRoom(ownerID string, clubID string, ID string, roomNumber string) *Room {
 	r := &Room{}
-	r.pseudoFlowerTileID = TON
 	r.ownerID = ownerID
 	r.clubID = clubID
 	r.players = make([]*PlayerHolder, 0, 4)
@@ -245,7 +244,6 @@ func (r *Room) bankerChange2(newBanker *PlayerHolder) {
 	// 如果首次庄家连庄则下局依然为东风为花牌，庄家下庄下家为庄，也是东风为花牌，
 	// 轮庄满4人后，则庄的花牌从南风开始，依次类推。
 	r.bankerSwitchCount++
-	r.pseudoFlowerTileID = TON + (r.bankerSwitchCount/len(r.players))%4
 }
 
 // onHandOver 一手牌结局
@@ -311,25 +309,12 @@ func (r *Room) isForceConsistent() bool {
 // handBegin 房间做一些准备开始游戏
 func (r *Room) handBegin() {
 	if r.isForceConsistent() {
-		// 如果需要，重设一下风牌
-		if r.monkeyCfg.windID != "" {
-			r.forceWind(dict[r.monkeyCfg.windID])
-		}
-
 		// 重设置一下庄家ID
 		r.bankerUserID = r.monkeyCfg.monkeyUserTilesCfgList[0].userID
 
 		if r.monkeyCfg.isContinuousBanker {
 			r.bankerPlayer().gStatis.isContinuousBanker = true
 		}
-
-		if r.monkeyCfg.isMarkup {
-			r.markup = 1
-		}
-	}
-
-	if r.pseudoFlowerTileID == 0 {
-		r.pseudoFlowerTileID = TON
 	}
 
 	r.refreshBankerID()
@@ -475,11 +460,6 @@ func (r *Room) onUser2Lobby(user IUser, gmsg *mahjong.GameMessage) {
 	user.send(buf)
 	// 断开websocket连接
 	user.closeWebsocket()
-}
-
-// forceWind 重设被当做花牌的风牌ID
-func (r *Room) forceWind(i int) {
-	r.pseudoFlowerTileID = i
 }
 
 // 踢开所有正在房间内的玩家
@@ -1330,7 +1310,6 @@ func (r *Room) writeHandBegin2Redis() {
 	conn.Send("MULTI")
 	conn.Send("HMSET", gconst.GameServerRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
 		"bankerID", r.bankerUserID,
-		"windID", r.pseudoFlowerTileID,
 		"hp", buf)
 
 	conn.Send("HSET", gconst.GameServerRoomStatisticsPrefix+r.ID, "hrStartted", r.handRoundStarted)
@@ -1342,7 +1321,7 @@ func (r *Room) writeHandBegin2Redis() {
 		r.cl.Println("writeHandBegin2Redis error:", err)
 	}
 
-	r.cl.Printf("writeHandBegin2Redis completed, bankerID:%s, windID:%d\n", r.bankerUserID, r.pseudoFlowerTileID)
+	r.cl.Printf("writeHandBegin2Redis completed, bankerID:%s\n", r.bankerUserID)
 }
 
 // writePlayersStatis 写玩家统计信息到redis
@@ -1447,12 +1426,11 @@ func (r *Room) writeHandEnd2Redis() {
 
 	conn.Do("HMSET", gconst.GameServerRoomTablePrefix+r.ID, "hrStartted", r.handRoundStarted, "hrfinished", r.handRoundFinished,
 		"bankerID", r.bankerUserID,
-		"windID", r.pseudoFlowerTileID,
 		"sr", bytes,
 		"hp", buf)
 
-	r.cl.Printf("writeHandEnd2Redis completed, bankerID:%s, windID:%d, scoreRecords:%d\n",
-		r.bankerUserID, r.pseudoFlowerTileID, len(r.scoreRecords))
+	r.cl.Printf("writeHandEnd2Redis completed, bankerID:%s, scoreRecords:%d\n",
+		r.bankerUserID, len(r.scoreRecords))
 }
 
 // readHandInfoFromRedis4Restore 恢复房间时，从redis读取手牌信息
@@ -1475,14 +1453,7 @@ func (r *Room) readHandInfoFromRedis4Restore(conn redis.Conn) {
 			//log.Println(err)
 		}
 
-		windID, err := redis.Int(values[2], nil)
-		if err == nil {
-			r.forceWind(windID)
-		} else {
-			//log.Println(err)
-		}
-
-		bytes, err := redis.Bytes(values[3], nil)
+		bytes, err := redis.Bytes(values[2], nil)
 		if err == nil {
 			roomScoreRecords := &mahjong.RoomScoreRecords{}
 			err = proto.Unmarshal(bytes, roomScoreRecords)
@@ -1494,7 +1465,7 @@ func (r *Room) readHandInfoFromRedis4Restore(conn redis.Conn) {
 			//log.Println(err)
 		}
 
-		bytes, err = redis.Bytes(values[4], nil)
+		bytes, err = redis.Bytes(values[3], nil)
 		if err == nil {
 			var msgIDList = &gconst.SSMsgUserIDList{}
 			err = proto.Unmarshal(bytes, msgIDList)
@@ -1565,19 +1536,6 @@ func (r *Room) restorePlayerGStatis(player *PlayerHolder) {
 
 	r.cl.Printf("restorePlayerGStatis, chucker:%d, winChuck:%d, winSelf:%d, score:%d\n", player.gStatis.chuckerCounter, player.gStatis.winChuckCounter,
 		player.gStatis.winSelfDrawnCounter, player.gStatis.roundScore)
-}
-
-// isFlowerTile 是否花牌
-func (r *Room) isFlowerTile(tileID int) bool {
-	if tileID >= FlowerBegin && tileID < FlowerEnd {
-		return true
-	}
-
-	if tileID == r.pseudoFlowerTileID {
-		return true
-	}
-
-	return false
 }
 
 // notifyReturnDiamond 通知管理服务器返还钻石给玩家

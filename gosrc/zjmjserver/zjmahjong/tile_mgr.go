@@ -511,17 +511,10 @@ func (tm *TileMgr) drawForPlayer(player *PlayerHolder, needDrawData bool, reserv
 // drawForPlayer 为玩家抽到一张非花牌的牌
 func (tm *TileMgr) drawNonFlower(player *PlayerHolder, needDrawData bool, reserved int) (ok bool, handTile *Tile, newFlowers []*Tile) {
 	handTile = nil
-	newFlowers = nil
-
 	if len(tm.wallTiles) <= reserved {
 		tm.cl.Panic("wall tiles empty")
 		ok = false
 		return
-	}
-
-	if needDrawData {
-		// 最多24张花牌
-		newFlowers = make([]*Tile, 24)
 	}
 
 	ok = false
@@ -529,32 +522,13 @@ func (tm *TileMgr) drawNonFlower(player *PlayerHolder, needDrawData bool, reserv
 	for len(tm.wallTiles) > reserved {
 		var t = tm.drawOne()
 		nt := &Tile{drawBy: player.userID(), tileID: t.tileID}
-		if t.isFlower() {
-			// 花牌
-			player.tiles.addFlowerTile(nt)
-			if needDrawData {
-				newFlowers[flowerCnt] = nt
-				flowerCnt++
-			}
-		} else if tm.room.pseudoFlowerTileID == t.tileID {
-			// 伪花牌，也即是东南西北4个风牌之一
-			if !t.isWind() {
-				tm.cl.Panic("Pesudo acquire wind tile")
-			}
-			player.tiles.addPesudoFlowerTile(nt)
-			if needDrawData {
-				newFlowers[flowerCnt] = nt
-				flowerCnt++
-			}
-		} else {
-			// 普通牌，停止抽牌
-			player.tiles.addHandTile(nt)
-			if needDrawData {
-				handTile = nt
-			}
-			ok = true
-			break
+		// 普通牌，停止抽牌
+		player.tiles.addHandTile(nt)
+		if needDrawData {
+			handTile = nt
 		}
+		ok = true
+		break
 	}
 
 	if needDrawData {
@@ -651,17 +625,19 @@ func (tm *TileMgr) drawForMonkeys() {
 
 // 抽取马牌
 func (tm *TileMgr) drawHorseTiles(horseTileCount int) []*Tile {
-	tiles := make([]*Tile, 0, horseTileCount)
-
 	remain := tm.tileCountInWall()
+
+	tm.cl.Printf("drawHorseTiles, horseTileCount:%d, remain:%d\n", horseTileCount, remain)
+
 	if horseTileCount > remain {
 		horseTileCount = remain
 	}
 
+	tiles := make([]*Tile, 0, horseTileCount)
+
 	for i := 0; i < horseTileCount; i++ {
 		var t = tm.drawOne()
 		nt := &Tile{drawBy: "", tileID: t.tileID}
-
 		tiles = append(tiles, nt)
 	}
 
@@ -685,10 +661,6 @@ func (tm *TileMgr) padPlayerTiles(player *PlayerHolder) {
 func (tm *TileMgr) fillFor(player *PlayerHolder, cfgUserTiles *MonkeyUserTilesCfg) {
 	var tiles = player.tiles
 
-	if len(cfgUserTiles.flowerTiles) > 0 {
-		tm.fillTiles(player, cfgUserTiles.flowerTiles, tiles)
-	}
-
 	if len(cfgUserTiles.handTiles) > 0 {
 		tm.fillTiles(player, cfgUserTiles.handTiles, tiles)
 	}
@@ -700,13 +672,7 @@ func (tm *TileMgr) fillTiles(player *PlayerHolder, tileIDs []int, tiles *PlayerT
 		var t = tm.drawWith(tileID)
 		nt := &Tile{drawBy: player.userID(), tileID: t.tileID}
 
-		if tileID == tm.room.pseudoFlowerTileID {
-			tiles.addPesudoFlowerTile(nt)
-		} else if nt.isFlower() {
-			tiles.addFlowerTile(nt)
-		} else {
-			tiles.addHandTile(nt)
-		}
+		tiles.addHandTile(nt)
 	}
 }
 

@@ -1,0 +1,146 @@
+﻿<Window x:Class="MahjongTest.DealCfgWnd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MahjongTest"
+        mc:Ignorable="d"
+        Title="湛江麻将配牌" Height="900" Width="1000" WindowStartupLocation="CenterOwner">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="5" />
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="30"></RowDefinition>
+            </Grid.RowDefinitions>
+            <GroupBox Header="牌墙(136)" Grid.Row="0" x:Name="WallTilesGroup">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="WallTileNonFlower" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <WrapPanel Grid.Row="1" x:Name="WallTileFlower"  Orientation="Horizontal">
+
+                    </WrapPanel>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="庄家" Grid.Row="1" Margin="10,0,10,0" x:Name="AGroupBox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="ATileNonFlower" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <WrapPanel Grid.Row="1" x:Name="ATileFlower"  Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="10,0,10,0">
+                        <RadioButton VerticalAlignment="Center" GroupName="CurrentActive" IsChecked="True" x:Name="RadioButtonA">当前</RadioButton>
+                        <Button Margin="10,0,10,0" Click="OnX0_Btn_Gernerate_Clicked">随机</Button>
+                        <Button Margin="10,0,10,0" Click="OnX0_Btn_Clear_Clicked">清空</Button>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="闲家1" Grid.Row="2" Margin="10,0,10,0" x:Name="BGroupBox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="BTileNonFlower" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <WrapPanel Grid.Row="1" x:Name="BTileFlower"  Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="10,0,10,0">
+                        <RadioButton VerticalAlignment="Center" GroupName="CurrentActive" x:Name="RadioButtonB">当前</RadioButton>
+                        <Button Margin="10,0,10,0" Click="OnX1_Btn_Gernerate_Clicked">随机</Button>
+                        <Button Margin="10,0,10,0" Click="OnX1_Btn_Clear_Clicked">清空</Button>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="闲家2" Grid.Row="3" Margin="10,0,10,0" x:Name="CGroupBox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="CTileNonFlower" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <WrapPanel Grid.Row="1" x:Name="CTileFlower"  Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="10,0,10,0">
+                        <RadioButton VerticalAlignment="Center" GroupName="CurrentActive" x:Name="RadioButtonC">当前</RadioButton>
+                        <Button Margin="10,0,10,0" Click="OnX2_Btn_Gernerate_Clicked">随机</Button>
+                        <Button Margin="10,0,10,0" Click="OnX2_Btn_Clear_Clicked">清空</Button>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="闲家3" Grid.Row="4" Margin="10,0,10,0" x:Name="DGroupBox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="DTileNonFlower" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <WrapPanel Grid.Row="1" x:Name="DTileFlower"  Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="10,0,10,0">
+                        <RadioButton VerticalAlignment="Center" GroupName="CurrentActive" x:Name="RadioButtonD">当前</RadioButton>
+                        <Button Margin="10,0,10,0" Click="OnX3_Btn_Gernerate_Clicked">随机</Button>
+                        <Button Margin="10,0,10,0" Click="OnX3_Btn_Clear_Clicked">清空</Button>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <GridSplitter Grid.Row="5" Height="5" HorizontalAlignment="Stretch"/>
+            <GroupBox Header="抽牌序列" Grid.Row="6" Margin="10,0,10,0" x:Name="EGroupBox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" x:Name="ETiles" Orientation="Horizontal">
+
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" Margin="10,0,10,0">
+                        <RadioButton VerticalAlignment="Center" GroupName="CurrentActive" x:Name="RadioButtonE">当前</RadioButton>
+                        <Button Margin="10,0,10,0" Click="OnX4_Btn_Gernerate_Clicked">余下</Button>
+                        <Button Margin="10,0,10,0" Click="OnX4_Btn_Clear_Clicked">清空</Button>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            <StackPanel Orientation="Horizontal" Grid.Row="7" HorizontalAlignment="Right" Margin="10,0,10,0">
+                <TextBox MinWidth="100"  Margin="0,3,20,3" x:Name="tbCfgName"></TextBox>
+                <ComboBox SelectedIndex="0" VerticalAlignment="Center" Margin="0,0,10,0" SelectionChanged="OnFlowerTypeCombox_Selected" x:Name="comboFlowerBegin" Visibility="Collapsed">
+                    <ComboBoxItem>大丰（白）</ComboBoxItem>
+                    <ComboBoxItem>东台（白）</ComboBoxItem>
+                    <ComboBoxItem>盐城（东）</ComboBoxItem>
+                </ComboBox>
+                <Button Click="OnLoad_Button_Clicked">加载已有</Button>
+                <Button Click="OnGenerate_Button_Clicked" Margin="10,0,10,0">随机生成</Button>
+                <Button Click="OnSave_Button_Clicked">保存</Button>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

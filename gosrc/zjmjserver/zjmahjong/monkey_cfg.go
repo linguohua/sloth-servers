@@ -7,10 +7,8 @@ type MonkeyCfg struct {
 	monkeyUserTilesCfgList []*MonkeyUserTilesCfg
 	draws                  []int
 	name                   string
-	windID                 string
 	isForceConsistent      bool
 	isContinuousBanker     bool
-	isMarkup               bool
 }
 
 // newMonkeyCfg 新建一个monkey config
@@ -74,11 +72,6 @@ func (mtc *MonkeyCfg) isValid() bool {
 			slots[handTile]++
 		}
 
-		if tuc.flowerTiles != nil {
-			for _, flowTile := range tuc.flowerTiles {
-				slots[flowTile]++
-			}
-		}
 	}
 
 	for _, t := range mtc.draws {

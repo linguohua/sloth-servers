@@ -33,13 +33,13 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, int) {
 	switch st {
 	case GreatWinType_GreatSevenPair:
 		winType |= int(GreatWinType_GreatSevenPair)
-		var gp = roomConfig.sevenPairPoint()
+		var gp = roomConfig.greatSevenPairPoint()
 		points += gp
 		s.cl.Println("GWT:GreatSevenPair:", gp)
 		break
 	case GreatWinType_SevenPair:
 		winType |= int(GreatWinType_SevenPair)
-		var gp = roomConfig.greatSevenPairPoint()
+		var gp = roomConfig.sevenPairPoint()
 		points += gp
 		s.cl.Println("GWT:SevenPair:", gp)
 		break
@@ -130,7 +130,7 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 	}
 
 	sc.greatWinType = winType
-	sc.fGreatWinPoints = points
+	sc.greatWinPoints = points
 
 	s.cl.Printf("great win point:%d, type:%d\n", points, winType)
 }
@@ -144,12 +144,21 @@ func calcGreatWinning(s *SPlaying, player *PlayerHolder, selfDrawn bool) {
 // 中马倍数=中马个数+1；
 func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple int) {
 	horseMultiple := (winner.sctx.horseCount + 1)
-	baseMutiple := winner.sctx.fGreatWinPoints
+	baseMutiple := winner.sctx.greatWinPoints
 
-	score2Pay := room.config.baseScore * baseMutiple * horseMultiple
+	trimMultiple := baseMutiple * horseMultiple
+	if room.config.trimMultiple > 0 {
+		if trimMultiple > room.config.trimMultiple {
+			before := trimMultiple
+			trimMultiple = room.config.trimMultiple
 
-	room.cl.Printf("pay2Winner, score2Pay:%d = baseScore:%d X baseMutiple:%d X horseMultiple:%d\n",
-		score2Pay, room.config.baseScore, baseMutiple, horseMultiple)
+			room.cl.Printf("pay2Winner, trim %d to %d", before, trimMultiple)
+		}
+	}
+
+	score2Pay := room.config.baseScore * trimMultiple * mutiple
+	room.cl.Printf("pay2Winner, score2Pay:%d = baseScore:%d X baseMutiple:%d X horseMultiple:%d X mutiple: %d\n",
+		score2Pay, room.config.baseScore, baseMutiple, horseMultiple, mutiple)
 
 	loser.sctx.getPayTarget(winner).totalWinScore -= score2Pay
 	winner.sctx.getPayTarget(loser).totalWinScore += score2Pay
@@ -232,6 +241,10 @@ func calcFinalResultWithChucker(s *SPlaying, chucker *PlayerHolder) {
 
 		var winner = p
 		basicScoreCalc(s, winner, false)
+
+		// 计算马牌
+		calcHorse(winner, s)
+
 		winner.sctx.winType = int(mahjong.HandOverType_enumHandOverType_Win_Chuck)
 	}
 
@@ -272,9 +285,20 @@ func calcHorse(winner *PlayerHolder, s *SPlaying) {
 	horseCount := s.room.config.horseCount
 
 	horseTileMatchCount := 0
-	horseTiles := s.tileMgr.drawHorseTiles(horseCount)
+	if s.horseTiles == nil {
+		horseTiles := s.tileMgr.drawHorseTiles(horseCount)
+		// 记录马牌
+		s.horseTiles = horseTiles
 
-	for _, ht := range horseTiles {
+		horseTileIDs := make([]int, len(horseTiles))
+		for i, t := range horseTiles {
+			horseTileIDs[i] = t.tileID
+		}
+
+		s.cl.Printf("calcHorse, winner:%s, horseTiles:%+v", winner.userID(), horseTileIDs)
+	}
+
+	for _, ht := range s.horseTiles {
 		if ht.horseType() == horseType {
 			horseTileMatchCount++
 		}

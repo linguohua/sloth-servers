@@ -221,7 +221,7 @@ func (lc *LoopContext) snapshootDealActions() {
 	// 记录庄家和风花牌
 	var bankerChairID32 = int32(room.bankerPlayer().chairID)
 	msgRecorder.BankerChairID = &bankerChairID32
-	var windFlowerID32 = int32(room.pseudoFlowerTileID)
+	var windFlowerID32 = int32(0)
 	msgRecorder.WindFlowerID = &windFlowerID32
 	var isHandOver = false
 	msgRecorder.IsHandOver = &isHandOver
@@ -237,7 +237,7 @@ func (lc *LoopContext) snapshootDealActions() {
 	msgRecorder.RoomType = &roomType32
 
 	extra := &mahjong.SRMsgHandRecorderExtra{}
-	var markup32 = int32(room.markup)
+	var markup32 = int32(0)
 	extra.Markup = &markup32
 	extra.OwnerUserID = &room.ownerID
 	msgRecorder.Extra = extra

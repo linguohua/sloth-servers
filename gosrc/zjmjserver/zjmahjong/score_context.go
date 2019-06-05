@@ -10,9 +10,9 @@ import (
 type ScoreContext struct {
 	winType int
 
-	greatWinType    int
-	fGreatWinPoints int
-	horseCount      int
+	greatWinType   int
+	greatWinPoints int
+	horseCount     int
 
 	isContinuousBanker bool
 	orderPlayerSctxs   []*PlayerScoreContext

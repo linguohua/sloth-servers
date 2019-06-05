@@ -1,0 +1,97 @@
+﻿<UserControl x:Class="PokerTest.TileStackWnd"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PokerTest"
+             mc:Ignorable="d" 
+             d:DesignHeight="280" d:DesignWidth="700">
+    <Grid>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,0,0">
+            <StackPanel Orientation="Horizontal" x:Name="Sp1">
+                <Button Height="53" Width="43">A1</Button>
+                <Button Height="53" Width="43">A2</Button>
+                <Button Height="53" Width="43">A3</Button>
+                <Button Height="53" Width="43">A4</Button>
+                <Button Height="53" Width="43">A5</Button>
+                <Button Height="53" Width="43">A6</Button>
+                <Button Height="53" Width="43">A7</Button>
+                <Button Height="53" Width="43">A8</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0"  x:Name="Sp2">
+                <Button Height="53" Width="43">A1</Button>
+                <Button Height="53" Width="43">A2</Button>
+                <Button Height="53" Width="43">A3</Button>
+                <Button Height="53" Width="43">A4</Button>
+                <Button Height="53" Width="43">A5</Button>
+                <Button Height="53" Width="43">A6</Button>
+                <Button Height="53" Width="43">A7</Button>
+                <Button Height="53" Width="43">A8</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0"  x:Name="Sp3">
+                <Button Height="53" Width="43">A1</Button>
+                <Button Height="53" Width="43">A2</Button>
+                <Button Height="53" Width="43">A3</Button>
+                <Button Height="53" Width="43">A4</Button>
+                <Button Height="53" Width="43">A5</Button>
+                <Button Height="53" Width="43">A6</Button>
+                <Button Height="53" Width="43">A7</Button>
+                <Button Height="53" Width="43">A8</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0"  x:Name="Sp4">
+                <Button Height="53" Width="43">A1</Button>
+                <Button Height="53" Width="43">A2</Button>
+                <Button Height="53" Width="43">A3</Button>
+                <Button Height="53" Width="43">A4</Button>
+                <Button Height="53" Width="43">A5</Button>
+                <Button Height="53" Width="43">A6</Button>
+                <Button Height="53" Width="43">A7</Button>
+                <Button Height="53" Width="43">A8</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+                <Button Height="53" Width="43">A9</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                <Button Height="40" Width="60" Click="OnAuoX_Button_Click" x:Name="AutoX">Auto</Button>
+                <Button Height="40" Width="60" Click="OnAction1_Button_Click" x:Name="BtnAction1">Action1</Button>
+                <Button Height="40" Width="60" Click="OnAction2_Button_Click" x:Name="BtnAction2">Action2</Button>
+                <Button Height="40" Width="60" Click="OnAction3_Button_Click" x:Name="BtnAction3">Action3</Button>
+                <Button Height="40" Width="60" Click="OnAction4_Button_Click" x:Name="BtnAction4">Action4</Button>
+                <Button Height="40" Width="60" Click="OnAction5_Button_Click" x:Name="BtnAction5">Action5</Button>
+                <TextBlock Margin="10" Text="" x:Name="TbName"></TextBlock>
+                <TextBlock Margin="10" Text="" x:Name="TbPseudoFlower"></TextBlock>
+                <TextBlock Margin="10" Text="" x:Name="TbRichi"></TextBlock>
+                <TextBlock Margin="10" Text="" x:Name="TbScore"></TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

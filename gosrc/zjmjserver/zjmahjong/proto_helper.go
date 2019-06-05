@@ -1,8 +1,9 @@
 package zjmahjong
 
 import (
-	log "github.com/sirupsen/logrus"
 	"mahjong"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // serializeMsgRestore 序列化掉线恢复消息给客户端
@@ -56,7 +57,7 @@ func serializeMsgDeal(s *SPlaying, forwho *PlayerHolder) *mahjong.MsgDeal {
 	var msg = &mahjong.MsgDeal{}
 	var bankerChairID = int32(s.room.bankerPlayer().chairID)
 	msg.BankerChairID = &bankerChairID
-	var windFlowerID = int32(s.room.pseudoFlowerTileID)
+	var windFlowerID = int32(0)
 	msg.WindFlowerID = &windFlowerID
 	var tileInWall = int32(s.tileMgr.tileCountInWall())
 	msg.TilesInWall = &tileInWall
@@ -64,7 +65,7 @@ func serializeMsgDeal(s *SPlaying, forwho *PlayerHolder) *mahjong.MsgDeal {
 	msg.IsContinuousBanker = &isContinuousBanker
 
 	// 家家庄
-	var markup32 = int32(s.room.markup)
+	var markup32 = int32(0)
 	msg.Markup = &markup32
 
 	// 骰子
@@ -131,11 +132,7 @@ func serializeTileListForOpponent(player *PlayerHolder) *mahjong.MsgPlayerTileLi
 	playerTileList.TilesDiscard = tiles.discard2IDList()
 
 	// 已经落地的面子牌，暗杠只发标记
-	// 需求修正：如果有吃椪，需要明牌暗杠
 	mark := true
-	if tiles.chowPongExposedKongCount() > 0 {
-		mark = false
-	}
 	playerTileList.Melds = tiles.melds2MsgMeldTileList(mark)
 
 	// 花牌
@@ -402,7 +399,8 @@ func int32ListRemove(intList []int32, element int) []int32 {
 }
 
 // serializeMsgAllowedForDiscardResponse 序列化允许的反应动作给玩家，以便其他玩家，对某个玩家的出牌做出反应
-func serializeMsgAllowedForDiscardResponse(player *PlayerHolder, qaIndex int, discardedTile *Tile, discardPlayer *PlayerHolder) *mahjong.MsgAllowPlayerReAction {
+func serializeMsgAllowedForDiscardResponse(player *PlayerHolder, qaIndex int,
+	discardedTile *Tile, discardPlayer *PlayerHolder) *mahjong.MsgAllowPlayerReAction {
 	msg := &mahjong.MsgAllowPlayerReAction{}
 	var qaIndex32 = int32(qaIndex)
 	msg.QaIndex = &qaIndex32
@@ -498,6 +496,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 	var msgHandScore = &mahjong.MsgHandScore{}
 
 	playerScores := make([]*mahjong.MsgPlayerScore, 0, len(s.players))
+	banker := s.room.bankerPlayer()
 
 	for _, player := range s.players {
 		var sc = player.sctx
@@ -508,7 +507,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 		msgPlayerScore.WinType = &winType32
 		var score32 = int32(sc.calcTotalWinScore())
 		msgPlayerScore.Score = &score32
-		var specialScore32 = int32(0) // 湛江麻将不用
+		var specialScore32 = int32(sc.horseCount) // 湛江麻用于表示中马个数
 		msgPlayerScore.SpecialScore = &specialScore32
 		var fakeWinScore32 = int32(0)
 		msgPlayerScore.FakeWinScore = &fakeWinScore32
@@ -521,7 +520,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 			greatWin := &mahjong.MsgPlayerScoreGreatWin{}
 			var baseWinScore32 = int32(0)
 			greatWin.BaseWinScore = &baseWinScore32
-			var greatWinPoints32 = int32(sc.fGreatWinPoints * 10)
+			var greatWinPoints32 = int32(sc.greatWinPoints)
 			greatWin.GreatWinPoints = &greatWinPoints32
 			var greatWinType32 = int32(sc.greatWinType)
 			greatWin.GreatWinType = &greatWinType32
@@ -531,6 +530,17 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 			msgPlayerScore.GreatWin = greatWin
 		}
 
+		if player == banker {
+			if s.horseTiles != nil {
+				horseList := make([]int32, len(s.horseTiles))
+				for i, t := range s.horseTiles {
+					horseList[i] = int32(t.tileID)
+				}
+
+				// 湛江麻将把马牌放到庄家的fake list上
+				msgPlayerScore.FakeList = horseList
+			}
+		}
 		playerScores = append(playerScores, msgPlayerScore)
 	}
 

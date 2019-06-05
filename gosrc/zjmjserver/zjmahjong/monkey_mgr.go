@@ -219,10 +219,6 @@ func (mgr *MonkeyMgr) attachDealCfg2Room(w http.ResponseWriter, r *http.Request,
 	if !err {
 		log.Printf("bind deal cfg to room:%s, cfg:%s\n", roomNumber, cfg.name)
 		room.monkeyCfg = cfg
-		// 如果需要，重设一下风牌
-		if cfg.windID != "" {
-			room.forceWind(dict[cfg.windID])
-		}
 
 		// 重设置一下庄家ID
 		if cfg.monkeyUserTilesCfgList[0].userID != "" {
@@ -296,9 +292,9 @@ func (mgr *MonkeyMgr) getCfgByName(cfgName string) *MonkeyCfg {
 
 // verifyHeader 检查上传的csv文件头部是否有效
 func (mgr *MonkeyMgr) verifyHeader(record []string) error {
-	headers := []string{"名称", "类型", "庄家userID", "庄家手牌", "庄家花牌", "庄家动作提示", "userID2",
-		"手牌", "花牌", "动作提示", "userID3", "手牌", "花牌", "动作提示", "userID4", "手牌", "花牌", "动作提示",
-		"抽牌序列", "风牌", "强制一致", "房间配置ID", "是否连庄", "家家庄"}
+	headers := []string{"名称", "类型", "庄家userID", "庄家手牌", "庄家动作提示", "userID2",
+		"手牌", "动作提示", "userID3", "手牌", "动作提示", "userID4", "手牌", "动作提示",
+		"抽牌序列", "强制一致", "房间配置ID", "是否连庄"}
 
 	if len(headers) != len(record) {
 		return fmt.Errorf("csv file not match, maybe you use old versoin mahjong test client")
@@ -315,7 +311,7 @@ func (mgr *MonkeyMgr) verifyHeader(record []string) error {
 
 // extractUserTilesCfg 从csv文件里面抽取玩家发牌配置
 func (mgr *MonkeyMgr) extractUserTilesCfg(record []string, userIndex int) *MonkeyUserTilesCfg {
-	beginIdx := userIndex*4 + 2
+	beginIdx := userIndex*3 + 2
 	tuc := newMonkeyUserTilesCfg(userIndex == 0, userIndex)
 
 	// userID
@@ -339,20 +335,8 @@ func (mgr *MonkeyMgr) extractUserTilesCfg(record []string, userIndex int) *Monke
 		tuc.setHandTiles(hands)
 	}
 
-	// 花牌
-	flowercomps := record[beginIdx+2]
-	flowercomps = strings.Trim(flowercomps, " \t")
-	if flowercomps != "" {
-		flowercomps = strings.Replace(flowercomps, "，", ",", -1)
-		var flowers = strings.Split(flowercomps, ",")
-		if len(flowers) > 0 {
-			mgr.trimLeftRight(flowers)
-			tuc.setFlowerTiles(flowers)
-		}
-	}
-
 	// 动作提示
-	tipscomps := record[beginIdx+3]
+	tipscomps := record[beginIdx+2]
 	tipscomps = strings.Trim(tipscomps, " \t")
 	if tipscomps != "" {
 		tipscomps = strings.Replace(tipscomps, "，", ",", -1)
@@ -412,7 +396,7 @@ func (mgr *MonkeyMgr) onUploadCfgs(body string) ([]*MonkeyCfg, error) {
 		}
 
 		// 抽牌序列
-		var drawseq = strings.Trim(record[18], "\t ")
+		var drawseq = strings.Trim(record[14], "\t ")
 		if drawseq != "" {
 			var draws = strings.Split(drawseq, ",")
 			if len(draws) >= 1 {
@@ -421,31 +405,14 @@ func (mgr *MonkeyMgr) onUploadCfgs(body string) ([]*MonkeyCfg, error) {
 			}
 		}
 
-		// 风牌ID
-		var windID = strings.Trim(record[19], "\t ")
-		if windID != "" {
-			var tileID = dict[windID]
-			if tileID >= TON && tileID <= PEI {
-				cfg.windID = windID
-			} else {
-				err = fmt.Errorf("cfg %s reset wind error:%s", name, windID)
-				return nil, err
-			}
-		}
-
-		var forceConsistent = strings.Trim(record[20], "\t ")
+		var forceConsistent = strings.Trim(record[15], "\t ")
 		if forceConsistent == "1" {
 			cfg.isForceConsistent = true
 		}
 
-		var isContinuousBanker = strings.Trim(record[22], "\t ")
+		var isContinuousBanker = strings.Trim(record[16], "\t ")
 		if isContinuousBanker == "1" {
 			cfg.isContinuousBanker = true
-		}
-
-		var isMarkup = strings.Trim(record[23], "\t ")
-		if isMarkup == "1" {
-			cfg.isMarkup = true
 		}
 
 		if cfg.isValid() {

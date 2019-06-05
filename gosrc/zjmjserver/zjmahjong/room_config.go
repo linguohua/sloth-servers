@@ -65,6 +65,9 @@ type RoomConfig struct {
 
 	// 底分
 	baseScore int
+
+	// 封顶倍数
+	trimMultiple int
 }
 
 func newRoomConfig() *RoomConfig {
@@ -89,6 +92,8 @@ func newRoomConfig() *RoomConfig {
 
 	rc.horseCount = 6
 	rc.baseScore = 1
+
+	rc.trimMultiple = 0
 
 	return rc
 }
@@ -139,6 +144,13 @@ func newRoomConfigFromJSON(configJSON *RoomConfigJSON) *RoomConfig {
 		rc.baseScore = 10
 	default:
 		rc.baseScore = 2
+	}
+
+	switch configJSON.TrimType {
+	case 1:
+		rc.trimMultiple = 8
+	case 2:
+		rc.trimMultiple = 16
 	}
 
 	return rc
@@ -272,6 +284,9 @@ type RoomConfigJSON struct {
 
 	// 底分类型
 	BaseScoreType int `json:"baseScoreType"`
+
+	// 封顶类型
+	TrimType int `json:"trimType"`
 }
 
 func loadRoomConfigFromRedis(roomConfigID string) []byte {

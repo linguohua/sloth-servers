@@ -1,0 +1,26 @@
+﻿<Window x:Class="PokerTest.ExportRoomWnd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PokerTest"
+        mc:Ignorable="d"
+        Title="ExportRoomWnd" Height="150" Width="300" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="40"></RowDefinition>
+        </Grid.RowDefinitions>
+        <DockPanel LastChildFill="True" Height="40" Grid.Row="0" Margin="0,10,0,0">
+            <Label>xID:</Label>
+            <TextBox MinWidth="100" x:Name="TextBoxUserId"></TextBox>
+        </DockPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <CheckBox VerticalAlignment="Center" Margin="0,0,10,0" x:Name="cbAll">所有记录</CheckBox>
+            <RadioButton GroupName="idType" VerticalAlignment="Center" Margin="0,0,10,0" IsChecked="True" x:Name="RbUserId">userID</RadioButton>
+            <RadioButton GroupName="idType" VerticalAlignment="Center" Margin="0,0,10,0" x:Name="RbRoomId">recordID</RadioButton>
+            <Button Content="导出" Click="OnExportButton_Clicked"></Button>
+        </StackPanel>
+    </Grid>
+</Window>
