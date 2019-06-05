@@ -89,7 +89,7 @@ message MsgClubEvent
 {
     required int32 evtType = 1; // 事件类型
     required uint32 Id = 2; // 事件唯一ID
-    required uint32 generatedTime = 3; // 自2010后时间过去秒数
+    required uint32 generatedTime = 3; // 时间戳，单位为秒
     optional string to = 4; // 目标，事件发送给谁，如果为空或者 "" 表示发给俱乐部所有成员
     optional bytes content = 5; // 时间详细内容，根据evtType做不同的解析
     optional bool unread = 6; // 为true表示未读
