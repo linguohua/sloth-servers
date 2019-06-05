@@ -23,7 +23,7 @@ const (
 	wsReadBufferSize  = 2048 // 每个websocket的接收缓冲限制
 	wsWriteBufferSize = 4096 // 每个websocket的发送缓冲限制
 
-	myRoomType = gconst.RoomType_DafengMJ
+	myRoomType = gconst.RoomType_ZJMJ
 )
 
 var (
