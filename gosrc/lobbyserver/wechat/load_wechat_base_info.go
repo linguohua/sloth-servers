@@ -33,25 +33,28 @@ func GetWeiXinPlusUserInfo(sessionkey string, encrypteddata string, iv string) (
 
 	skey, err := base64.StdEncoding.DecodeString(sessionkey)
 	if err != nil {
+		log.Error("GetWeiXinPlusUserInfo, decode sessionkey error:", err)
 		return nil, err
 	}
 
 	sdata, err := base64.StdEncoding.DecodeString(encrypteddata)
 	if err != nil {
+		log.Error("GetWeiXinPlusUserInfo, decode encrypteddata error:", err)
 		return nil, err
 	}
 
 	siv, err := base64.StdEncoding.DecodeString(iv)
 	if err != nil {
+		log.Error("GetWeiXinPlusUserInfo, decode iv error:", err)
 		return nil, err
 	}
 
 	databyte := pswDecrypt(string(sdata), string(skey), string(siv))
-	log.Debug("GetWeiXinPlusUserInfo data:", string(databyte))
 
 	userplusinfo := &WeiXinUserPlusInfo{}
 	err = json.Unmarshal(databyte, &userplusinfo)
 	if err != nil {
+		log.Error("GetWeiXinPlusUserInfo, Unmarshal WeiXinUserPlusInfo error:", err)
 		return nil, err
 	}
 
@@ -111,4 +114,5 @@ func loadDataUseHTTPGet(url string, jsonStruct interface{}) error {
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(jsonStruct)
 	return err
+
 }
