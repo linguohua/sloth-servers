@@ -121,6 +121,8 @@ func newApplicateEvent(clubID string, applicantUserID string, owner string) {
 	clubEvent.GeneratedTime = &generatedTime32
 	needHandle := true // 申请事件是需要处理的
 	clubEvent.NeedHandle = &needHandle
+	// 未处理
+	clubEvent.ApprovalResult = proto.Int(0)
 
 	eventID32 := uint32(cn % int64(0x0ffffffff))
 	clubEvent.Id = &eventID32
