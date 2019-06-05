@@ -102,6 +102,7 @@ func acceptHTTPRequest() {
 		log.Fatalf("Http server ListenAndServe %d failed:%v", config.AccessoryServerPort, err)
 	}
 
+
 }
 
 // func initFileServer() {
@@ -109,3 +110,4 @@ func acceptHTTPRequest() {
 // 	var gameServerHandler = http.StripPrefix("/lobby/upgrade/download/", http.FileServer(http.Dir(config.FileServerPath)))
 // 	rootRouter.PathPrefix("/lobby/upgrade/download/").Handler(gameServerHandler)
 // }
+

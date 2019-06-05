@@ -6,7 +6,7 @@ import (
 
 // InitWith init
 func InitWith() {
-	lobby.RegHTTPHandle("GET", "/wxLogin", handlerWxLogin)
+	lobby.RegHTTPHandle("POST", "/wxLogin", handlerWxLogin)
 	lobby.RegHTTPHandle("GET", "/accountLogin", handlerAccountLogin)
 	lobby.RegHTTPHandle("GET", "/quicklyLogin", handlerQuicklyLogin)
 	lobby.RegHTTPHandle("GET", "/register", handlerRegister)

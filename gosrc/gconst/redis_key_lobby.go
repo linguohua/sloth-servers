@@ -55,6 +55,9 @@ const (
 	// LobbyDatabaseConfig 数据库配置
 	LobbyDatabaseConfig = "l:db:cfg"
 
+	// LobbyWeChatConfig 微信配置
+	LobbyWeChatConfig = "l:wc:cfg"
+
 	// LobbyUpgradeModuleSet 所有配置了更新的模块的名字set
 	LobbyUpgradeModuleSet = "l:upset"
 
