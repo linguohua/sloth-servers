@@ -1436,8 +1436,7 @@ func (r *Room) writeHandEnd2Redis() {
 // readHandInfoFromRedis4Restore 恢复房间时，从redis读取手牌信息
 func (r *Room) readHandInfoFromRedis4Restore(conn redis.Conn) {
 	// 读取一下已经完成的手牌局数，以及玩家列表等一手牌相关的信息
-	values, err := redis.Values(conn.Do("hmget", gconst.GameServerRoomTablePrefix+r.ID, "hrfinished", "bankerID",
-		"windID", "sr", "hp"))
+	values, err := redis.Values(conn.Do("hmget", gconst.GameServerRoomTablePrefix+r.ID, "hrfinished", "bankerID", "sr", "hp"))
 	if err == nil {
 		handRoundFinished, err := redis.Int(values[0], nil)
 		if err == nil {
