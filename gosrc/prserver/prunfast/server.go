@@ -242,6 +242,7 @@ func monkeyHTTPHandle(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	} else {
 		var msg = "no authorization for call monkey handler:" + spName
 		log.Println(msg)
+		w.WriteHeader(404)
 		w.Write([]byte(msg))
 	}
 }
