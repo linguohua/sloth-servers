@@ -413,113 +413,6 @@ func (pt *PlayerTiles) windTypeCount() int {
 	return len(set)
 }
 
-// isSecondClearFrontAble 是否算作小门清
-// 需求修正：如果没有吃椪杠他人（注意是他人，因此暗杠不算）行为，且有花分，叫小门清
-func (pt *PlayerTiles) isSecondClearFrontAble() bool {
-	meldCount := pt.exposedMeldCount()
-	if meldCount > 0 {
-		// 有吃椪杠他人行为，因此不是小门清
-		return false
-	}
-
-	// 如果有暗杠，或者有花牌，都可以产生花分，因此算作小门清
-	if pt.flowerTileCount() > 0 || pt.concealedKongCount() > 0 {
-		return true
-	}
-
-	return false
-}
-
-// allFlowerScoreCount 计算小胡花分
-// 一个碰算1个花，3个一样的牌在手里算2个花（必须胡出刻子），花墩子算8花（还要算花墩子），
-// 明杠非花算3花（还要额外算墩子），暗杠非花算4花（还要额外算墩子）
-// 为牌局前预设的分数，针对花牌，1个花X分
-// a.胡牌为小胡，手里有3只或4只一样的牌，额外要算2个花。
-// b.胡牌为小胡，且有明杠，额外要算3个花。
-// c.胡牌为小胡，且有暗杠，额外要算4个花。
-// d.胡牌为小胡，且有门前有花墩子（4只一样的花牌），算8个花。
-// e.门前有除开花墩子外的花，有几个花牌算几个花
-func (pt *PlayerTiles) allFlowerScoreCount(selfDraw bool) int {
-	count := 0
-	var pongCount = pt.tripletMeldCount()
-	count += pongCount // 一个碰算1个花
-	log.Printf("FlowerX, pong %d *1=> %d\n", pongCount, pongCount*1)
-
-	var ekongCount = pt.exposedKongCount()
-	count += ekongCount * 3 // 明杠（包括加杠），额外要算3个花
-
-	log.Printf("FlowerX, ekong %d *3=> %d\n", ekongCount, ekongCount*3)
-
-	var ckongCount = pt.concealedKongCount()
-	count += ckongCount * 4 // 暗杠，额外要算4个花
-	log.Printf("FlowerX, ckong %d *4=> %d\n", ckongCount, ckongCount*4)
-
-	pt.hand2Slots()
-
-	// --需求修正：必须胡牌牌型中，这几个一样牌真的一幅刻子才可以
-	// --例如，123万33万345万678条这种牌胡了，就不能将333万为2个花
-	// -- 必须是123条  333万  345万 678条 99饼  才能将333万算2个花
-	// 需求修正：如果最后一张牌是形成刻子，且改牌是吃炮而来的，则该刻子只能获得1分而不是两分
-	var sameInHandCount, lastTileKotCount = winAbleKotCount(pt.slots, pt.latestHandTile().tileID)
-	var lastTileCountInHand = pt.tileCountInHandOf(pt.latestHandTile().tileID)
-
-	log.Printf("FlowerX, same inHand %d *2=> %d\n", sameInHandCount, sameInHandCount*2)
-	count += (sameInHandCount * 2)
-	if lastTileKotCount > 0 && !selfDraw && lastTileCountInHand < 4 {
-		log.Println("last tile is in kot, but chuck from other, can earn only 1 score")
-		count--
-	}
-
-	pt.flower2Slots()
-	var f4Count = pt.quadFlowerCount()
-	var fCount = pt.flowerTileCount() - 4*f4Count
-	count += 8 * f4Count
-	count += fCount
-
-	log.Printf("FlowerX, dunzi %d *8=> %d\n", f4Count, f4Count*8)
-	log.Printf("FlowerX, non-dunzi flower %d *1=> %d\n", fCount, fCount)
-
-	return count
-}
-
-// quadFlowerCount 4张一样的花牌组，有几个
-// 注意这样的花牌组如果有，最多有6个，只可能是风牌当花牌的情形以及中发白
-// 因为其他8种花牌，都是每种只得1张牌
-// --需求修改：如果春夏秋冬都有，算一个花墩子；如果梅兰竹菊都有，算一个花墩子
-func (pt *PlayerTiles) quadFlowerCount() int {
-	count := 0
-	pt.flower2Slots()
-	for _, v := range pt.slots {
-		if v == 4 {
-			// 花墩子（4只一样的花牌），算8个花。
-			count++
-		}
-	}
-
-	// PLUM          = 34 // 梅
-	// ORCHID        = 35 // 兰
-	// BAMBOO        = 36 // 竹
-	// CHRYSANTHEMUM = 37 // 菊
-	if pt.slots[PLUM] > 0 && pt.slots[ORCHID] > 0 &&
-		pt.slots[BAMBOO] > 0 && pt.slots[CHRYSANTHEMUM] > 0 {
-		count++
-	}
-
-	// SPRING        = 38 // 春
-	// SUMMER        = 39 // 夏
-	// AUTUMN        = 40 // 秋
-	// WINTER        = 41 // 冬
-	if pt.slots[SPRING] > 0 && pt.slots[SUMMER] > 0 &&
-		pt.slots[AUTUMN] > 0 && pt.slots[WINTER] > 0 {
-		count++
-	}
-
-	if count > 6 {
-		log.Panic("quad flower should not great than 6")
-	}
-	return count
-}
-
 // readyHandAble 是否可以听牌
 func (pt *PlayerTiles) readyHandAble() bool {
 	if pt.agariTileCount() != 13 {
@@ -747,12 +640,12 @@ func (pt *PlayerTiles) chowAble2IdList(tileID int) []int {
 
 // pongAbleWith 是否可以碰牌
 func (pt *PlayerTiles) pongAbleWith(t *Tile) bool {
-	// 最后一次打出去的牌不能跟本次要碰的牌相同
-	latestDiscardTileOfSelf := pt.host.hStatis.latestDiscardedTileLocked
-	// 需求修正：如果手上只剩下4张牌，那么不考虑这个锁定
-	if pt.hand.Len() > 4 && latestDiscardTileOfSelf.tileID == t.tileID {
-		return false
-	}
+	// // 最后一次打出去的牌不能跟本次要碰的牌相同
+	// latestDiscardTileOfSelf := pt.host.hStatis.latestDiscardedTileLocked
+	// // 需求修正：如果手上只剩下4张牌，那么不考虑这个锁定
+	// if pt.hand.Len() > 4 && latestDiscardTileOfSelf.tileID == t.tileID {
+	// 	return false
+	// }
 
 	pt.hand2Slots()
 	return pt.slots[t.tileID] >= 2

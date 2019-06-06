@@ -424,12 +424,6 @@ func serializeMsgActionResultNotifyForResponse(action int, player *PlayerHolder,
 
 	if newMeld != nil {
 		msg.ActionMeld = player.tiles.meld2MsgMeldTile(newMeld, false)
-
-		// 有了吃椪杠，暗杠需要明牌显示
-		concealedMeldIDs := player.tiles.concealedKongIDList()
-		if len(concealedMeldIDs) > 0 {
-			msg.NewFlowers = concealedMeldIDs
-		}
 	}
 
 	return msg
