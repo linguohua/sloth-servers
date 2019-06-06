@@ -7,7 +7,7 @@ namespace MahjongTest
 {
     public class Player : IDisposable
     {
-        
+
         public WebSocket Ws { get; }
         public string Name { get; }
 
@@ -21,6 +21,14 @@ namespace MahjongTest
             MyWnd = myWnd;
             UserId = userId;
             var url = $"{ProgramConfig.ServerUrl}/ws/monkey?userID={userId}&roomNumber={roomNumber}";
+            if (url.StartsWith("https://"))
+            {
+                url = url.Replace("https", "wss");
+            }
+            else
+            {
+                url = url.Replace("http", "ws");
+            }
             url = url.Replace("http", "ws");
             Ws = new WebSocket(string.Format(url, userId, roomNumber));
             MyWnd.SetPlayer(this);

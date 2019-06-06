@@ -58,7 +58,7 @@ namespace MahjongTest
 
                 Uri uriResult;
                 bool result = Uri.TryCreate(hostUrl, UriKind.Absolute, out uriResult)
-                    && uriResult.Scheme == Uri.UriSchemeHttp;
+                    && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
                 if (!result)
                 {
