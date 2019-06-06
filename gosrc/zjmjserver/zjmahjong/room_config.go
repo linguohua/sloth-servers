@@ -133,7 +133,7 @@ func newRoomConfigFromJSON(configJSON *RoomConfigJSON) *RoomConfig {
 		rc.horseCount = 6
 	}
 
-	switch configJSON.HorseNumberType {
+	switch configJSON.BaseScoreType {
 	case 0:
 		rc.baseScore = 1
 	case 1:
