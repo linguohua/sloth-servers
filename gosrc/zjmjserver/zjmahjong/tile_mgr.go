@@ -105,17 +105,17 @@ func (tm *TileMgr) discardAble(player *PlayerHolder, msgTile int) bool {
 	}
 
 	// 如果手牌数量大于2，而且刚刚吃碰，那么就有限制
-	if tiles.tileCountInHand() > 2 &&
-		player.hStatis.latestChowPongTileLocked.tileID == msgTile {
-		return false
-	}
+	// if tiles.tileCountInHand() > 2 &&
+	// 	player.hStatis.latestChowPongTileLocked.tileID == msgTile {
+	// 	return false
+	// }
 
-	if player.hStatis.isRichi || tm.wallEmpty() {
-		// 报听情况下只能打最后一张牌
-		if msgTile != tiles.latestHandTile().tileID {
-			return false
-		}
-	}
+	// if player.hStatis.isRichi || tm.wallEmpty() {
+	// 	// 报听情况下只能打最后一张牌
+	// 	if msgTile != tiles.latestHandTile().tileID {
+	// 		return false
+	// 	}
+	// }
 	return true
 }
 
