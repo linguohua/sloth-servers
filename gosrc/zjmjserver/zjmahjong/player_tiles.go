@@ -325,6 +325,19 @@ func (pt *PlayerTiles) kongMeldCount() int {
 	return count
 }
 
+// kongMelds 杠牌牌组列表
+func (pt *PlayerTiles) kongMelds() []*Meld {
+	melds := make([]*Meld, 0, 4)
+	for e := pt.fixedMelds.Front(); e != nil; e = e.Next() {
+		m := e.Value.(*Meld)
+		if m.isKong() {
+			melds = append(melds, m)
+		}
+	}
+
+	return melds
+}
+
 // suitTypeCount 所有索子牌种类
 func (pt *PlayerTiles) suitTypeCount() int {
 	set := make(map[int]bool)

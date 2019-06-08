@@ -436,7 +436,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 
 	playerScores := make([]*mahjong.MsgPlayerScore, 0, len(s.players))
 	banker := s.room.bankerPlayer()
-
+	bs := s.room.config.baseScore
 	for _, player := range s.players {
 		var sc = player.sctx
 		var msgPlayerScore = &mahjong.MsgPlayerScore{}
@@ -448,7 +448,7 @@ func serializeMsgHandOver(s *SPlaying, handOverType int) *mahjong.MsgHandOver {
 		msgPlayerScore.Score = &score32
 		var specialScore32 = int32(sc.horseCount) // 湛江麻用于表示中马个数
 		msgPlayerScore.SpecialScore = &specialScore32
-		var fakeWinScore32 = int32(0)
+		var fakeWinScore32 = int32(bs * sc.calcKongMultiple()) // 湛江麻将用于表示杠分
 		msgPlayerScore.FakeWinScore = &fakeWinScore32
 
 		msgPlayerScore.IsContinuousBanker = &sc.isContinuousBanker

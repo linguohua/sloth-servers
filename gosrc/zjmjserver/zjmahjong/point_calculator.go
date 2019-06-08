@@ -161,13 +161,88 @@ func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple i
 	}
 
 	score2Pay := room.config.baseScore * trimMultiple * mutiple
-	room.cl.Printf("pay2Winner, score2Pay:%d = baseScore:%d X baseMutiple:%d X horseMultiple:%d X mutiple: %d\n",
-		score2Pay, room.config.baseScore, baseMutiple, horseMultiple, mutiple)
+	room.cl.Printf("%s pay2Winner %s, score2Pay:%d = baseScore:%d X baseMutiple:%d X horseMultiple:%d X mutiple: %d\n",
+		loser.userID(), winner.userID(), score2Pay, room.config.baseScore, baseMutiple, horseMultiple, mutiple)
 
 	loser.sctx.getPayTarget(winner).totalWinScore -= score2Pay
 	winner.sctx.getPayTarget(loser).totalWinScore += score2Pay
 
 	room.cl.Printf("loser:%d pay score %d 2 winner %d\n", loser.chairID, score2Pay, winner.chairID)
+}
+
+// calcKongMultiple 计算杠分
+func calcKongMultiple(s *SPlaying, player *PlayerHolder) {
+	log.Println("calcKongMultiple for player:", player.chairID)
+	tiles := player.tiles
+	kongMelds := tiles.kongMelds()
+
+	if len(kongMelds) < 1 {
+		return
+	}
+
+	for _, m := range kongMelds {
+		switch m.mt {
+		case mahjong.MeldType_enumMeldTypeConcealedKong:
+			payConcealedKong(player, s)
+			break
+		case mahjong.MeldType_enumMeldTypeExposedKong:
+			payExposedKong(player, m, s)
+			break
+		case mahjong.MeldType_enumMeldTypeTriplet2Kong:
+			payTriplet2Kong(player, s)
+			break
+		}
+	}
+}
+
+// payConcealedKong 暗杠计分, 每人出2分，共收6分
+func payConcealedKong(konger *PlayerHolder, s *SPlaying) {
+	// 暗杠每一个人都要给予分数
+
+	for _, p := range s.players {
+		if p == konger {
+			continue
+		}
+
+		multiple := 2
+
+		p.sctx.getPayTarget(konger).kongMultiple -= multiple
+		konger.sctx.getPayTarget(p).kongMultiple += multiple
+		log.Printf("player :%d pay concealed kong multiple %d to %d\n", p.chairID, multiple, konger.chairID)
+	}
+}
+
+// payExposedKong 加杠计分, 每人出1分，共3分
+func payTriplet2Kong(konger *PlayerHolder, s *SPlaying) {
+	// 明杠每一个人都要给予分数
+	for _, p := range s.players {
+		if p == konger {
+			continue
+		}
+
+		multiple := 1
+
+		p.sctx.getPayTarget(konger).kongMultiple -= multiple
+		konger.sctx.getPayTarget(p).kongMultiple += multiple
+
+		log.Printf("player :%d pay triplet2Kong multiple %d to %d\n", p.chairID, multiple, konger.chairID)
+	}
+}
+
+// payExposedKong 明杠计分，放杠者出3分，共收3分
+func payExposedKong(konger *PlayerHolder, m *Meld, s *SPlaying) {
+	loser := s.tileMgr.getContributor(konger, m)
+	if loser == nil || loser == konger {
+		log.Panicf("payExposedKong failed, can't find contributor player\n")
+		return
+	}
+
+	multiple := 3
+
+	loser.sctx.getPayTarget(konger).kongMultiple -= multiple
+	konger.sctx.getPayTarget(loser).kongMultiple += multiple
+
+	log.Printf("player :%d pay exposed kong multiple %d to %d\n", loser.chairID, multiple, konger.chairID)
 }
 
 // collectMyEarn 直接地收取某个玩家所赢的钱，如果输家不够，输家就进入保护状态，而不为输家去收取其他人的钱
@@ -201,6 +276,32 @@ func loseProtectPay(s *SPlaying, winner *PlayerHolder, loser *PlayerHolder, pc *
 // doFinalPay 最终计分，orderPlayers赢家按照逆时针排在前端
 func doFinalPay(s *SPlaying, orderPlayers []*PlayerHolder) {
 	s.cl.Println("doFinalPay")
+	roomConfig := s.room.config
+
+	// 汇总各种得分
+	for _, p := range orderPlayers {
+		for _, pc := range p.sctx.orderPlayerSctxs {
+			if pc.hasCalc {
+				continue
+			}
+
+			targetPlayer := pc.target
+
+			if pc.kongMultiple != 0 {
+				before := pc.totalWinScore
+				add := pc.kongMultiple * roomConfig.baseScore
+				pc.totalWinScore += add
+
+				log.Printf("doFinalPay: player:%d take %d kongMultiple from palyer:%d, totalWinScore %d=>%d\n",
+					p.chairID, add, targetPlayer.chairID, before, pc.totalWinScore)
+			}
+
+			pc.hasCalc = true
+			pc2 := pc.target.sctx.getPayTarget(p)
+			pc2.totalWinScore = -pc.totalWinScore
+			pc2.hasCalc = true
+		}
+	}
 
 	// 检查玩家得分者
 	for _, p := range orderPlayers {
@@ -263,6 +364,11 @@ func calcFinalResultWithChucker(s *SPlaying, chucker *PlayerHolder) {
 		pay2Winner(chucker, winner, s.room, 1)
 	}
 
+	// 计算每个人的杠牌得分
+	for _, p := range s.players {
+		calcKongMultiple(s, p)
+	}
+
 	orderPlayers := make([]*PlayerHolder, 0, len(s.players))
 	xorderPlayers := s.tileMgr.getOrderPlayers(chucker)
 	for _, xp := range xorderPlayers {
@@ -302,7 +408,7 @@ func calcHorse(winner *PlayerHolder, s *SPlaying) {
 		s.cl.Printf("calcHorse, winner:%s, horseTiles:%+v", winner.userID(), horseTileIDs)
 
 		// 记录马牌列表
-		s.lctx.addActionWithTiles(nil, horseTileIDs, mahjong.ActionType_enumActionType_CustomA, 0, mahjong.SRFlags_SRNone, 0)
+		s.lctx.addActionWithTiles(nil, horseTileIDs, mahjong.ActionType_enumActionType_CustomA, 0, mahjong.SRFlags_SRUserReplyOnly, 0)
 	}
 
 	for _, ht := range s.horseTiles {
@@ -351,6 +457,11 @@ func calcFinalResultSelfDraw(s *SPlaying, winner *PlayerHolder) {
 
 			pay2Winner(p, winner, s.room, 1)
 		}
+	}
+
+	// 计算每个人的杠牌得分
+	for _, p := range s.players {
+		calcKongMultiple(s, p)
 	}
 
 	orderPlayers := make([]*PlayerHolder, 0, len(s.players))

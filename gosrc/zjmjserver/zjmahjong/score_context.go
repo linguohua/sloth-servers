@@ -22,7 +22,9 @@ type ScoreContext struct {
 type PlayerScoreContext struct {
 	target        *PlayerHolder
 	totalWinScore int  // 总分整数即可，不需要浮点数
+	kongMultiple  int  // 杠倍数
 	hasClear      bool // 是否两清了
+	hasCalc       bool // 是否计算了
 }
 
 func (sc *ScoreContext) isWin() bool {
@@ -56,6 +58,17 @@ func (sc *ScoreContext) calcTotalWinScore() int {
 	for _, pc := range sc.orderPlayerSctxs {
 		if pc != nil {
 			sum += pc.totalWinScore
+		}
+	}
+
+	return sum
+}
+
+func (sc *ScoreContext) calcKongMultiple() int {
+	sum := 0
+	for _, pc := range sc.orderPlayerSctxs {
+		if pc != nil {
+			sum += pc.kongMultiple
 		}
 	}
 

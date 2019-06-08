@@ -368,6 +368,19 @@ func (tm *TileMgr) chowAble(player *PlayerHolder, dq *TaskPlayerReAction, msgAct
 	return true
 }
 
+// getContributor 获得牌组贡献者
+func (tm *TileMgr) getContributor(owner *PlayerHolder, m *Meld) *PlayerHolder {
+	myUserID := owner.userID()
+	ts := []*Tile{m.t1, m.t2, m.t3, m.t4}
+	for _, t := range ts {
+		if t.drawBy != myUserID {
+			return tm.room.getPlayerByUserID(t.drawBy)
+		}
+	}
+
+	return owner
+}
+
 // nextPlayreImpl 下一个玩家
 func (tm *TileMgr) nextPlayerImpl(player *PlayerHolder) *PlayerHolder {
 	var players = tm.players
