@@ -64,7 +64,7 @@ func calcGreatWinTileType(s *SPlaying, player *PlayerHolder) (int, int) {
 	// 全风子 : 全部由风牌组成的胡牌
 	if tiles.suitTypeCount() == 0 {
 		winType |= int(GreatWinType_AllWind)
-		var gp = roomConfig.allWinPoint()
+		var gp = roomConfig.allWindPoint()
 		points += gp
 		log.Println("GWT:, All Wind:", gp)
 	}
@@ -147,6 +147,7 @@ func pay2Winner(loser *PlayerHolder, winner *PlayerHolder, room *Room, mutiple i
 	baseMutiple := winner.sctx.greatWinPoints
 
 	if baseMutiple == 0 {
+		// 如果没有牌型倍数，则置为1，否则乘法运算结果恒为0
 		baseMutiple = 1
 	}
 

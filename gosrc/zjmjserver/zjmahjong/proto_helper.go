@@ -194,17 +194,6 @@ func serializeMsgActionResultNotifyForDiscardedTile(action int, player *PlayerHo
 	return msg
 }
 
-// serializeMsgActionResultNotifyForNoTile 序列化某个玩家的动作结果给其他玩家
-func serializeMsgActionResultNotifyForNoTile(actoin int, player *PlayerHolder) *mahjong.MsgActionResultNotify {
-	var msg = &mahjong.MsgActionResultNotify{}
-	var action32 = int32(actoin)
-	msg.Action = &action32
-	var chairID32 = int32(player.chairID)
-	msg.TargetChairID = &chairID32
-
-	return msg
-}
-
 // serializeMsgAllowedForDiscard2Opponent 序列化正在等待某个玩家出牌的消息给其他玩家
 func serializeMsgAllowedForDiscard2Opponent(player *PlayerHolder, qaIndex int, actions int) *mahjong.MsgAllowPlayerAction {
 	var msg = &mahjong.MsgAllowPlayerAction{}

@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gscfg"
 	log "github.com/sirupsen/logrus"
+	"gscfg"
 	"os"
 	"runtime"
 	"runtime/pprof"
