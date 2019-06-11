@@ -23,7 +23,7 @@ func loadUsersProfile(userIDs []string) []*lobby.UserProfile {
 
 	conn.Send("MULTI")
 	for _, userID := range userIDs {
-		conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "userName", "userNick")
+		conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "userName", "nick")
 	}
 
 	values, err := redis.Values(conn.Do("EXEC"))

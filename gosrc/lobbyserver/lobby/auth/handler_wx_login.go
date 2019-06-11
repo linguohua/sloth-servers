@@ -34,8 +34,8 @@ func saveUserInfo2Redis(userInfo *lobby.UserInfo) {
 	headImgURL := userInfo.GetHeadImgUrl()
 	diamond := userInfo.GetDiamond()
 
-	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nickName", nickName, "gender", gender,
-		"provice", provice, "city", city, "country", country, "headImgURL", headImgURL, "diamond", diamond)
+	conn.Do("HMSET", key, "userID", userID, "openID", openID, "nick", nickName, "gender", gender,
+		"provice", provice, "city", city, "country", country, "avatarUrl", headImgURL, "diamond", diamond)
 }
 
 func updateWxUserInfo(userInfo *lobby.UserInfo, clientInfo *lobby.ClientInfo) {

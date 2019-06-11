@@ -88,4 +88,13 @@ const (
 	LobbyClubRoomSetPrefix = "l:club:rs:"
 	// LobbyClubUserApplicantEventPrefix 用户的申请记录列表
 	LobbyClubUserApplicantEventPrefix = "l:club:uel:"
+
+	// LobbyConfig 大厅相关配置
+	LobbyConfig = "l:config"
+
+	// LobbyShareMedia 分享可以是图片，视频，动图，格式l:sm:sence:mediaType
+	LobbyShareMedia = "l:sm:%d:%d"
+
+	// LobbyShareText 分享显示的文本，格式:l:st:sence
+	LobbyShareText = "l:st:%d"
 )

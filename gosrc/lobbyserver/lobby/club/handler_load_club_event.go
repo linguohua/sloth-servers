@@ -132,7 +132,7 @@ func loadDisplayInfoForEvents(events []*MsgClubEvent, conn redis.Conn) {
 }
 
 func loadDisplayInfoByUserID(userID string, conn redis.Conn) *MsgClubDisplayInfo {
-	strValues, err := redis.Strings(conn.Do("HMGET", gconst.LobbyUserTablePrefix+userID, "Nick", "Gender", "Protrait", "AvatarID"))
+	strValues, err := redis.Strings(conn.Do("HMGET", gconst.LobbyUserTablePrefix+userID, "nick", "gender", "avatarUrl", "avatarID"))
 	if err != nil {
 		log.Panicln("loadDisplayInfoByUserID, redis err:", err)
 	}

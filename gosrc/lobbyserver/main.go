@@ -13,6 +13,7 @@ import (
 	"lobbyserver/lobby/mail"
 	"lobbyserver/lobby/club"
 	"lobbyserver/lobby/donate"
+	"lobbyserver/lobby/share"
 	"lobbyserver/wechat"
 
 	//"accwebserver"
@@ -108,6 +109,7 @@ func main() {
 	club.InitWith()
 	donate.InitWith()
 	wechat.InitWechat()
+	share.InitWith()
 
 	if config.Daemon == "yes" {
 		waitForSignal()
