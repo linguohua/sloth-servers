@@ -1,13 +1,20 @@
 package share
 
 import (
+	"testing"
+	"log"
+	"net/http"
+	"time"
+	"lobbyserver/lobby"
+	"io/ioutil"
+	"github.com/golang/protobuf/proto"
 
 )
 
 // TestSomething 测试用例
 func TestSomething(t *testing.T) {
 
-
+	testGetShareInfo("10000008")
 
 
 }
@@ -16,7 +23,7 @@ func TestSomething(t *testing.T) {
 func testGetShareInfo(id string) {
 	tk := lobby.GenTK(id)
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
-	var url = "http://localhost:3002/lobby/uuid/getShareInfo?tk="+ tk + "&sence=1&mediaType=1&"
+	var url = "http://localhost:3002/lobby/uuid/getShareInfo?tk="+ tk + "&sence=1&mediaType=1&shareType=1"
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -43,20 +50,11 @@ func testGetShareInfo(id string) {
 		return
 	}
 
-	msgClubReply := &MsgClubReply{}
-	err = proto.Unmarshal(body, msgClubReply)
+	shareInfo := &lobby.MsgShareInfo{}
+	err = proto.Unmarshal(body, shareInfo)
 	if err != nil {
 		log.Println("err:", err)
 	}
 
-
-	createClubReply := &MsgCreateClubReply{}
-	buf := msgClubReply.GetContent()
-
-	err = proto.Unmarshal(buf, createClubReply)
-	if err != nil {
-		log.Println("err:", err)
-	}
-
-	log.Println("createClubReply:", createClubReply)
+	log.Println("shareInfo:", shareInfo)
 }

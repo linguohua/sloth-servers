@@ -498,3 +498,10 @@ message MsgLoadMail
 	repeated MsgMail mails = 1; // 邮件列表
 	optional int32 cursor = 2; // 下一次拉取的游标
 }
+
+message MsgShareInfo
+{
+	required int32 result = 1; // 参见MsgError
+	optional string text = 2; // 分享显示的文本
+	optional string multimedia = 3; // 图片、视频、动图的url
+}

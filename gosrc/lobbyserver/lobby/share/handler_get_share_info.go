@@ -106,7 +106,7 @@ func handlerGetShareInfo(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	multimedia := getMultimedia(sence, mediaType)
 	if multimedia == "" {
-		log.Errorf("handlerGetShareInfo multimedia is empty for sence:%d, mediaType:%d, shareType:%d")
+		log.Errorf("handlerGetShareInfo multimedia is empty for sence:%d, mediaType:%d, shareType:%d", sence, mediaType, shareType)
 	}
 
 	text := getText(sence)
