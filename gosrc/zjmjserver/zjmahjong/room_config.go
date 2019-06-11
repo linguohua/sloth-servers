@@ -223,7 +223,7 @@ func (rc *RoomConfig) thirteenOrphansPoint() int {
 	return 5
 }
 
-func (rc *RoomConfig) allWinPoint() int {
+func (rc *RoomConfig) allWindPoint() int {
 	if rc.allWindX2 {
 		return 2
 	}

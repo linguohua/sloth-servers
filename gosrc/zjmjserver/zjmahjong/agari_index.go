@@ -138,7 +138,6 @@ func calcKey(n []int, pos []int) int {
 // isAgariThirteenOrphans 国士无双（十三幺）
 func isAgariThirteenOrphans(slots []int) bool {
 	count := 0
-
 	for _, v := range thirteenOrphans {
 		if slots[v] == 0 {
 			return false

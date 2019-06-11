@@ -166,10 +166,14 @@ func (mgr *MonkeyMgr) attachDealCfg2Room(w http.ResponseWriter, r *http.Request,
 
 	// 要求的玩家数量不一致
 	if cfg.playerCount() != room.config.playerNumAcquired {
-		w.WriteHeader(404)
-		w.Write([]byte(fmt.Sprintf("player number not the same, room require:%d, but cfg:%d", room.config.playerNumAcquired,
-			cfg.playerCount())))
-		return
+		if len(room.players) <= cfg.playerCount() {
+			room.config.playerNumAcquired = cfg.playerCount()
+		} else {
+			w.WriteHeader(404)
+			w.Write([]byte(fmt.Sprintf("player number not the same, room require:%d, but cfg:%d", room.config.playerNumAcquired,
+				cfg.playerCount())))
+			return
+		}
 	}
 
 	// 如果是强制要求顺序，则必须所有的userID不能为空
