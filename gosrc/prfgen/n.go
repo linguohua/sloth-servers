@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"math"
-	"prunfast"
+	"prserver/prunfast"
 	"sort"
 )
 
