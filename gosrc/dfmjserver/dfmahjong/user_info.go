@@ -31,7 +31,7 @@ func loadUserInfoFromRedis(userID string) *UserInfo {
 	var userInfo = &UserInfo{}
 
 	conn.Send("MULTI")
-	conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "Nick", "Gender", "Protrait", "Addr", "location", "diamond", "charm", "AvatarID", "DanID")
+	conn.Send("HMGET", gconst.LobbyUserTablePrefix+userID, "nick", "gender", "avatarUrl", "addr", "location", "diamond", "charm", "avatarID", "danID")
 	conn.Send("HGET", gconst.LobbyPlayerTablePrefix+userID, "dfHands")
 	// conn.Send("HGETALL", gconst.UserClubTablePrefix+userID)
 	values, err := redis.Values(conn.Do("EXEC"))

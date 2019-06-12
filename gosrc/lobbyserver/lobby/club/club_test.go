@@ -21,13 +21,14 @@ func TestSomething(t *testing.T) {
 	// testLoadClubMembers("10000002")
 	// testJoinClub("10000004", "56135")
 	// testLoadClubEvent("10000002")
-	// testJoinApproval("10000002", "10000003", "yes", "5")
+	testJoinApproval("10000001", "10000004", "0aee5aa1-8765-11e9-9a1a-00163e0f7404", "yes", "11")
 	// testClubQuit("10000003")
 	// testLoadMyClubs("10000003")
 	// testCreateClubRoom("10000002")
 	// testLoadClubRooms("10000002")
 	// testDeleteClubRoom("10000002")
-	testLoadMyApplyEvent("10000004")
+	// testLoadMyApplyEvent("10000004")
+
 
 
 }
@@ -363,12 +364,12 @@ func testLoadClubEvent(id string) {
 	log.Println("reply:", reply)
 }
 
-func testJoinApproval(id string, applicantID string, agree string, eID string) {
+func testJoinApproval(id string, applicantID string, clubID string, agree string, eID string) {
 	tk := lobby.GenTK(id)
 	// tk := "vpequ8ELk8xCTPN-heLzghqikggNF85xeH1AyElDSHY="
 
-	var url = "http://localhost:3002/lobby/uuid/joinApproval?tk="+ tk +
-	"&clubID=3ca992e8-7e99-11e9-a192-107b445225b6&applicantID="+applicantID+"&agree="+ agree +"&eID=" + eID
+	var url = "http://121.196.210.106:30002/lobby/uuid/joinApproval??tk="+ tk +
+	"&clubID="+clubID+"&applicantID="+applicantID+"&agree="+ agree +"&eID=" + eID
 	client := &http.Client{Timeout: time.Second * 60}
 	req, err := http.NewRequest("GET", url, nil)
 

@@ -101,7 +101,7 @@ func onJoinApprove(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 	if "yes" != agree {
 		// 发邮件通知申请者告知被拒绝
-		nick, _ := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "Nick"))
+		nick, _ := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "nick"))
 		if nick == "" {
 			nick = userID
 		}

@@ -33,7 +33,7 @@ func loadUserInfoFromRedis(userID string) *lobby.UserInfo {
 
 	key := fmt.Sprintf("%s%s", gconst.LobbyUserTablePrefix, userID)
 
-	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nickName", "gender", "provice", "city", "country", "headImgURL", "phone", "diamond"))
+	fields, err := redis.Strings(conn.Do("HMGET", key, "openID", "nick", "gender", "provice", "city", "country", "avatarUrl", "phone", "diamond"))
 	if err != nil {
 		log.Println("loadUserInfoFromRedis, error", err)
 		return nil

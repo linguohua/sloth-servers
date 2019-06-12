@@ -119,7 +119,7 @@ func onDisbandClub(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 	conn := lobby.Pool().Get()
 	defer conn.Close()
 
-	nick, _ := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "Nick"))
+	nick, _ := redis.String(conn.Do("HGET", gconst.LobbyUserTablePrefix+userID, "nick"))
 	if nick == "" {
 		nick = userID
 	}
